@@ -70,6 +70,7 @@ class LightRSAClass:
         _ = self.mtg          # Force le chargement du MTG
         if self.load_date_map_flag:
             _ = self.date_map
+            
 
     def get_data(self):
         """
