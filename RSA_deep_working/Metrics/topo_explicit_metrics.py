@@ -1,7 +1,7 @@
 # ----------------------------
 # Métriques additionnelles pour la segmentation tubulaire
 # ----------------------------
-
+import torch
 
 def all_metrics():
     return [cldice, skeleton_recall, Connectivity_Preserving_Instance_Segmentation, evaluate_sk_seg]
@@ -56,13 +56,17 @@ def skeleton_recall(prediction, mask, time=0, mtg=None):
                        Valeur par défaut : None.
 
     Returns:
-        float: La valeur de la loss de rappel du squelette * -1 pour la rendre positive.
+        float: La valeur de la loss de rappel du squelette calculée.
     """
     from RSA_deep_working.Metrics.Losses.SkeletonRecall.nnunetv2.training.loss.dice import SoftSkeletonRecallLoss
+    
     prediction = prediction.unsqueeze(0)
     mask = mask.unsqueeze(0)
-    soft_skeleton_recall = SoftSkeletonRecallLoss()
-    return (-1) * soft_skeleton_recall(prediction, mask).item()
+    soft_skeleton_recall = SoftSkeletonRecallLoss(do_bg=False)
+    # Pour la prédiction & mask : le premier canal (background) est 1 - prédiction, le second canal est la prédiction
+    prediction_2c = torch.cat([1 - prediction, prediction], dim=1)
+    mask_2c = torch.cat([1 - mask, mask], dim=1)
+    return soft_skeleton_recall(prediction_2c, mask_2c).item()
 
 
 def Connectivity_Preserving_Instance_Segmentation(prediction, mask, time=0, mtg=None):

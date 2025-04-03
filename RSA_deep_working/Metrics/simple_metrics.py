@@ -1,32 +1,24 @@
-from skimage.measure import label
+from skimage.measure import label, euler_number
+from skimage.metrics import adapted_rand_error
+from sklearn.metrics import adjusted_rand_score, mutual_info_score
+from sklearn.metrics.cluster import entropy
+from skimage.morphology import skeletonize
 import torchmetrics.functional as FMF
 import torchmetrics.functional.segmentation as FMS
 import numpy as np
 
 
 def all_metrics():
-    return [dice, f1_score, iou, pixel_accuracy, precision, recall, specificity, connectivity_metric]
+    return [dice, f1_score, iou, pixel_accuracy, precision, recall, specificity,
+            connectivity_metric, ARI_index, VI_index, ARE_error,
+            betti_0_difference, betti_1_difference, euler_charac_difference]
 
 # ----------------------------
-# Métriques classiques
+# Standard segmentation metrics
 # ----------------------------
 
 
 def dice(prediction, mask, time=0, mtg=None):
-    """
-    Calcule le coefficient de Dice entre la prédiction et le masque.
-    
-    Dice = 2 * |A ∩ B| / (|A| + |B|)
-    où A est la prédiction et B est le masque.
-
-    Args:
-        prediction (_tensor): Tenseur contenant la prédiction.
-        mask (_tensor): Tenseur contenant le masque de vérité terrain.
-        mtg (_type_, optional): _description_. Defaults to None.
-
-    Returns:
-        float: Le score de Dice calculé.
-    """
     prediction = prediction.int()
     mask = mask.int()
     return FMS.dice_score(prediction, mask, num_classes=2, average='micro').mean().item()
@@ -65,39 +57,89 @@ def recall(prediction, mask, time=0, mtg=None):
 def specificity(prediction, mask, time=0, mtg=None):
     prediction = prediction.int()
     mask = mask.int()
-    # stat_scores renvoie (TP, FP, TN, FN, tp_plus_fn)
-    _, fp, tn, _, _ = FMF.stat_scores(
-        prediction, mask, task='binary')
+    _, fp, tn, _, _ = FMF.stat_scores(prediction, mask, task='binary')
     spec = (tn.float()) / (tn.float() + fp.float())
     return spec.mean().item()
 
+# ----------------------------
+# Topology-aware segmentation metrics
+# ----------------------------
+
 
 def connectivity_metric(prediction, mask, time=0, mtg=None):
-    """
-    Compare la connectivité en évaluant le nombre de composantes connexes.
-    On calcule un score simple qui pénalise la différence entre
-    le nombre de composantes connexes dans la prédiction et dans le masque.
-    
-    Args:
-        prediction (torch.Tensor): Tenseur contenant la prédiction.
-        mask (torch.Tensor): Tenseur contenant le masque de vérité terrain.
-        mtg (optionnel): Valeur par défaut : None.
-
-    Returns:
-        float: Le score de connectivité calculé. (correspond à la connectivité, ie Betti score 0 ?)
-    """
     prediction = prediction.int().cpu().numpy().astype(np.uint8)
     mask = mask.int().cpu().numpy().astype(np.uint8)
     conn_scores = []
     for pred_img, mask_img in zip(prediction, mask):
-        label_pred = label(pred_img)
-        label_mask = label(mask_img)
-        n_pred = label_pred.max()  # nombre de composantes connexes
-        n_mask = label_mask.max() # nombre de composantes connexes
-        conn_scores.append((n_pred, n_mask))
-    # somme normalisé des distances entre les composantes connexes 
-    s = 0
-    for i in range(len(conn_scores)):
-        s += abs(conn_scores[i][0] - conn_scores[i][1])
-    s /= len(conn_scores)
-    return s
+        num_pred = label(pred_img).max()
+        num_mask = label(mask_img).max()
+        denominator = max(num_pred, num_mask)
+        if denominator == 0:
+            conn_score = 1.0 if num_pred == num_mask else 0.0
+        else:
+            conn_score = 1 - abs(num_pred - num_mask) / denominator
+        conn_scores.append(conn_score)
+    return np.mean(conn_scores).item()
+
+
+def ARI_index(prediction, mask, time=0, mtg=None):
+    prediction = prediction.int().cpu().numpy()
+    mask = mask.int().cpu().numpy()
+    return adjusted_rand_score(mask.flatten(), prediction.flatten())
+
+
+def ARE_error(prediction, mask, time=0, mtg=None):
+    prediction = prediction.int().cpu().numpy()
+    mask = mask.int().cpu().numpy()
+    try:
+        are, _, _ = adapted_rand_error(mask, prediction)
+    # if division by zero occurs
+    except ZeroDivisionError or RuntimeError or RuntimeWarning:
+        are = 0.0
+    return are.item()
+
+
+def VI_index(prediction, mask, time=0, mtg=None):
+    prediction = prediction.int().cpu().numpy()
+    mask = mask.int().cpu().numpy()
+    H_mask = entropy(mask.flatten())
+    H_pred = entropy(prediction.flatten())
+    MI = mutual_info_score(mask.flatten(), prediction.flatten())
+    VI = H_mask + H_pred - 2 * MI
+    return VI
+
+
+def betti_0_difference(prediction, mask, time=0, mtg=None):
+    prediction = prediction.int().cpu().numpy().astype(np.uint8)
+    mask = mask.int().cpu().numpy().astype(np.uint8)
+    scores = []
+    for pred_img, mask_img in zip(prediction, mask):
+        num_pred = label(pred_img).max()
+        num_mask = label(mask_img).max()
+        # ratio
+        scores.append(abs(num_pred - num_mask) / (num_pred + num_mask))  # normalized
+    return np.mean(scores).item()
+
+
+def betti_1_difference(prediction, mask, time=0, mtg=None):
+    prediction = prediction.int().cpu().numpy().astype(np.uint8)
+    mask = mask.int().cpu().numpy().astype(np.uint8)
+    scores = []
+    for pred_img, mask_img in zip(prediction, mask):
+        skel_pred = skeletonize(pred_img)
+        skel_mask = skeletonize(mask_img)
+        betti1_pred = label(skel_pred, connectivity=1).max() - euler_number(skel_pred, connectivity=1)
+        betti1_mask = label(skel_mask, connectivity=1).max() - euler_number(skel_mask, connectivity=1)
+        scores.append(abs(betti1_pred - betti1_mask) / (betti1_pred + betti1_mask))  # normalized
+    return np.mean(scores)
+
+
+def euler_charac_difference(prediction, mask, time=0, mtg=None):
+    prediction = prediction.int().cpu().numpy().astype(np.uint8)
+    mask = mask.int().cpu().numpy().astype(np.uint8)
+    scores = []
+    for pred_img, mask_img in zip(prediction, mask):
+        euler_pred = euler_number(pred_img, connectivity=1)
+        euler_mask = euler_number(mask_img, connectivity=1)
+        scores.append(abs(euler_pred - euler_mask) / (euler_pred + euler_mask)) # normalized
+    return np.mean(scores).item()
