@@ -58,7 +58,7 @@ def skeleton_recall(prediction, mask, time=0, mtg=None):
     Returns:
         float: La valeur de la loss de rappel du squelette calculée.
     """
-    from RSA_deep_working.Metrics.Losses.SkeletonRecall.nnunetv2.training.loss.dice import SoftSkeletonRecallLoss
+    from RSA_deep_working.Metrics.Losses.Skeleton_Recall.nnunetv2.training.loss.dice import SoftSkeletonRecallLoss
     
     prediction = prediction.unsqueeze(0)
     mask = mask.unsqueeze(0)

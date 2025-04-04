@@ -11,7 +11,7 @@ import numpy as np
 def all_metrics():
     return [dice, f1_score, iou, pixel_accuracy, precision, recall, specificity,
             connectivity_metric, ARI_index, VI_index, ARE_error,
-            betti_0_difference, betti_1_difference, euler_charac_difference]
+            betti_0_difference, euler_charac_difference]
 
 # ----------------------------
 # Standard segmentation metrics
@@ -117,21 +117,9 @@ def betti_0_difference(prediction, mask, time=0, mtg=None):
         num_pred = label(pred_img).max()
         num_mask = label(mask_img).max()
         # ratio
-        scores.append(abs(num_pred - num_mask) / (num_pred + num_mask))  # normalized
+        scores.append(abs(num_pred - num_mask) /
+                      (num_pred + num_mask))  # normalized
     return np.mean(scores).item()
-
-
-def betti_1_difference(prediction, mask, time=0, mtg=None):
-    prediction = prediction.int().cpu().numpy().astype(np.uint8)
-    mask = mask.int().cpu().numpy().astype(np.uint8)
-    scores = []
-    for pred_img, mask_img in zip(prediction, mask):
-        skel_pred = skeletonize(pred_img)
-        skel_mask = skeletonize(mask_img)
-        betti1_pred = label(skel_pred, connectivity=1).max() - euler_number(skel_pred, connectivity=1)
-        betti1_mask = label(skel_mask, connectivity=1).max() - euler_number(skel_mask, connectivity=1)
-        scores.append(abs(betti1_pred - betti1_mask) / (betti1_pred + betti1_mask))  # normalized
-    return np.mean(scores)
 
 
 def euler_charac_difference(prediction, mask, time=0, mtg=None):
@@ -141,5 +129,6 @@ def euler_charac_difference(prediction, mask, time=0, mtg=None):
     for pred_img, mask_img in zip(prediction, mask):
         euler_pred = euler_number(pred_img, connectivity=1)
         euler_mask = euler_number(mask_img, connectivity=1)
-        scores.append(abs(euler_pred - euler_mask) / (euler_pred + euler_mask)) # normalized
+        scores.append(abs(euler_pred - euler_mask) /
+                      (euler_pred + euler_mask))  # normalized
     return np.mean(scores).item()
