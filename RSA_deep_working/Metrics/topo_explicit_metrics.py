@@ -2,73 +2,68 @@
 # Métriques additionnelles pour la segmentation tubulaire
 # ----------------------------
 import torch
+import functools
 
 def all_metrics():
     return [cldice, skeleton_recall, Connectivity_Preserving_Instance_Segmentation, evaluate_sk_seg]
 
 
+# =============================================================================
+# Décorateur pour standardiser les entrées des métriques
+# =============================================================================
+def standardize_metric(func):
+    @functools.wraps(func)
+    def wrapper(prediction, mask, time=0, mtg=None):
+        # Conversion en int
+        pred = prediction.int()
+        msk = mask.int()
+        # Suppression de la dimension de canal unique (si besoin)
+        if pred.dim() == 4 and pred.size(1) == 1:
+            pred = pred.squeeze(1)
+        if msk.dim() == 4 and msk.size(1) == 1:
+            msk = msk.squeeze(1)
+        return func(pred, msk, time, mtg)
+    return wrapper
+
+def standardize_float_metric(func):
+    
+    def wrapper(prediction, mask, time=0, mtg=None):
+        # Conversion en float (plutôt qu'en int)
+        pred = prediction.float()
+        msk = mask.float()
+        # Supprimer la dimension de canal unique si présente
+        if pred.dim() == 4 and pred.size(1) == 1:
+            pred = pred.squeeze(1)
+        if msk.dim() == 4 and msk.size(1) == 1:
+            msk = msk.squeeze(1)
+        return func(pred, msk, time, mtg)
+    return wrapper
+
+# =============================================================================
+# Définition des métriques tubulaires (topology-aware spécifiques)
+# =============================================================================
+
+@standardize_float_metric
 def cldice(prediction, mask, time=0, mtg=None):
-    """
-    Calcule la métrique clDice, une variante du coefficient Dice spécialement conçue pour
-    évaluer la segmentation de structures tubulaires. Cette métrique intègre à la fois la 
-    connectivité et la forme, deux aspects essentiels pour une évaluation précise en imagerie médicale.
-
-    Le score clDice est défini par la formule suivante :
-        clDice = (2 * TP(Sp, Vl) * TS(Sl, Vp)) / (TP(Sp, Vl) + TS(Sl, Vp))
-    où :
-        - TP (Précision Topologique) correspond à |A ∩ B| / |A|, avec A représentant le squelette prédit
-          et B la vérité terrain.
-        - TS (Sensibilité Topologique) correspond à |A ∩ B| / |A|, avec A représentant le squelette extrait 
-          de la vérité terrain et B la prédiction.
-
-    Args:
-        prediction (torch.Tensor): Tenseur contenant la sortie de la segmentation prédite.
-        mask (torch.Tensor): Tenseur contenant la segmentation de la vérité terrain.
-        mtg (optionnel): Structure additionnelle (par exemple, un multigraph) requise pour certains calculs.
-                       Valeur par défaut : None.
-
-    Returns:
-        float: Le score clDice calculé.
-    """
+    # Exemple avec une implémentation externe (assurez-vous que le module est installé)
     from RSA_deep_working.Metrics.Losses.clDice.cldice_loss.pytorch.cldice import soft_cldice
     prediction = prediction.unsqueeze(0)
     mask = mask.unsqueeze(0)
-    soft_cldice = soft_cldice()
-    return 1 - soft_cldice(prediction, mask).item()
+    soft_cldice_instance = soft_cldice()
+    return 1 - soft_cldice_instance(prediction, mask).item()
 
-
+@standardize_float_metric
 def skeleton_recall(prediction, mask, time=0, mtg=None):
-    """
-    Calcule la métrique de rappel du squelette, qui mesure la capacité de la prédiction à 
-    recouvrir le squelette (ou structure tubulaire) extrait de la vérité terrain.
-
-    La loss de rappel du squelette est formulée comme suit :
-        L = - (1 / |C|) * ∑ (|A ∩ B| / |A|)
-    où :
-        - A représente le squelette tubulaire extrait de la vérité terrain.
-        - B représente la prédiction du réseau.
-        - |C| correspond au nombre de classes, assurant une normalisation sur l'ensemble des classes.
-
-    Args:
-        prediction (torch.Tensor): Tenseur contenant la segmentation prédite.
-        mask (torch.Tensor): Tenseur contenant la segmentation de la vérité terrain.
-        mtg (optionnel): Structure additionnelle éventuellement requise pour le calcul.
-                       Valeur par défaut : None.
-
-    Returns:
-        float: La valeur de la loss de rappel du squelette calculée.
-    """
     from RSA_deep_working.Metrics.Losses.Skeleton_Recall.nnunetv2.training.loss.dice import SoftSkeletonRecallLoss
-    
     prediction = prediction.unsqueeze(0)
     mask = mask.unsqueeze(0)
     soft_skeleton_recall = SoftSkeletonRecallLoss(do_bg=False)
-    # Pour la prédiction & mask : le premier canal (background) est 1 - prédiction, le second canal est la prédiction
+    # Préparation pour 2 canaux : background et prédiction
     prediction_2c = torch.cat([1 - prediction, prediction], dim=1)
     mask_2c = torch.cat([1 - mask, mask], dim=1)
     return soft_skeleton_recall(prediction_2c, mask_2c).item()
 
-
+@standardize_float_metric
 def Connectivity_Preserving_Instance_Segmentation(prediction, mask, time=0, mtg=None):
     from RSA_deep_working.Metrics.Losses.supervoxel_loss.src.supervoxel_loss.loss import SuperVoxelLoss2D
     SuperVoxelLoss = SuperVoxelLoss2D()
@@ -76,108 +71,68 @@ def Connectivity_Preserving_Instance_Segmentation(prediction, mask, time=0, mtg=
     mask = mask.unsqueeze(0)
     return SuperVoxelLoss(prediction, mask).item()
 
-
-# source des idées https://github.com/AllenNeuralDynamics/segmentation-skeleton-metrics/
+@standardize_float_metric
 def evaluate_sk_seg(prediction, mask, time=0, mtg_path=None):
+    # Exemple d'évaluation sur la segmentation skeletonisée
     import numpy as np
     from rsml import rsml2mtg
     mtg = rsml2mtg(mtg_path)
     prediction = prediction.int().cpu().numpy().astype(np.uint8)
     mask = mask.int().cpu().numpy().astype(np.uint8)
-    mask = np.squeeze(mask)
     prediction = np.squeeze(prediction)
-    cc_gt = vertex_cc_2_mtg(mtg, mask, time)
-    cc_pred = vertex_cc_2_mtg(mtg, prediction, time)
-    # count the number of not predicted connected components
-    count_bad_conn = 0
-    cound_good_conn = 0
-    for cc in cc_gt:
-        if cc not in cc_pred:
-            count_bad_conn += 1
-        elif cc_gt[cc] != cc_pred[cc]:
-            count_bad_conn += 1
-        else:
-            cound_good_conn += 1
-    # return ratio of good connected components over the total number of connected components
-    return cound_good_conn / (count_bad_conn + cound_good_conn)
-
-
-def vertex_cc_2_mtg(mtg, mask, time0):
-    # for each key in the hierarchy, get the connected components of the mask
-    from skimage.measure import label
-    import numpy as np
-    labeled_mask = label(mask)
-    roots_2_cc = {}
-    for vertex in mtg.vertices():
-        try:
-            geometry = mtg[vertex].get("geometry")
-            times = mtg[vertex].get("time")
-        except KeyError:
-            print("KeyError: geometry not found")
-            continue
-
-        if geometry is None:
-            # print("Geometry is None")
-            continue
-        cc_2_root = set()
-        count_0 = 0
-        count_label = 0
-        # for all the positions of the geometry, get the corresponding connected components of the mask
-        for pos in geometry:
-            x, y = pos
-            time = times[geometry.index(pos)]
-            # get the connected component of the mask
+    mask = np.squeeze(mask)
+    
+    # Définition locale d'une fonction pour extraire les composantes connexes
+    def vertex_cc_2_mtg(mtg, mask, time0):
+        from skimage.measure import label
+        labeled_mask = label(mask)
+        roots_2_cc = {}
+        for vertex in mtg.vertices():
             try:
-                if time > time0:
-                    continue
-                connected_component = labeled_mask[int(y), int(x)]
-                cc_2_root.add(connected_component)
-                if connected_component == 0:
-                    count_0 += 1
-                else:
-                    count_label += 1
-            except IndexError:
-                print("IndexError: position out of bounds :",
-                      pos, "for image size", mask.shape)
+                geometry = mtg[vertex].get("geometry")
+                times = mtg[vertex].get("time")
+            except KeyError:
                 continue
-        roots_2_cc[vertex] = cc_2_root
-    # same principle, but we trace the poliline of the root geometry and we select all the cc the polyline intersects
-    for vertex in mtg.vertices():
-        try:
-            geometry = mtg[vertex].get("geometry")
-            times = mtg[vertex].get("time")
-        except KeyError:
-            print("KeyError: geometry not found")
-            continue
-        if geometry is None:
-            # print("Geometry is None")
-            continue
-        cc_2_root = set()
-        count_0 = 0
-        count_label = 0
-        # for all the positions of the geometry, get the corresponding connected components of the mask
-        for index_pos in range(len(geometry)-1):
-            x1, y1 = geometry[index_pos]
-            x2, y2 = geometry[index_pos+1]
-            time = times[geometry.index(geometry[index_pos+1])]
-            # get the connected component of the mask
-            try:
-                if time > time0:
-                    continue
-                # get the connected that intersects the line between (x1, y1) and (x2, y2)
-                # create a line between the two points
-                x_line = np.linspace(x1, x2, num=100).astype(int)
-                y_line = np.linspace(y1, y2, num=100).astype(int)
-                # get the connected component of the mask
-                labeled_mask_line = labeled_mask[y_line, x_line]
-                # get the unique connected components of the mask
-                connected_component = np.unique(labeled_mask_line)
-                cc_2_root.update(connected_component)
-                if 0 in connected_component:
-                    count_0 += 1
-                else:
-                    count_label += 1
-            except IndexError:
-                print("IndexError: position out of bounds")
+            if geometry is None:
                 continue
-    return roots_2_cc
+            cc_2_root = set()
+            for pos in geometry:
+                x, y = pos
+                time = times[geometry.index(pos)]
+                try:
+                    if time > time0:
+                        continue
+                    connected_component = labeled_mask[int(y), int(x)]
+                    cc_2_root.add(connected_component)
+                except IndexError:
+                    continue
+            roots_2_cc[vertex] = cc_2_root
+        return roots_2_cc
+    
+    if prediction.ndim == 2:
+        cc_gt = vertex_cc_2_mtg(mtg, mask, time)
+        cc_pred = vertex_cc_2_mtg(mtg, prediction, time)
+        count_bad_conn = 0
+        count_good_conn = 0
+        for cc in cc_gt:
+            if cc not in cc_pred:
+                count_bad_conn += 1
+            elif cc_gt[cc] != cc_pred[cc]:
+                count_bad_conn += 1
+            else:
+                count_good_conn += 1
+        return count_good_conn / (count_bad_conn + count_good_conn + 1e-8)
+    else:
+        total_good = 0
+        total_bad = 0
+        for i in range(prediction.shape[0]):
+            cc_gt = vertex_cc_2_mtg(mtg, mask[i], time[i])
+            cc_pred = vertex_cc_2_mtg(mtg, prediction[i], time[i])
+            for cc in cc_gt:
+                if cc not in cc_pred:
+                    total_bad += 1
+                elif cc_gt[cc] != cc_pred[cc]:
+                    total_bad += 1
+                else:
+                    total_good += 1
+        return total_good / (total_good + total_bad + 1e-8)
