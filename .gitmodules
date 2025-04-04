@@ -1,0 +1,9 @@
+[submodule "RSA_deep_working/Metrics/Losses/clDice"]
+	path = RSA_deep_working/Metrics/Losses/clDice
+	url = https://github.com/jocpae/clDice
+[submodule "RSA_deep_working/Metrics/Losses/Skeleton_Recall"]
+	path = RSA_deep_working/Metrics/Losses/Skeleton_Recall
+	url = https://github.com/Money-eng/Skeleton_Recall
+[submodule "RSA_deep_working/Metrics/Losses/supervoxel_loss"]
+	path = RSA_deep_working/Metrics/Losses/supervoxel_loss
+	url = https://github.com/Money-eng/supervoxel_loss
