@@ -13,3 +13,6 @@
 [submodule "RSA_deep_working/Metrics/segmentation_sk"]
 	path = RSA_deep_working/Metrics/segmentation_sk
 	url = https://github.com/AllenNeuralDynamics/segmentation-skeleton-metrics
+[submodule "RSML/rsml_lib"]
+	path = RSML/rsml_lib
+	url = https://github.com/Money-eng/RSML
