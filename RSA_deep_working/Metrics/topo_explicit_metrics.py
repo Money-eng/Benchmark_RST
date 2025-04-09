@@ -10,9 +10,9 @@ import torchmetrics.functional.segmentation as FMS
 
 ###############################################################################
 # Make sure to cite:
-#  - clDice: :contentReference[oaicite:0]{index=0}
-#  - Skeleton Recall Loss: :contentReference[oaicite:1]{index=1}
-#  - SuperVoxel-Based Loss for Connectivity Preservation: :contentReference[oaicite:2]{index=2}
+#  - clDice: : https://openaccess.thecvf.com/content/CVPR2021/papers/Shit_clDice_-_A_Novel_Topology-Preserving_Loss_Function_for_Tubular_Structure_CVPR_2021_paper.pdf
+#  - Skeleton Recall Loss: : https://arxiv.org/pdf/2404.03010
+#  - SuperVoxel-Based Loss for Connectivity Preservation: : https://arxiv.org/pdf/2501.01022
 ###############################################################################
 
 def all_metrics():
@@ -28,10 +28,10 @@ def all_metrics():
 def standardize_float_metric(func):
     @functools.wraps(func)
     def wrapper(prediction, mask, time=0, mtg=None):
-        # Convert inputs to float tensors
+        # Conversion en float (plutôt qu'en int)
         pred = prediction.float()
         msk = mask.float()
-        # If there's a single channel dimension, squeeze it out
+        # Supprimer la dimension de canal unique si présente
         if pred.dim() == 4 and pred.size(1) == 1:
             pred = pred.squeeze(1)
         if msk.dim() == 4 and msk.size(1) == 1:
@@ -78,7 +78,7 @@ def cldice(prediction, mask, time=0, mtg=None):
     prediction = prediction.unsqueeze(0)
     mask = mask.unsqueeze(0)
     soft_cldice_instance = soft_cldice()
-    return 1 - soft_cldice_instance(prediction, mask).item()
+    return 1 - soft_cldice_instance(prediction, mask).item() # - to make higher is better
 
 ###############################################################################
 # Skeleton Recall Metric Definition
@@ -164,7 +164,7 @@ def Connectivity_Preserving_Instance_Segmentation(prediction, mask, time=0, mtg=
     mask = mask.unsqueeze(0)
 
     # Compute the supervoxel-based connectivity-preserving loss
-    return SuperVoxelLoss(prediction, mask).item()
+    return - SuperVoxelLoss(prediction, mask).item() # - to make higher is better
 
 
 @standardize_float_metric

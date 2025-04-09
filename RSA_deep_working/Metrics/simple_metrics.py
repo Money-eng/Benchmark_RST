@@ -206,7 +206,7 @@ def VI_index(prediction, mask, time=0, mtg=None):
         VI = H(Mask) + H(Prediction) - 2 * MI(Mask, Prediction)
 
     Where H is the entropy of the segmentation labels and MI is the mutual information.
-    Lower values indicate better agreement.
+    Lower values indicate better agreement, so we  have to negate it.
     """
     pred_np = prediction.cpu().numpy()
     mask_np = mask.cpu().numpy()
@@ -214,7 +214,7 @@ def VI_index(prediction, mask, time=0, mtg=None):
     H_pred = entropy(pred_np.flatten())
     MI = mutual_info_score(mask_np.flatten(), pred_np.flatten())
     VI = H_mask + H_pred - 2 * MI
-    return VI
+    return - VI
 
 @standardize_metric
 def betti_0_difference(prediction, mask, time=0, mtg=None):
@@ -233,7 +233,9 @@ def betti_0_difference(prediction, mask, time=0, mtg=None):
         num_pred = label(pred_img).max()
         num_mask = label(mask_img).max()
         scores.append(abs(num_pred - num_mask) / (num_pred + num_mask + 1e-8))
-    return np.mean(scores).item()
+    mean_score = np.mean(scores).item()
+    # for higer score to be better
+    return 1 - mean_score
 
 @standardize_metric
 def euler_charac_difference(prediction, mask, time=0, mtg=None):
@@ -252,4 +254,4 @@ def euler_charac_difference(prediction, mask, time=0, mtg=None):
         euler_pred = euler_number(pred_img, connectivity=1)
         euler_mask = euler_number(mask_img, connectivity=1)
         scores.append(abs(euler_pred - euler_mask) / (euler_pred + euler_mask + 1e-8))
-    return np.mean(scores).item()
+    return 1 - np.mean(scores).item() # for higher score to be better
