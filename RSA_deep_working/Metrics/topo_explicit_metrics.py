@@ -1,37 +1,37 @@
-# ----------------------------
-# Métriques additionnelles pour la segmentation tubulaire
-# ----------------------------
 import torch
+import numpy as np
 import functools
+from skimage.measure import label, euler_number
+from skimage.metrics import adapted_rand_error
+from sklearn.metrics import adjusted_rand_score, mutual_info_score
+from sklearn.metrics.cluster import entropy
+import torchmetrics.functional as FMF
+import torchmetrics.functional.segmentation as FMS
+
+###############################################################################
+# Make sure to cite:
+#  - clDice: :contentReference[oaicite:0]{index=0}
+#  - Skeleton Recall Loss: :contentReference[oaicite:1]{index=1}
+#  - SuperVoxel-Based Loss for Connectivity Preservation: :contentReference[oaicite:2]{index=2}
+###############################################################################
 
 def all_metrics():
-    return [cldice, skeleton_recall, Connectivity_Preserving_Instance_Segmentation, evaluate_sk_seg]
+    return [
+        cldice,
+        skeleton_recall,
+        Connectivity_Preserving_Instance_Segmentation
+    ]
 
-
-# =============================================================================
-# Décorateur pour standardiser les entrées des métriques
-# =============================================================================
-def standardize_metric(func):
-    @functools.wraps(func)
-    def wrapper(prediction, mask, time=0, mtg=None):
-        # Conversion en int
-        pred = prediction.int()
-        msk = mask.int()
-        # Suppression de la dimension de canal unique (si besoin)
-        if pred.dim() == 4 and pred.size(1) == 1:
-            pred = pred.squeeze(1)
-        if msk.dim() == 4 and msk.size(1) == 1:
-            msk = msk.squeeze(1)
-        return func(pred, msk, time, mtg)
-    return wrapper
-
+###############################################################################
+# Decorators to standardize input for metrics (conversion to float)
+###############################################################################
 def standardize_float_metric(func):
     @functools.wraps(func)
     def wrapper(prediction, mask, time=0, mtg=None):
-        # Conversion en float (plutôt qu'en int)
+        # Convert inputs to float tensors
         pred = prediction.float()
         msk = mask.float()
-        # Supprimer la dimension de canal unique si présente
+        # If there's a single channel dimension, squeeze it out
         if pred.dim() == 4 and pred.size(1) == 1:
             pred = pred.squeeze(1)
         if msk.dim() == 4 and msk.size(1) == 1:
@@ -39,37 +39,133 @@ def standardize_float_metric(func):
         return func(pred, msk, time, mtg)
     return wrapper
 
-# =============================================================================
-# Définition des métriques tubulaires (topology-aware spécifiques)
-# =============================================================================
-
+###############################################################################
+# clDice Metric Definition
+###############################################################################
 @standardize_float_metric
 def cldice(prediction, mask, time=0, mtg=None):
-    # Exemple avec une implémentation externe (assurez-vous que le module est installé)
+    """
+    clDice Metric/Loss (&#8203;:contentReference[oaicite:3]{index=3}):
+    ------------------------------------------------------------------------
+    - The clDice (centerline Dice) metric is specifically designed
+      for measuring the connectivity of thin/tubular structures.
+    - It relies on the overlap between the segmentation mask and
+      its morphological skeleton.
+
+    Pseudo-math (if used as a metric):
+        1. Let P = predicted segmentation (binary after thresholding),
+           and GT = ground truth.
+        2. Skeletonize P --> S(P), and skeletonize GT --> S(GT).
+        3. Compute Tprec = |S(P) ∩ GT| / |S(P)|
+           and Tsens = |S(GT) ∩ P| / |S(GT)|.
+        4. clDice = 2 * (Tprec * Tsens) / (Tprec + Tsens).
+
+    Here, we are using an *external* soft version that can act as a loss
+    term by making skeletonization differentiable. The final returned
+    value can be (1 - clDice) when used as a loss.
+
+    Implementation:
+        We utilize 'soft_cldice' from an external library (imported below)
+        which transforms the skeletonization process into a differentiable
+        operation and computes the final soft-clDice.
+
+    Returns:
+        1 - soft_clDice(pred, mask) as a scalar float.
+        Lower is better if using as a loss function.
+    """
     from RSA_deep_working.Metrics.Losses.clDice.cldice_loss.pytorch.cldice import soft_cldice
+    # Temporarily add a batch dimension for soft_cldice
     prediction = prediction.unsqueeze(0)
     mask = mask.unsqueeze(0)
     soft_cldice_instance = soft_cldice()
     return 1 - soft_cldice_instance(prediction, mask).item()
 
+###############################################################################
+# Skeleton Recall Metric Definition
+###############################################################################
 @standardize_float_metric
 def skeleton_recall(prediction, mask, time=0, mtg=None):
+    """
+    Skeleton Recall Metric (&#8203;:contentReference[oaicite:4]{index=4}):
+    ------------------------------------------------------------------------
+    - The Skeleton Recall approach encourages preserving the connectivity
+      of thin, tubular structures by comparing prediction vs. the ground
+      truth skeleton.
+    - Instead of computing a full overlap-based measure, this metric
+      focuses on "how much of the GT skeleton is recalled by the prediction."
+
+    Pseudo-math:
+        SkeletonRecall =  ∑ (S(GT)_i * P_i) / ∑ S(GT)_i
+        where S(GT) denotes a (possibly thickened) skeletonization
+        of the ground truth mask, and P_i is the predicted mask.
+
+    Implementation:
+      - We use 'SoftSkeletonRecallLoss' which computes a differentiable
+        approximation for the recall of the skeleton. The returned value
+        can serve as a loss if desired.
+      - For binary segmentation, the code also prepares two channels:
+        (background, foreground) by concatenation.
+
+    Returns:
+        The skeleton recall value as a float. Typically, a lower result
+        indicates worse matching of skeletons, so for a loss, we might
+        want to maximize this recall or invert it if needed.
+    """
     from RSA_deep_working.Metrics.Losses.Skeleton_Recall.nnunetv2.training.loss.dice import SoftSkeletonRecallLoss
+
+    # We add a batch dimension for the skeleton recall loss
     prediction = prediction.unsqueeze(0)
     mask = mask.unsqueeze(0)
+
     soft_skeleton_recall = SoftSkeletonRecallLoss(do_bg=False)
-    # Préparation pour 2 canaux : background et prédiction
+    # Prepare 2-channel input: background = (1 - pred), foreground = pred
     prediction_2c = torch.cat([1 - prediction, prediction], dim=1)
     mask_2c = torch.cat([1 - mask, mask], dim=1)
+
     return soft_skeleton_recall(prediction_2c, mask_2c).item()
 
+###############################################################################
+# Connectivity Preserving Instance Segmentation Metric (SuperVoxelLoss)
+###############################################################################
 @standardize_float_metric
 def Connectivity_Preserving_Instance_Segmentation(prediction, mask, time=0, mtg=None):
+    """
+    Connectivity Preserving Instance Segmentation (&#8203;:contentReference[oaicite:5]{index=5}):
+    ------------------------------------------------------------------------
+    - This metric (or loss) focuses on penalizing topological errors,
+      especially split or merge errors, in instance segmentation tasks.
+    - The approach extends the concept of non-simple voxels to "supervoxels":
+      connected sets of voxels whose addition/removal changes the total
+      number of connected components.
+
+    Pseudo-math (sketch):
+        1. Identify the false-positive (FP) and false-negative (FN) regions.
+        2. Within these FP/FN volumes, find the connected components
+           that cause connectivity changes (called "critical components").
+        3. Impose additional penalties (via L0) on each critical component
+           to preserve correct connectivity.
+
+    Implementation:
+        The code below uses 'SuperVoxelLoss2D' with user-defined parameters
+        alpha=0.5 and beta=0.5, to demonstrate a basic weighting between
+        voxel-level and topological mistakes. It is applied to 2D data.
+    
+    Returns:
+        The scalar loss value as a float, indicating the topological penalty
+        for connectivity preservation. Lower is better.
+    """
     from RSA_deep_working.Metrics.Losses.supervoxel_loss.src.supervoxel_loss.loss import SuperVoxelLoss2D
+
+    # Instantiate the Supervoxel loss
     SuperVoxelLoss = SuperVoxelLoss2D(alpha=0.5, beta=0.5)
+
+    # Add a batch dimension for the loss
     prediction = prediction.unsqueeze(0)
     mask = mask.unsqueeze(0)
+
+    # Compute the supervoxel-based connectivity-preserving loss
     return SuperVoxelLoss(prediction, mask).item()
+
 
 @standardize_float_metric
 def evaluate_sk_seg(prediction, mask, time=0, mtg_path=None):

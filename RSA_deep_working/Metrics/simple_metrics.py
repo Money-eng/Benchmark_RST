@@ -7,23 +7,21 @@ import torchmetrics.functional.segmentation as FMS
 import numpy as np
 import functools
 
-
 def all_metrics():
     return [dice, f1_score, iou, pixel_accuracy, precision, recall, specificity,
             connectivity_metric, ARI_index, VI_index, ARE_error,
             betti_0_difference, euler_charac_difference]
 
-
 # =============================================================================
-# Décorateur pour standardiser les entrées des métriques
+# Decorator for standardizing the inputs of metrics (conversion to int)
 # =============================================================================
 def standardize_metric(func):
     @functools.wraps(func)
     def wrapper(prediction, mask, time=0, mtg=None):
-        # Conversion en int
+        # Convert to integers
         pred = prediction.int()
         msk = mask.int()
-        # Suppression de la dimension de canal unique (si besoin)
+        # Remove the channel dimension if it is singular
         if pred.dim() == 4 and pred.size(1) == 1:
             pred = pred.squeeze(1)
         if msk.dim() == 4 and msk.size(1) == 1:
@@ -34,10 +32,10 @@ def standardize_metric(func):
 def standardize_float_metric(func):
     @functools.wraps(func)
     def wrapper(prediction, mask, time=0, mtg=None):
-        # Conversion en float (plutôt qu'en int)
+        # Convert to float
         pred = prediction.float()
         msk = mask.float()
-        # Supprimer la dimension de canal unique si présente
+        # Remove the channel dimension if it is singular
         if pred.dim() == 4 and pred.size(1) == 1:
             pred = pred.squeeze(1)
         if msk.dim() == 4 and msk.size(1) == 1:
@@ -46,46 +44,104 @@ def standardize_float_metric(func):
     return wrapper
 
 # =============================================================================
-# Définition des métriques standards
+# Standard Metrics Definitions
 # =============================================================================
 
 @standardize_metric
 def dice(prediction, mask, time=0, mtg=None):
+    """
+    Dice Score Metric:
+        Dice = (2 * |Prediction ∩ Mask|) / (|Prediction| + |Mask|)
+
+    The function computes the Dice coefficient over the binary segmentation.
+    In pseudo-math:
+        dice = 2TP / (2TP + FP + FN)
+    where TP, FP, FN denote true positives, false positives, and false negatives.
+    """
     return FMS.dice_score(prediction, mask, num_classes=2, average='micro').mean().item()
 
 @standardize_metric
 def f1_score(prediction, mask, time=0, mtg=None):
+    """
+    F1 Score Metric:
+        F1 = 2 * (Precision * Recall) / (Precision + Recall)
+
+    This is equivalent to the Dice coefficient in binary segmentation, and it
+    combines precision and recall into one measure.
+    """
     return FMF.f1_score(prediction, mask, average='micro', task='binary').mean().item()
 
 @standardize_metric
 def iou(prediction, mask, time=0, mtg=None):
+    """
+    Intersection over Union (IoU) or Jaccard Index:
+        IoU = |Prediction ∩ Mask| / |Prediction ∪ Mask|
+
+    The function calculates the Jaccard index, a common segmentation metric.
+    """
     return FMF.jaccard_index(prediction, mask, task='binary').mean().item()
 
 @standardize_metric
 def pixel_accuracy(prediction, mask, time=0, mtg=None):
+    """
+    Pixel Accuracy:
+        accuracy = (Number of correctly predicted pixels) / (Total number of pixels)
+
+    This metric measures the proportion of pixels in the prediction that match the ground truth.
+    """
     return FMF.accuracy(prediction, mask, task='binary').mean().item()
 
 @standardize_metric
 def precision(prediction, mask, time=0, mtg=None):
+    """
+    Precision:
+        precision = TP / (TP + FP)
+
+    Measures the fraction of predicted positive pixels that are actually positive.
+    """
     return FMF.precision(prediction, mask, task='binary').mean().item()
 
 @standardize_metric
 def recall(prediction, mask, time=0, mtg=None):
+    """
+    Recall:
+        recall = TP / (TP + FN)
+
+    Measures the fraction of actual positive pixels that are correctly predicted.
+    """
     return FMF.recall(prediction, mask, task='binary').mean().item()
 
 @standardize_metric
 def specificity(prediction, mask, time=0, mtg=None):
-    # Utilise stat_scores pour obtenir tn et fp
+    """
+    Specificity:
+        specificity = TN / (TN + FP)
+
+    Measures the proportion of actual negative pixels that are correctly identified.
+    Here, TN and FP are computed via FMF.stat_scores.
+    """
+    # Use stat_scores to obtain true negatives (tn) and false positives (fp)
     _, fp, tn, _, _ = FMF.stat_scores(prediction, mask, task='binary')
     spec = tn / (tn + fp + 1e-8)
     return spec.mean().item()
 
 # =============================================================================
-# Définition des métriques topology-aware
+# Topology-Aware Metrics Definitions
 # =============================================================================
 
 @standardize_metric
 def connectivity_metric(prediction, mask, time=0, mtg=None):
+    """
+    Connectivity Metric:
+        Let L(P) be the label image from the prediction and L(M) from the mask.
+        Let N_pred = max(label(L(P))) and N_mask = max(label(L(M))).
+        The connectivity score per image is computed as:
+            conn_score = 1 - |N_pred - N_mask| / max(N_pred, N_mask)
+        and the final score is the mean of conn_score over the image batch.
+
+    This metric penalizes differences in the number of connected components between the prediction and the ground truth.
+    A score of 1.0 indicates perfect connectivity, while 0.0 indicates no connectivity.
+    """
     pred_np = prediction.cpu().numpy().astype(np.uint8)
     mask_np = mask.cpu().numpy().astype(np.uint8)
     conn_scores = []
@@ -102,12 +158,39 @@ def connectivity_metric(prediction, mask, time=0, mtg=None):
 
 @standardize_metric
 def ARI_index(prediction, mask, time=0, mtg=None):
+    """
+    Adjusted Rand Index (ARI):
+    
+    The ARI measures the similarity between two data clusterings by considering all pairs of samples and checking
+    whether the clustering assignment of each pair is consistent between the predicted segmentation and the ground truth.
+    
+    It is defined as:
+        ARI = (RI - Expected_RI) / (Max_RI - Expected_RI)
+    
+    where the Rand Index (RI) is given by:
+        RI = (TP + TN) / (TP + TN + FP + FN)
+        -> ratio entre ensembe de pixels bien segmenté sur l'ensemble de pixels
+    It ranges from -1 (bad clustering) to 1 (perfect clustering).
+    """
     pred_np = prediction.cpu().numpy()
     mask_np = mask.cpu().numpy()
     return adjusted_rand_score(mask_np.flatten(), pred_np.flatten())
 
 @standardize_metric
 def ARE_error(prediction, mask, time=0, mtg=None):
+    """
+    Adapted Rand Error (ARE):
+    
+    The ARE is derived from the Rand Index (RI), which computes the similarity between the predicted and ground truth segmentations
+    by comparing pairwise pixel assignments. In this context, the Rand Index is defined as:
+        RI = (number of pixel pairs that are similarly grouped in both prediction and ground truth) / (total number of pixel pairs)
+    
+    where the Rand Index (RI) is given by:
+        RI = (TP + TN) / (TP + TN + FP + FN)
+    
+    The Adapted Rand Error is then defined as:
+        ARE = 1 - RI
+    """
     pred_np = prediction.cpu().numpy()
     mask_np = mask.cpu().numpy()
     try:
@@ -118,6 +201,13 @@ def ARE_error(prediction, mask, time=0, mtg=None):
 
 @standardize_metric
 def VI_index(prediction, mask, time=0, mtg=None):
+    """
+    Variation of Information (VI):
+        VI = H(Mask) + H(Prediction) - 2 * MI(Mask, Prediction)
+
+    Where H is the entropy of the segmentation labels and MI is the mutual information.
+    Lower values indicate better agreement.
+    """
     pred_np = prediction.cpu().numpy()
     mask_np = mask.cpu().numpy()
     H_mask = entropy(mask_np.flatten())
@@ -128,6 +218,14 @@ def VI_index(prediction, mask, time=0, mtg=None):
 
 @standardize_metric
 def betti_0_difference(prediction, mask, time=0, mtg=None):
+    """
+    Betti 0 Difference:
+        Let N_pred = max(label(prediction)) and N_mask = max(label(mask)).
+        betti_0_diff = |N_pred - N_mask| / (N_pred + N_mask + 1e-8)
+
+    This metric measures the normalized difference in the number of connected components,
+    also known as the 0th Betti number difference. A lower value means the topological structure is closer.
+    """
     pred_np = prediction.cpu().numpy().astype(np.uint8)
     mask_np = mask.cpu().numpy().astype(np.uint8)
     scores = []
@@ -139,6 +237,14 @@ def betti_0_difference(prediction, mask, time=0, mtg=None):
 
 @standardize_metric
 def euler_charac_difference(prediction, mask, time=0, mtg=None):
+    """
+    Euler Characteristic Difference:
+        Let E_pred = euler_number(prediction) and E_mask = euler_number(mask).
+        euler_diff = |E_pred - E_mask| / (E_pred + E_mask + 1e-8)
+
+    This metric compares the Euler characteristic (which summarizes connectivity, holes, and cavities)
+    between the prediction and the ground truth. Lower differences imply closer topological similarity.
+    """
     pred_np = prediction.cpu().numpy().astype(np.uint8)
     mask_np = mask.cpu().numpy().astype(np.uint8)
     scores = []
