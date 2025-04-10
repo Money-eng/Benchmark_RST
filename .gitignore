@@ -2,3 +2,18 @@
 .idea/
 # ignore .vscode directory
 .vscode/
+
+tok.txt
+
+# Fichiers de modèles PyTorch / Deep Learning
+*.pth
+*.pt
+*.ckpt
+*.onnx
+*.h5
+*.tflite
+
+checkpoints/
+weights/
+
+events.out.tfevents.*
