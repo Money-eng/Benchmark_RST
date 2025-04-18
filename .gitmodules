@@ -16,3 +16,6 @@
 [submodule "RSML/rsml_lib"]
 	path = RSML/rsml_lib
 	url = https://github.com/Money-eng/RSML
+[submodule "RSA_deep_working/Metrics/topo_pitfalls"]
+	path = RSA_deep_working/Metrics/topo_pitfalls
+	url = https://github.com/Money-eng/topo_pitfalls

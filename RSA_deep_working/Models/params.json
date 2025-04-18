@@ -1,17 +1,6 @@
 {
-  "data_directory": "/home/loai/Images/DataTest/UC1_data",
-  "models": {
-    "Unet": {
-      "model_path": "",
-      "input_size": [1184, 1376],
-      "num_classes": 1,
-      "num_channels": 1
-    },
-    "RootNav2": {
-      "model_path": "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Existing_models/RootNav2",
-      "input_size": [1024, 1024],
-      "num_classes": 1,
-      "num_channels": 3
-    }
-  }
+  "base_directory": "/home/loai/Images/DataTest/UC1_data",
+  "batch_size": 2,
+  "lr": 5e-5,
+  "num_epochs": 300
 }

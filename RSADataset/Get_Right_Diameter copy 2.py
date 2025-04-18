@@ -6,6 +6,7 @@ from rsml import hirros
 import utils.CustomDumper as CD
 from itertools import combinations
 
+# Classes et fonctions pour la gestion des systèmes racinaires
 class RootSystem:
     def __init__(self, folder_path: str, load_date_map: bool = False):
         """

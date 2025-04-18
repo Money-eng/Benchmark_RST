@@ -92,6 +92,50 @@ class RootSystem:
                         print("Le date_map n'est pas chargé, impossible de calculer le diamètre.")
             # Mise à jour des metadata dans le mtg
             self.mtg.graph_properties()['metadata'] = metadata
+        # to remove unwanted date_map values
+        self.correct_date_map()
+    
+    # on calcule le diamètre avant de corriger la date_map ? on va supposer que ça passe :
+    def correct_date_map(self):
+        date_map = self.date_map
+        mtg = self.mtg
+        # get the connected components of the date_map
+        from skimage.measure import label
+        binary_date_map = np.zeros_like(date_map)
+        binary_date_map[date_map > 0] = 1
+        labeled_date_map = label(binary_date_map)
+        cc_of_mtg = set()
+        # for each vertex in the mtg, get the connected component of the date_map associated with the vertex position and add it to the set
+        for vid in mtg.vertices_iter():
+            if mtg.scale(vid) == 0 or mtg.scale(vid) == 1:
+                continue
+            # get the position of the vertex in the date_map
+            positions = mtg.property('geometry')[vid]
+            # get the connected component of the date_map associated with the vertex position
+            for pos in positions:
+                cc = labeled_date_map[int(pos[1]), int(pos[0])]
+                cc_of_mtg.add(cc)
+        cc_date_map = np.unique(labeled_date_map)
+        # if a connected component of the date_map is not in the set, we delete it from the original date_map image
+        #import matplotlib.pyplot as plt
+        #fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+        #ax[0].imshow(date_map)
+        #ax[0].set_title("Date Map")
+        #ax[1].imshow(labeled_date_map)
+        # for each connected component of the date_map, write the number of the connected component in the image at one if its pixel position
+        #for cc in cc_date_map:
+         #   pixel_found = np.where(labeled_date_map == cc)
+          #  if len(pixel_found[0]) > 0:
+           #     x = pixel_found[1][0]
+            #    y = pixel_found[0][0]
+            #    ax[1].text(x, y, str(cc), color='red', fontsize=8)
+        #ax[1].set_title("Labeled Date Map with CC")
+        #plt.show()
+        for cc in cc_date_map:
+            if cc not in cc_of_mtg and cc != 0:
+                date_map[labeled_date_map == cc] = 0
+        #plt.imshow(date_map)
+        #plt.show()
 
     def visualize(self, show_date_map: bool = False, show_diameter_overlay: bool = False):
         """
@@ -375,6 +419,7 @@ class RootSystem:
                 tifffile.imwrite(date_map_save_path, self.date_map)
                 print(f"Date map sauvegardée dans : {date_map_save_path}")
 
+# not used
 def find_crossing_edges(mtg):
     """
     Trouve les arêtes qui se croisent dans le graphe MTG.
@@ -424,7 +469,7 @@ def mtg2rsml(g, rsml_file):
         rsml_file.write(s) 
 
 # Exemple d'utilisation principal
-if __name__ == "__main__0":
+if __name__ == "__main__":
     folder = "/home/loai/Images/DataTest/230629PN021/"
     root_system = RootSystem(folder, load_date_map=True)
 
@@ -445,7 +490,7 @@ if __name__ == "__main__0":
     root_system2 = RootSystem(dest_folder, load_date_map=False)
     root_system2.save2folder(new_dest_Folder)
 
-if __name__ == "__main__":
+if __name__ == "__main__0":
     # Chemin de base contenant tous les dossiers à traiter
     source_base = '/home/loai/Images/DataTest/UC1'
     # Dossier de destination où sera recréée l'arborescence et sauvegardé chaque dataset
