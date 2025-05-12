@@ -1,6 +1,0 @@
-{
-  "base_directory": "/home/loai/Images/DataTest/UC1_data",
-  "batch_size": 2,
-  "lr": 5e-5,
-  "num_epochs": 300
-}

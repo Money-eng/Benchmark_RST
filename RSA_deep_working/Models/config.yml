@@ -1,0 +1,11 @@
+defaults:
+  - model: resnet18
+  - loss: dice
+
+model:
+  name: ${model}
+loss:
+  name: ${loss}
+optimizer:
+  name: adam
+  lr: 1e-3
