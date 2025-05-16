@@ -7,6 +7,10 @@ import torchmetrics.functional.segmentation as FMS
 import numpy as np
 import functools
 
+## https://www.mdpi.com/2072-4292/16/12/2056
+# APLS ? PLS is used to measure the similarity between the extracted road network and the real road network. It is defined by Equation (7). By comparing the average path lengths between them, the accuracy and completeness of the road extraction results can be evaluated, determining whether the topology of the road network is consistent with the real situation. 
+# ECM ? ECM evaluates object connectivity in remote sensing road extraction by quantifying pixel relationships based on entropy. It is defined by Equation (8), where 
+
 
 def all_metrics():
     return {'cpu': all_metrics_cpu(),

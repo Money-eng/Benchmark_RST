@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 import tifffile
-from .Tiff_reader import CachedTiffReader
+from .tiff_reader import CachedTiffReader
 
 
 class RSADataset(Dataset):

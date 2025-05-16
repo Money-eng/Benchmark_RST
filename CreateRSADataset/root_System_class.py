@@ -79,7 +79,7 @@ class RootSystem:
                 if 'diameter' not in metadata['functions']:
                     if self.load_date_map and self.date_map is not None:
                         # Calcul du diamètre à partir du date_map
-                        import Get_Right_Diameter as grd
+                        import CreateRSADataset.right_Diameter as grd
                         diameter = grd.project_root_system_on_diameter_map(self)
                         #diameter2 = grd.project_root_system_on_diameter_maps(self)
                         #metadata['functions']['diameter'] = diameter2

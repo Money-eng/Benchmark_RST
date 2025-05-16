@@ -18,12 +18,6 @@ import numpy as np
 from scipy.ndimage import distance_transform_edt
 from skimage.graph import MCP_Geometric
 
-__all__ = [
-    "euclidean_filtration",
-    "geodesic_filtration",
-]
-
-
 def euclidean_filtration(binary_mask: np.ndarray, inverse: bool = True, show: bool = False) -> np.ndarray:
     """Return an Euclidean-distance based filtration.
 
@@ -46,7 +40,7 @@ def euclidean_filtration(binary_mask: np.ndarray, inverse: bool = True, show: bo
         import numpy as np
 
         # Create a figure with two subplots
-        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+        _, axs = plt.subplots(1, 2, figsize=(10, 5))
 
         # Display the binary mask in the first subplot
         axs[0].imshow(binary_mask, cmap='gray')

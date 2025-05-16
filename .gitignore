@@ -1,0 +1,46 @@
+# ignore pycache files
+__pycache__/
+# ignore all .pyc files
+*.pyc
+# ignore all .pyo files
+*.pyo
+# ignore all .pyd files
+*.pyd
+# ignore all .egg files
+*.egg
+# ignore all .egg-info files
+*.egg-info/
+# ignore all .whl files
+*.whl
+# ignore all .zip files
+*.zip
+# ignore all .tar files
+*.tar
+# ignore all .tar.gz files
+*.tar.gz
+# ignore all .tar.bz2 files
+*.tar.bz2
+# ignore all .tar.xz files
+*.tar.xz
+
+# ignore weights files (deep models)
+*.weights
+*.pth
+# ignore all .log files
+*.log
+# ignore all .out files
+*.out
+# ignore all .tmp files
+*.tmp
+# ignore all .tmp files
+*.temp
+# ignore all .cache files
+*.cache
+
+# ignore vscode or pycharm files
+.vscode/
+.idea/
+# ignore all .DS_Store files
+.DS_Store
+# ignore all .ipynb_checkpoints files
+.ipynb_checkpoints/
