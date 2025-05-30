@@ -2,7 +2,7 @@ import numpy as np
 from scipy.ndimage import distance_transform_edt
 from scipy.spatial import cKDTree
 from skimage.morphology import skeletonize
-from CreateRSADataset.root_System_class import RootSystem
+from root_System_class import RootSystem
 
 def compute_skeleton_and_diameter(date_map, threshold=0):
     """

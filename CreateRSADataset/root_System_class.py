@@ -41,8 +41,11 @@ class RootSystem:
         # Chargement optionnel du dateMap
         if self.load_date_map:
             date_map_file = os.path.join(self.folder_path, "40_date_map.tif")
+            mask_t1_file = os.path.join(self.folder_path, "31_mask_at_t1.tif")
             if os.path.exists(date_map_file):
                 self.date_map = tifffile.imread(date_map_file)
+            if os.path.exists(mask_t1_file):
+                self.mask_t1 = tifffile.imread(mask_t1_file)
             else:
                 print(f"Avertissement: dateMap non trouvé dans {self.folder_path}")
 
@@ -79,7 +82,7 @@ class RootSystem:
                 if 'diameter' not in metadata['functions']:
                     if self.load_date_map and self.date_map is not None:
                         # Calcul du diamètre à partir du date_map
-                        import CreateRSADataset.right_Diameter as grd
+                        import right_Diameter as grd
                         diameter = grd.project_root_system_on_diameter_map(self)
                         #diameter2 = grd.project_root_system_on_diameter_maps(self)
                         #metadata['functions']['diameter'] = diameter2
@@ -416,7 +419,10 @@ class RootSystem:
             if save_date_map and self.date_map is not None:
                 date_map_filename = "40_date_map.tif"
                 date_map_save_path = os.path.join(destination_folder, date_map_filename)
+                mask_at_t1 = "31_mask_at_t1.tif"
                 tifffile.imwrite(date_map_save_path, self.date_map)
+                mask_save_path = os.path.join(destination_folder, mask_at_t1)
+                tifffile.imwrite(mask_save_path, self.mask_t1)  # Sauvegarde un masque binaire
                 print(f"Date map sauvegardée dans : {date_map_save_path}")
 
 # not used
@@ -470,7 +476,7 @@ def mtg2rsml(g, rsml_file):
 
 # Exemple d'utilisation principal
 if __name__ == "__main__":
-    folder = "/home/loai/Images/DataTest/230629PN021/"
+    folder = "/home/loai/Images/DataTest/230629PN016/"
     root_system = RootSystem(folder, load_date_map=True)
 
     print("Image stack shape:", root_system.image_stack.shape)
