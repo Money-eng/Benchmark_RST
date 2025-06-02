@@ -424,6 +424,18 @@ class RootSystem:
                 mask_save_path = os.path.join(destination_folder, mask_at_t1)
                 tifffile.imwrite(mask_save_path, self.mask_t1)  # Sauvegarde un masque binaire
                 print(f"Date map sauvegardée dans : {date_map_save_path}")
+            
+            # copy /home/loai/Images/DataTest/UC1/InfoSerieRootSystemTracker.csv to destination_folder
+            import shutil
+            info_file_src = "/home/loai/Images/DataTest/UC1/InfoSerieRootSystemTracker.csv"
+            info_file_dst = os.path.join(destination_folder, "InfoSerieRootSystemTracker.csv")
+            try:
+                shutil.copy(info_file_src, info_file_dst)
+                print(f"Fichier InfoSerieRootSystemTracker.csv copié dans : {info_file_dst}")
+            except Exception as e:
+                print(f"Erreur lors de la copie du fichier InfoSerieRootSystemTracker.csv : {e}")
+            
+
 
 # not used
 def find_crossing_edges(mtg):

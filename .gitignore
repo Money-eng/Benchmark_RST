@@ -44,3 +44,8 @@ __pycache__/
 .DS_Store
 # ignore all .ipynb_checkpoints files
 .ipynb_checkpoints/
+
+.tif 
+.tiff 
+.rsml
+.csv
