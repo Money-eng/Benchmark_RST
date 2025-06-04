@@ -1,14 +1,14 @@
-from torch.nn import BCELoss
+import torch
 from .dice_loss import DiceLoss
 from .bce_dice_loss import BCEDiceLoss
 
 LOSS_FACTORIES = {
-    "bce": BCELoss,
+    "bce": torch.nn.BCELoss,
     "dice": DiceLoss,
     "bce_dice": BCEDiceLoss
 }
 
-def get_loss(loss_config):
+def get_loss(loss_config: dict) -> torch.nn.Module:
     """
     Returns the loss function corresponding to loss_config["name"]
     """

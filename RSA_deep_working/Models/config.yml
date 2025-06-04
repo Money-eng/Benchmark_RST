@@ -9,8 +9,8 @@ model:
   params:
     in_channels: 1
     out_channels: 1
-    encoder_weights: None
-    decoder_attention_type: None
+    encoder_weights: null
+    decoder_attention_type: null
     return_logits: False
     
 loss:
@@ -24,27 +24,28 @@ optimizer:
   weight_decay: 0
 
 metrics:
-  - name: dice
-    params:
-      smooth: 1e-6
-  - name: iou
-    params:
-      smooth: 1e-6
-  - name: accuracy
-    params:
-      smooth: 1e-6
-  - name: precision
-    params:
-      smooth: 1e-6
+  gpu:
+    - { name: "dice" }
+    - { name: "iou" }
+    - { name: "pixel_accuracy" }
+    - { name: "precision" }
+    - { name: "recall" }
+    - { name: "specificity" }
+  cpu:
+    - { name: "connectivity" }
+    - { name: "ari_index" }
+    - { name: "are_error" }
+    - { name: "vi_index" }
+    - { name: "betti0_difference" }
+    - { name: "euler_charac_difference" }
 
 data:
   base_dir: /home/loai/Images/DataTest/UC1_data
+  batch_size: 1
 
 training:
   epochs: 100
-  batch_size: 16
   device: cuda
-  shuffle: true
   save_best_only: true
   checkpoint_dir: /home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/Checkpoints/
 

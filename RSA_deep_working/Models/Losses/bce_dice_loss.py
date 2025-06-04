@@ -6,8 +6,8 @@ class BCEDiceLoss(nn.Module):
     def __init__(self, weight=0.5, smooth=1.0, **kwargs):
         super(BCEDiceLoss, self).__init__()
         self.bce = nn.BCELoss()
-        self.dice = DiceLoss(smooth=smooth) # DiceLoss class from dice_loss.py
-        self.weight = weight
+        self.dice = DiceLoss(smooth=float(smooth)) # DiceLoss class from dice_loss.py
+        self.weight = float(weight)
 
     def forward(self, inputs, targets):
         bce_loss = self.bce(inputs, targets)

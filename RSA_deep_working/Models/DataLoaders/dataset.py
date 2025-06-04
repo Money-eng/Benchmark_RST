@@ -3,6 +3,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 import tifffile
+from PIL import Image
 from .tiff_reader import CachedTiffReader
 
 
@@ -91,37 +92,68 @@ class RSADataset(Dataset):
 
     def __getitem__(self, idx):
         img_path, mask_path, num_slices, mtg_path = self.samples[idx]
+
         if self.mode == 'series':
-            img = tifffile.imread(img_path)  # just read the whole image stack
-            mask_raw = tifffile.imread(mask_path)
-            time = num_slices  # here number of slices is the time
+            img_np   = tifffile.imread(img_path)         # NumPy array, maybe uint16 or int
+            mask_raw = tifffile.imread(mask_path)        # Likely a date‐map int64
+
+            # Convert image → PIL so that img_transform (Pad, etc.) works:
+            img = Image.fromarray(img_np)
+
+            # Cast mask_raw to uint8 before giving to PIL:
+            mask_uint8 = mask_raw.astype(np.uint8)
+            mask = Image.fromarray(mask_uint8)
+
+            time = num_slices
             if self.img_transform:
                 img = self.img_transform(img)
-            mask = (  # mask is not binary, it is a date map
-                # apply transformation to the whole mask
-                self.mask_transform_series(mask_raw)
-                if self.mask_transform_series
-                else mask_raw
-            )
-        else:
-            z = num_slices  # not here, it's the slice number
-            img = self.tiff_reader.get_page(
-                img_path, z)  # read a specific slice (z)
-            mask_raw = tifffile.imread(mask_path)
-            mask = np.where((mask_raw != 0) & (mask_raw <= z+1),
-                            1, 0)  # mask is binary until time z
+
+            # If you have a transform for masks (series-level), remember to give it a PIL mask:
+            if self.mask_transform_series:
+                # (mask_transform_series may expect a PIL Image)
+                mask = self.mask_transform_series(mask)
+            else:
+                # If you want to keep it as a raw NumPy fallback, you could do:
+                mask = torch.from_numpy(mask_uint8).float()
+
+        else:  # mode == 'image'
+            z = num_slices
+            img_np   = self.tiff_reader.get_page(img_path, z)  # NumPy array
+            mask_raw = tifffile.imread(mask_path)              # date‐map int64
+
+            # Build binary mask up to slice z:
+            mask_np = np.where((mask_raw != 0) & (mask_raw <= z + 1), 1, 0)
+
+            # Convert image → PIL:
+            img = Image.fromarray(img_np)
+
+            # Cast the binary mask to uint8:
+            mask_uint8 = mask_np.astype(np.uint8)
+            mask = Image.fromarray(mask_uint8)
+
             if self.img_transform:
                 img = self.img_transform(img)
-            mask = (
-                self.mask_transform_image(mask)
-                if self.mask_transform_image
-                else mask
-            )
+
+            if self.mask_transform_image:
+                mask = self.mask_transform_image(mask)
+            else:
+                mask = torch.from_numpy(mask_uint8).float()
+
             time = z
-        # to convert grayscale to RGB (a bit overkill for RSA images)
+
+        # If you really need RGB channels (rare for RSA), you can do this later on a tensor.
         if self.as_RGB:
-            img = img.repeat(3, 1, 1)
+            # But if img is still PIL here, you’d do something like:
+            # img = transforms.Grayscale(num_output_channels=3)(img)
+            # or convert back to tensor then repeat channels. 
+            pass
+
         mtg = mtg_path if self.image_with_mtg else torch.tensor(0)
-        # mask to float tensor
-        mask = torch.tensor(mask, dtype=torch.float32)
+
+        # At this point, ensure `mask` is a tensor (if you want to do `mask.clone()`):
+        if isinstance(mask, Image.Image):
+            # Convert PIL mask back to tensor if your training loop expects that:
+            mask = torch.from_numpy(np.array(mask)).float()
+
+        # Now you can safely call `mask.clone().detach()` in your training loop.
         return img, mask, time, mtg

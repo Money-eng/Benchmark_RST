@@ -1,3 +1,4 @@
+import torch
 from .unet import UNet
 from .segformer import Segformer
 
@@ -6,7 +7,7 @@ MODEL_FACTORIES = {
     "segformer": Segformer,
 }
 
-def get_model(model_config):
+def get_model(model_config: dict) -> torch.nn.Module:
     name = model_config["name"]
     params = model_config.get("params", {})
     if name not in MODEL_FACTORIES:

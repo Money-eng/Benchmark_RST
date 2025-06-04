@@ -1,10 +1,8 @@
-# utils/logger.py
-
 import logging
 from torch.utils.tensorboard import SummaryWriter
 
 
-def get_logger(log_file=None):
+def get_logger(log_file=None) -> logging.Logger:
     """
     Returns a logger instance.
     If log_file is specified, logs are also written to this file.
@@ -23,18 +21,19 @@ def get_logger(log_file=None):
 
 
 class TensorboardLogger:
-    """
-    Simple wrapper for tensorboard logging
-    """
+    def __init__(self, log_dir: str):
+        self.writer = SummaryWriter(log_dir=log_dir)
 
-    def __init__(self, log_dir):
-        self.writer = SummaryWriter(log_dir)
-
-    def log_scalar(self, tag, value, step):
+    def log_scalar(self, tag: str, value: float, step: int):
         self.writer.add_scalar(tag, value, step)
+
+    def log_image(self, tag: str, img_tensor, step: int):
+        # img_tensor : Tensor CxHxW ou NxCxHxW
+        self.writer.add_images(tag, img_tensor, step)
 
     def close(self):
         self.writer.close()
+
 
 def log_dataset_stats(
     n_series, n_images, n_train_series, n_val_series, n_test_series,
