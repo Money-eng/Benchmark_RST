@@ -11,7 +11,7 @@ class F1Score(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
+    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor, time, mtg) -> float:
         """
         F1 Score binaire. Equivalent au Dice dans la plupart des cas,
         mais on utilise torchmetrics.functional.f1_score().

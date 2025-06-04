@@ -11,12 +11,12 @@ class Precision(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
+    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor, time, mtg) -> float:
         """
         Precision binaire : TP / (TP + FP).
-        """
-        pred = prediction.float()
-        msk = mask.float()
+        """        
+        pred_bin = (prediction > 0.5).float()
+        msk_bin = (mask > 0.5).float()
         
-        score = FMF.precision(pred, msk, task="binary")
+        score = FMF.precision(pred_bin, msk_bin, task="binary")
         return score.mean().item()

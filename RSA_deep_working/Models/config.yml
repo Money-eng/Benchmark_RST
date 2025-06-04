@@ -20,7 +20,7 @@ loss:
 
 optimizer:
   name: Adam
-  learning_rate: 1e-4
+  learning_rate: 1e-3
   weight_decay: 0
 
 metrics:
@@ -40,12 +40,12 @@ metrics:
     - { name: "euler_charac_difference" }
 
 data:
-  base_dir: /home/loai/Images/DataTest/UC1_data
-  batch_size: 1
+  base_dir: /home/loai/data/UC1_data
+  batch_size: 8
 
 training:
   epochs: 100
   device: cuda
   save_best_only: true
-  checkpoint_dir: /home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/Checkpoints/
+  checkpoint_dir: /home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/Checkpoints
 

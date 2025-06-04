@@ -11,7 +11,7 @@ class Dice(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
+    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor, time, mtg) -> float:
         """
         Dice coefficient (Binary). On considère que `prediction` et `mask`
         sont des tenseurs de forme [B, 1, H, W] ou [B, H, W], déjà sigmoidés/binaire.

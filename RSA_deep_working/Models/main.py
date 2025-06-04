@@ -85,7 +85,7 @@ if __name__ == "__main__":
     # 7) Création des loggers
     # ----------------------------------------
     # Logger Python (console / fichier si configuré)
-    logger = get_logger()  # Ex. renvoie un objet logging.Logger déjà configuré
+    logger = get_logger("/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/log_file.log")
 
     # TensorBoard logger : on crée un dossier au sein de checkpoint_dir/tensorboard
     tb_log_dir = os.path.join(config["training"]["checkpoint_dir"], "tensorboard_logs")

@@ -11,7 +11,7 @@ class IoU(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
+    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor, time, mtg) -> float:
         """
         Intersection over Union (Jaccard) for binary masks.
         We threshold both prediction and mask at 0.5, so that jaccard_index

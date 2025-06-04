@@ -27,9 +27,9 @@ class TensorboardLogger:
     def log_scalar(self, tag: str, value: float, step: int):
         self.writer.add_scalar(tag, value, step)
 
-    def log_image(self, tag: str, img_tensor, step: int):
+    def log_image(self, tag, img_tensor, global_step=None, walltime=None, dataformats="NCHW"):
         # img_tensor : Tensor CxHxW ou NxCxHxW
-        self.writer.add_images(tag, img_tensor, step)
+        self.writer.add_images(tag, img_tensor, global_step=global_step, walltime=walltime, dataformats=dataformats)
 
     def close(self):
         self.writer.close()

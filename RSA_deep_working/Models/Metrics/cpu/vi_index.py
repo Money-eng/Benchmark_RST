@@ -12,14 +12,14 @@ class VIIndex(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
+    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor, time, mtg) -> float:
         """
         Variation of Information (VI) :
             VI = H(mask) + H(pred) - 2 * MI(mask, pred)
         Pour avoir un score « plus haut = meilleur », on renvoie 1/(1+VI).
         """
-        pred_np = prediction.detach().cpu().numpy().flatten()
-        mask_np = mask.detach().cpu().numpy().flatten()
+        pred_np = prediction.numpy().flatten()
+        mask_np = mask.numpy().flatten()
         h_mask = entropy(mask_np)
         h_pred = entropy(pred_np)
         mi = mutual_info_score(mask_np, pred_np)

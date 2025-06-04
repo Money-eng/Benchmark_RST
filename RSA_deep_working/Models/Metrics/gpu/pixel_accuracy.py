@@ -11,7 +11,7 @@ class PixelAccuracy(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
+    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor, time, mtg) -> float:
         """
         Pixel accuracy (binaire) : proportion de pixels correctement classés.
         """

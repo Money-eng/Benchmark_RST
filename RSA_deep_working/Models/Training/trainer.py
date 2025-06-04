@@ -4,6 +4,8 @@ import os
 import torch
 from tqdm import tqdm
 from logging import Logger
+from utils.logger import TensorboardLogger
+from .evaluator import Evaluator
 from utils.misc import get_device
 
 
@@ -15,9 +17,9 @@ class Trainer:
         criterion: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         config: dict,
-        evaluator,
+        evaluator: Evaluator,
         logger: Logger = None,
-        tb_logger=None,
+        tb_logger: TensorboardLogger = None,
         device: torch.device = None,
     ):
         """
@@ -41,7 +43,11 @@ class Trainer:
         os.makedirs(self.checkpoint_dir, exist_ok=True)
 
         self.evaluator = evaluator
-        self.device = device if device is not None else get_device(preferred=config["training"].get("device", "cuda"))
+        self.device = (
+            device
+            if device is not None
+            else get_device(preferred=config["training"].get("device", "cuda"))
+        )
 
         self.logger = logger
         self.tb_logger = tb_logger
@@ -60,17 +66,19 @@ class Trainer:
 
     def train(self):
         """
-        Boucle d'entraînement principale, avec : 
+        Boucle d'entraînement principale, avec :
         - forward + backward / mise à jour des poids
         - calcul de la loss au *batch* et à la fin de chaque epoch
         - évaluation sur validation + TensorBoard + sauvegarde du meilleur modèle
         """
         if self.logger:
-            self.logger.info(f"[Trainer] Démarrage de l'entraînement pour {self.epochs} epochs")
+            self.logger.info(
+                f"[Trainer] Démarrage de l'entraînement pour {self.epochs} epochs"
+            )
         else:
             print(f"[Trainer] Démarrage de l'entraînement pour {self.epochs} epochs")
 
-        best_val_metric = -float("inf")
+        best_metric_val = {}
         global_step = 0
 
         for epoch in range(1, self.epochs + 1):
@@ -80,37 +88,42 @@ class Trainer:
             self.model.train()
             epoch_loss = 0.0
 
-            pbar = tqdm(self.train_loader, desc=f"Epoch {epoch}/{self.epochs} [Train]", leave=False, dynamic_ncols=True)
-            for imgs, masks, time, mtg in pbar:
+            pbar = tqdm(
+                self.train_loader,
+                desc=f"Epoch {epoch}/{self.epochs} [Train]",
+                leave=False,
+                dynamic_ncols=True,
+            )
+            for imgs, masks, _, _ in pbar:
                 imgs, masks = imgs.to(self.device), masks.to(self.device)
 
-                # 1. forward
                 preds = self.model(imgs)
                 loss = self.criterion(preds, masks)
 
-                # 2. backward + mise à jour
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
 
-                # 3. accumulation de la loss
                 epoch_loss += loss.item()
                 pbar.set_postfix({"batch_loss": f"{loss.item():.4f}"})
 
-                # 4. logging TensorBoard (chaque batch)
                 if self.tb_logger:
-                    self.tb_logger.log_scalar("train/batch_loss", loss.item(), global_step)
+                    self.tb_logger.log_scalar(
+                        "train/batch_loss", loss.item(), global_step
+                    )
 
                 global_step += 1
 
-            # loss moyenne sur l'epoch
             avg_epoch_loss = epoch_loss / len(self.train_loader)
 
-            # 5. Logging après epoch
             if self.logger:
-                self.logger.info(f"[Trainer] Epoch {epoch}/{self.epochs} | Train Loss: {avg_epoch_loss:.4f}")
+                self.logger.info(
+                    f"[Trainer] Epoch {epoch}/{self.epochs} | Train Loss: {avg_epoch_loss:.4f}"
+                )
             else:
-                print(f"[Trainer] Epoch {epoch}/{self.epochs} | Train Loss: {avg_epoch_loss:.4f}")
+                print(
+                    f"[Trainer] Epoch {epoch}/{self.epochs} | Train Loss: {avg_epoch_loss:.4f}"
+                )
 
             if self.tb_logger:
                 self.tb_logger.log_scalar("train/epoch_loss", avg_epoch_loss, epoch)
@@ -118,33 +131,38 @@ class Trainer:
             # ---------------------
             # 2) EVALUATION SUR VALIDATION
             # ---------------------
-            val_results = self.evaluator.evaluate(on_test=False)
-            # val_results est un dict { "Dice": 0.85, "IoU": 0.78, ... }
+            val_results = self.evaluator.evaluate(on_test=False, on_serie=False)
+            # val_serie_results = self.evaluator.evaluate(on_test=False, on_serie=True) # TODO
 
-            # Concaténation en chaîne pour le logger
+            # String to log the validation results -> k
             val_str = ", ".join(f"{k}: {v:.4f}" for k, v in val_results.items())
             if self.logger:
-                self.logger.info(f"[Trainer] Epoch {epoch}/{self.epochs} | Val : {val_str}")
+                self.logger.info(
+                    f"[Trainer] Epoch {epoch}/{self.epochs} | Val : {val_str}"
+                )
             else:
                 print(f"[Trainer] Epoch {epoch}/{self.epochs} | Val : {val_str}")
 
-            # 6. Logging TensorBoard pour chaque métrique de validation
+            # Logging TensorBoard
             if self.tb_logger:
                 for metric_name, metric_val in val_results.items():
                     self.tb_logger.log_scalar(f"val/{metric_name}", metric_val, epoch)
 
             # ---------------------
-            # 3) SAUVEGARDE DU MEILLEUR MODELE
+            # 3) SAUVEGARDE DU MEILLEUR MODELE pour chaque metrique
             # ---------------------
-            # On se base sur la première métrique du dict (ordonnée comme get_metrics l'a retourné)
-            first_metric_value = list(val_results.values())[0]
-            if first_metric_value > best_val_metric:
-                best_val_metric = first_metric_value
-                self._save_checkpoint(epoch, first_metric_value)
-                if self.logger:
-                    self.logger.info(f"[Trainer] Nouveau meilleur modèle (val {first_metric_value:.4f}) enregistré.")
-                else:
-                    print(f"[Trainer] Nouveau meilleur modèle (val {first_metric_value:.4f}) enregistré.")
+            if not best_metric_val:
+                for metric_name, metric_val in val_results.items():
+                    best_metric_val[metric_name] = metric_val
+                    self._save_checkpoint(epoch, metric_name, metric_val)
+            else:
+                for metric_name, metric_val in val_results.items():
+                    if (
+                        metric_name not in best_metric_val
+                        or metric_val > best_metric_val[metric_name]
+                    ):
+                        best_metric_val[metric_name] = metric_val
+                        self._save_checkpoint(epoch, metric_name, metric_val)
 
         # Fin de la boucle d'entraînement
         if self.logger:
@@ -152,12 +170,12 @@ class Trainer:
         else:
             print("[Trainer] Entraînement terminé.")
 
-    def _save_checkpoint(self, epoch: int, metric_val: float):
+    def _save_checkpoint(self, epoch: int, metric_name: str, metric_val: float):
         """
         Sauvergarde du state_dict du modèle dans checkpoint_dir.
         On ajoute epoch et valeur de métrique dans le nom de fichier.
         """
-        filename = f"{self.model.__class__.__name__}_epoch{epoch:03d}_val{metric_val:.4f}.pth"
+        filename = f"{self.model.__class__.__name__}_epoch{epoch:03d}_{metric_name}_{metric_val:.4f}.pth"
         filepath = os.path.join(self.checkpoint_dir, filename)
         torch.save(self.model.state_dict(), filepath)
         if self.logger:

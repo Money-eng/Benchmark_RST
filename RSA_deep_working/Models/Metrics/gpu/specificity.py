@@ -10,7 +10,7 @@ class Specificity(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
+    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor, time, mtg) -> float:
         """
         Spécificité (TN / (TN + FP)) pour segmentation binaire, 
         calculée manuellement quand torchmetrics.stat_scores n'existe pas.
@@ -18,8 +18,8 @@ class Specificity(BaseMetric):
         On suppose que `prediction` et `mask` sont déjà des tenseurs {0,1}
         de forme [B, 1, H, W] ou [B, H, W].
         """
-        pred = prediction.float()
-        msk = mask.float()
+        pred = (prediction > 0.5).float()
+        msk = (mask > 0.5).float()
 
         # 1) On s'assure qu'on ait un tenseur [B, H, W], pas [B,1,H,W]
         if pred.dim() == 4 and pred.size(1) == 1:
