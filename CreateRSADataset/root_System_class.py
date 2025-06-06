@@ -487,7 +487,7 @@ def mtg2rsml(g, rsml_file):
         rsml_file.write(s) 
 
 # Exemple d'utilisation principal
-if __name__ == "__main__":
+if __name__ == "__main_0_":
     folder = "/home/loai/Images/DataTest/230629PN016/"
     root_system = RootSystem(folder, load_date_map=True)
 
@@ -508,7 +508,7 @@ if __name__ == "__main__":
     root_system2 = RootSystem(dest_folder, load_date_map=False)
     root_system2.save2folder(new_dest_Folder)
 
-if __name__ == "__main__0":
+if __name__ == "__main__":
     # Chemin de base contenant tous les dossiers à traiter
     source_base = '/home/loai/Images/DataTest/UC1'
     # Dossier de destination où sera recréée l'arborescence et sauvegardé chaque dataset

@@ -71,7 +71,7 @@ class Evaluator:
             ):
                 imgs = imgs.to(self.device)
                 masks = masks.to(self.device)
-                
+
                 preds = self.model(imgs)  # shape [B, 1, H, W]
 
                 for metric in self.gpu_metrics:
@@ -85,25 +85,13 @@ class Evaluator:
                     name = metric.__class__.__name__
                     value = metric(preds_cpu, masks_cpu, time, mtg)
                     results[name].append(value)
-                    
+
                 if save_first_pred and self.tb_logger:
                     # Sauvegarde la première image, masque et prédiction dans TensorBoard
                     print(mtg)
-                    self.tb_logger.log_image(
-                        "Image",
-                        imgs, 
-                        0  
-                    )
-                    self.tb_logger.log_image(
-                        "Mask",
-                        masks,  
-                        0  
-                    )
-                    self.tb_logger.log_image(
-                        "Prediction",
-                        preds, 
-                        0  
-                    )
+                    self.tb_logger.log_image("Image", imgs, 0)
+                    self.tb_logger.log_image("Mask", masks, 0)
+                    self.tb_logger.log_image("Prediction", preds, 0)
                     save_first_pred = False
         mean_results = {}
         for name in results:

@@ -49,3 +49,5 @@ training:
   save_best_only: true
   checkpoint_dir: /home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/Checkpoints
 
+rst:
+  jar_path: /home/loai/Documents/code/RSMLExtraction/RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar

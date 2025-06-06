@@ -65,7 +65,7 @@ def generate_graph_with_java(input_path: str, output_dir: str, acq_times: list,
         "io.github.rocsg.rootsystemtracker.PipelineActionsHandler",
         f"--input={input_path}",
         f"--output={output_dir}",
-        f"--acqTimes={','.join(str(x) for x in acq_times)}" # format = "0.0,13.6571,19.6551,..."
+        f"--acqTimes={','.join(str(x) for x in acq_times)}"
 
     ]
     try:
