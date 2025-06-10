@@ -105,6 +105,7 @@ if __name__ == "__main__":
         device=device,
         logger=logger,
         tb_logger=tb_logger,
+        jar_path=config["rst"].get("jar_path", "/home/loai/Documents/code/RSMLExtraction/RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar"),
     )
 
     # ----------------------------------------

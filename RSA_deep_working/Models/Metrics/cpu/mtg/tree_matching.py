@@ -3,7 +3,7 @@
 import numpy as np
 import torch
 import tempfile
-from ..base import BaseMetric
+from ...base import BaseMetric
 from utils.root_System_class import RootSystem
 
 

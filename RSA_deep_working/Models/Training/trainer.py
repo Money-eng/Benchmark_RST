@@ -131,7 +131,7 @@ class Trainer:
             # ---------------------
             # 2) EVALUATION SUR VALIDATION
             # ---------------------
-            val_results = self.evaluator.evaluate(on_test=False, on_serie=False)
+            val_results = self.evaluator.evaluate(on_test=False, last_loss_value=avg_epoch_loss)
             # val_serie_results = self.evaluator.evaluate(on_test=False, on_serie=True) # TODO
 
             # String to log the validation results -> k

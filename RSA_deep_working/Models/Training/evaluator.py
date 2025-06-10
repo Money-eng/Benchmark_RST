@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 from logging import Logger
 from utils.logger import TensorboardLogger
-
+from utils.launch_RST import process_date_map
 
 class Evaluator:
     def __init__(
@@ -18,6 +18,7 @@ class Evaluator:
         device: torch.device,
         logger: Logger = None,
         tb_logger: TensorboardLogger = None,
+        jar_path: str = None,
         epoch: int = 0,
     ):
         """
@@ -38,6 +39,8 @@ class Evaluator:
         self.gpu_metrics = metrics.get("gpu", [])
         self.cpu_metrics = metrics.get("cpu", [])
 
+        self.jar_path = jar_path
+
         self.logger = logger
         self.tb_logger = tb_logger
 
@@ -46,7 +49,7 @@ class Evaluator:
         else:
             print("[Evaluator] Initialisation terminée.")
 
-    def evaluate(self, on_test: bool = False, on_serie: bool = False) -> dict:
+    def evaluate(self, last_loss_value, on_test: bool = False) -> dict:
         """
         Calcule toutes les métriques pour l'ensemble des batches de validation (ou test si on_test=True).
         Retourne un dict { metric_name: moyenne_sur_tous_les_batches }.
@@ -54,11 +57,8 @@ class Evaluator:
         self.model.eval()
 
         dataloader = self.test_dataloader if on_test else self.val_dataloader
-        if on_serie:
-            dataloader = (
-                self.test_series_dataloader if on_test else self.val_series_dataloader
-            )
-
+        data_loader_series = self.test_series_dataloader if on_test else self.val_series_dataloader
+        
         results = {}
         for metric in self.gpu_metrics + self.cpu_metrics:
             name = metric.__class__.__name__
@@ -67,8 +67,9 @@ class Evaluator:
         save_first_pred = True
         with torch.no_grad():
             for imgs, masks, time, mtg in tqdm(
-                dataloader, desc="Evaluating", leave=False, dynamic_ncols=True
+                dataloader, desc="Evaluating image by image", leave=False, dynamic_ncols=True
             ):
+                print(f"Processing batch with mtg: {mtg}")
                 imgs = imgs.to(self.device)
                 masks = masks.to(self.device)
 
@@ -93,6 +94,21 @@ class Evaluator:
                     self.tb_logger.log_image("Mask", masks, 0)
                     self.tb_logger.log_image("Prediction", preds, 0)
                     save_first_pred = False
+                    
+            #if accuracy loss gives us more than 80% accuracy, we can process the whole series
+            if last_loss_value < 0.2:
+                print("Processing the whole series")
+                for imgs, masks, time, mtgs in tqdm(
+                    dataloader, desc="Evaluating whole series", leave=False, dynamic_ncols=True
+                ):
+                    imgs = imgs.to(self.device)
+                    masks = masks.to(self.device)
+
+                    preds = self.model(imgs)
+                    
+                    mtg_gt, mtg_pred = process_date_map(mtgs, preds, jar_path= self.jar_path)
+                    
+                
         mean_results = {}
         for name in results:
             mean_results[name] = torch.mean(torch.tensor(results[name])).item()

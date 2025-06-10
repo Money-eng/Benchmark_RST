@@ -112,7 +112,3 @@ if __name__ == "__main__":
     non_mono = check_area_monotony(curve_dict)
     save_results(non_mono, "monotony_violations.pkl")
     print(f"Number of area monotony violations: {len(non_mono)}")
-
-
-
-    
