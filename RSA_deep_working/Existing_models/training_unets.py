@@ -1,7 +1,8 @@
 import sys
-import os
-import numpy as np
+
 import importlib
+import numpy as np
+import os
 
 # Remontée de deux niveaux pour accéder à Data_loader
 current_dir = os.getcwd()
@@ -23,7 +24,6 @@ except ModuleNotFoundError as e:
 
 # %%
 import torch
-import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
@@ -33,13 +33,11 @@ import matplotlib.pyplot as plt
 import rsml
 import tifffile
 
-
 from RSA_deep_working.Data_loader.class_data_loaders import DirectoryRSAClass
 
 # importing pretrained segmentation model
 import segmentation_models_pytorch as smp
 from torch.utils.tensorboard import SummaryWriter
-
 
 # %% [markdown]
 # ## Dataset and data loaders
@@ -60,28 +58,29 @@ import torchvision.transforms as transforms
 H, W = (1166, 1348)
 
 H_new, W_new = (1184, 1376)
-padding_bottom, padding_right = H_new - H, W_new - W # the opposite lol
+padding_bottom, padding_right = H_new - H, W_new - W  # the opposite lol
 print("pad :", padding_right, padding_bottom)
 
 # Transformations pré-calculées
 img_transform = transforms.Compose([
     transforms.ToTensor(),
-    #transforms.Resize((H_new, W_new), interpolation=transforms.InterpolationMode.BILINEAR),
+    # transforms.Resize((H_new, W_new), interpolation=transforms.InterpolationMode.BILINEAR),
     transforms.Pad(padding=(0, 0, padding_right, padding_bottom), fill=0),
     transforms.Normalize(mean=[0.5], std=[0.5])
 ])
 mask_transform_series = transforms.Compose([
     transforms.ToTensor(),
-    #transforms.Resize((H_new, W_new), interpolation=transforms.InterpolationMode.NEAREST),
+    # transforms.Resize((H_new, W_new), interpolation=transforms.InterpolationMode.NEAREST),
     transforms.Pad(padding=(0, 0, padding_right, padding_bottom), fill=0),
-    
+
 ])
 mask_transform_image = transforms.Compose([
     transforms.ToTensor(),
-    
-    #transforms.Resize((H_new, W_new), interpolation=transforms.InterpolationMode.NEAREST),
+
+    # transforms.Resize((H_new, W_new), interpolation=transforms.InterpolationMode.NEAREST),
     transforms.Pad(padding=(0, 0, padding_right, padding_bottom), fill=0),
 ])
+
 
 def mtg_transform(mtg):
     """
@@ -91,6 +90,7 @@ def mtg_transform(mtg):
     # Par exemple, convertir les coordonnées en tenseur
     # ou appliquer d'autres transformations spécifiques
     return mtg
+
 
 # %%
 # Optimisation de la lecture des TIFF : mise en cache par fichier
@@ -105,11 +105,13 @@ class CachedTiffReader:
                 self.cache[img_path] = [page.asarray() for page in tif.pages]
         return self.cache[img_path][key]
 
+
 tiff_reader = CachedTiffReader()
+
 
 class RSASeg2DDataset(Dataset):
     def __init__(self, rsa_dir_loader, mode='series', img_transform=None,
-                mask_transform_series=None, mask_transform_image=None, image_with_mtg=False, as_RGB=False):
+                 mask_transform_series=None, mask_transform_image=None, image_with_mtg=False, as_RGB=False):
         """
         mode: 'series' pour charger l'ensemble de la série temporelle,
             'image' pour charger image par image.
@@ -143,7 +145,7 @@ class RSASeg2DDataset(Dataset):
 
     def __len__(self):
         return len(self.samples)
-    
+
     def num_times(self, idx):
         """
         Retourne le nombre de slices (temps) que comporte la série.
@@ -186,7 +188,7 @@ class RSASeg2DDataset(Dataset):
             img = img.repeat(3, 1, 1)
         # Gestion du retour : si image_with_mtg est activé, on retourne mtg_path, sinon un tensor nul
         additional = mtg_path if self.image_with_mtg else torch.tensor(0)
-        #mask to float64 
+        # mask to float64
         mask = mask.float()
         return img, mask, extra_info, additional
 
@@ -215,7 +217,7 @@ generator = torch.Generator().manual_seed(42)
 train_set, val_set, test_set = torch.utils.data.random_split(
     rsa_dataset_image,
     [int(len(rsa_dataset_image) * 0.7), int(len(rsa_dataset_image) * 0.2),
-    int(len(rsa_dataset_image) * 0.1)+2],
+     int(len(rsa_dataset_image) * 0.1) + 2],
     generator=generator
 )
 
@@ -233,9 +235,15 @@ print(f"Utilisation du device : {device}")
 
 BATCH_SIZE = 4
 # data loader optimization
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=8, pin_memory=True, worker_init_fn=lambda worker_id: np.random.seed(42 + worker_id))
-val_loader = torch.utils.data.DataLoader(val_set, batch_size= 3* BATCH_SIZE, shuffle=False, num_workers=8, pin_memory=True, worker_init_fn=lambda worker_id: np.random.seed(42 + worker_id))
-test_loader = torch.utils.data.DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=8, pin_memory=True, worker_init_fn=lambda worker_id: np.random.seed(42 + worker_id))
+train_loader = torch.utils.data.DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=8,
+                                           pin_memory=True,
+                                           worker_init_fn=lambda worker_id: np.random.seed(42 + worker_id))
+val_loader = torch.utils.data.DataLoader(val_set, batch_size=3 * BATCH_SIZE, shuffle=False, num_workers=8,
+                                         pin_memory=True,
+                                         worker_init_fn=lambda worker_id: np.random.seed(42 + worker_id))
+test_loader = torch.utils.data.DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=8,
+                                          pin_memory=True,
+                                          worker_init_fn=lambda worker_id: np.random.seed(42 + worker_id))
 
 # %% [markdown]
 # ## Model
@@ -244,49 +252,49 @@ test_loader = torch.utils.data.DataLoader(test_set, batch_size=BATCH_SIZE, shuff
 model_BCE = smp.Unet(
     encoder_name="resnet34",
     encoder_depth=5,
-    encoder_weights=None, # "imagenet",    
-    in_channels=1,                 
-    classes=1                      
+    encoder_weights=None,  # "imagenet",
+    in_channels=1,
+    classes=1
 )
 
 model_Dice = smp.Unet(
-    encoder_name="resnet34",       
+    encoder_name="resnet34",
     encoder_depth=5,
-    encoder_weights=None, # "imagenet",    
-    in_channels=1,                 
-    classes=1                      
+    encoder_weights=None,  # "imagenet",
+    in_channels=1,
+    classes=1
 )
 
 model_clDice = smp.Unet(
-    encoder_name="resnet34",       
+    encoder_name="resnet34",
     encoder_depth=5,
-    encoder_weights=None, # "imagenet",    
-    in_channels=1,                 
-    classes=1                      
+    encoder_weights=None,  # "imagenet",
+    in_channels=1,
+    classes=1
 )
 
 model_Dice_clDice = smp.Unet(
-    encoder_name="resnet34",       
+    encoder_name="resnet34",
     encoder_depth=5,
-    encoder_weights=None, # "imagenet",    
-    in_channels=1,                 
-    classes=1                      
+    encoder_weights=None,  # "imagenet",
+    in_channels=1,
+    classes=1
 )
 
 model_skRecall = smp.Unet(
-    encoder_name="resnet34",       
+    encoder_name="resnet34",
     encoder_depth=5,
-    encoder_weights=None, # "imagenet",    
-    in_channels=1,                 
-    classes=1                      
+    encoder_weights=None,  # "imagenet",
+    in_channels=1,
+    classes=1
 )
 
 model_superVoxel = smp.Unet(
-    encoder_name="resnet34",       
+    encoder_name="resnet34",
     encoder_depth=5,
-    encoder_weights=None, # "imagenet",    
-    in_channels=1,                 
-    classes=1                      
+    encoder_weights=None,  # "imagenet",
+    in_channels=1,
+    classes=1
 )
 
 # Charger les poids pré-entraînés si disponibles
@@ -295,7 +303,7 @@ model_Dice_clDice.to(device)
 model_skRecall.to(device)
 model_superVoxel.to(device)
 
-List_models = [model_clDice, model_Dice_clDice, model_skRecall, model_superVoxel] # model_BCE, model_Dice,
+List_models = [model_clDice, model_Dice_clDice, model_skRecall, model_superVoxel]  # model_BCE, model_Dice,
 
 # %% [markdown]
 # ## Evaluation
@@ -303,26 +311,28 @@ List_models = [model_clDice, model_Dice_clDice, model_skRecall, model_superVoxel
 # %%
 from PIL import Image
 
+
 def tensor_to_heatmap_image(tensor, cmap='hot'):
     """
     Convertit un tenseur PyTorch en une heatmap image qui sera sauvagardée dans tensorboard.
     """
     # Normaliser le tenseur entre 0 et 1
     tensor = (tensor - tensor.min()) / (tensor.max() - tensor.min())
-    
+
     cpu_tensor = tensor.cpu()
-    
+
     # Convertir le tenseur en image PIL
     image = Image.fromarray((cpu_tensor.numpy() * 255).astype(np.uint8), mode='L')
-    
+
     # Convertir l'image PIL en tableau numpy
     image_np = np.array(image)
-    
+
     # Créer la heatmap
     heatmap = plt.get_cmap(cmap)(image_np)[:, :, :3]  # Ignorer l'alpha channel
     heatmap = (heatmap * 255).astype(np.uint8)  # Convertir en uint8
-    
+
     return heatmap
+
 
 # %%
 import torch
@@ -331,7 +341,8 @@ from tqdm import tqdm
 import torchvision.transforms.functional as TF
 
 
-def evaluate_segmentation(model, image, mask, mtg, metrics: list, prediction=None, threshold=0.5, writer=None, global_step=None, device='cpu'):
+def evaluate_segmentation(model, image, mask, mtg, metrics: list, prediction=None, threshold=0.5, writer=None,
+                          global_step=None, device='cpu'):
     """
     Évalue le modèle sur une image (ou un batch d'images) et calcule les métriques fournies.
 
@@ -371,7 +382,8 @@ def evaluate_segmentation(model, image, mask, mtg, metrics: list, prediction=Non
     return {'prediction': prediction, 'scores': scores}
 
 
-def evaluate_segmentation_on_loader(model, loader, metrics: list, threshold=0.5, writer=None, global_step=None, device='cpu'):
+def evaluate_segmentation_on_loader(model, loader, metrics: list, threshold=0.5, writer=None, global_step=None,
+                                    device='cpu'):
     """
     Évalue le modèle sur l'ensemble d'un DataLoader et accumule les scores pour chaque métrique.
     Enregistre également quelques exemples d'images, masques, prédictions et heatmaps dans TensorBoard.
@@ -394,13 +406,13 @@ def evaluate_segmentation_on_loader(model, loader, metrics: list, threshold=0.5,
 
     with torch.no_grad():
         for batch in tqdm(
-            loader,
-            desc="Evaluation",
-            bar_format="{l_bar}{bar}{r_bar}",
-            unit="batch",
-            position=0,
-            leave=True,
-            dynamic_ncols=True
+                loader,
+                desc="Evaluation",
+                bar_format="{l_bar}{bar}{r_bar}",
+                unit="batch",
+                position=0,
+                leave=True,
+                dynamic_ncols=True
         ):
             images, masks, time, mtgs = batch
             images, masks = images.to(device), masks.to(device)
@@ -415,7 +427,6 @@ def evaluate_segmentation_on_loader(model, loader, metrics: list, threshold=0.5,
             # Enregistre le premier batch pour affichage dans TensorBoard
             if sample_batch is None and writer is not None and global_step is not None:
                 sample_batch = (images.cpu(), masks.cpu(), output.cpu(), prediction.cpu())
-            
 
     # Log des images si writer et global_step sont fournis et un batch exemple est disponible
     if writer is not None and global_step is not None:
@@ -423,13 +434,12 @@ def evaluate_segmentation_on_loader(model, loader, metrics: list, threshold=0.5,
         for metric_name, scores in metric_scores.items():
             mean_score = np.mean(scores)
             writer.add_scalar(f"Eval_Mean/{metric_name}_mean", mean_score, global_step)
-        
+
         # for each metric, on calcule la variance
         for metric_name, scores in metric_scores.items():
             var_score = np.var(scores)
             writer.add_scalar(f"Eval_Var/{metric_name}_var", var_score, global_step)
-    
-    
+
         if sample_batch is not None:
             sample_images, sample_masks, sample_outputs, sample_preds = sample_batch
             n_samples = min(4, sample_images.shape[0])
@@ -445,20 +455,20 @@ def evaluate_segmentation_on_loader(model, loader, metrics: list, threshold=0.5,
                 # Supposons que l'output et la sigmoid sont des cartes 2D (dimension [1, H, W])
                 out = outputs[i].squeeze()
                 sig_out = torch.sigmoid(outputs[i]).squeeze()
-                
+
                 # Création de l'image heatmap
                 out_img = tensor_to_heatmap_image(out, cmap='hot')
                 sig_img = tensor_to_heatmap_image(sig_out, cmap='hot')
-                
+
                 # Conversion en tensor
                 out_tensor = TF.to_tensor(out_img)
                 sig_tensor = TF.to_tensor(sig_img)
                 outputs_heatmaps.append(out_tensor)
                 sigmoid_heatmaps.append(sig_tensor)
-            
+
             outputs_heatmaps_tensor = torch.stack(outputs_heatmaps)
             sigmoid_heatmaps_tensor = torch.stack(sigmoid_heatmaps)
-            
+
             # concaténation des images du sample
             images_concat = torch.cat([images[i] for i in range(n_samples)], dim=2)
             masks_concat = torch.cat([masks[i] for i in range(n_samples)], dim=2)
@@ -467,30 +477,33 @@ def evaluate_segmentation_on_loader(model, loader, metrics: list, threshold=0.5,
             sigmoid_heatmaps_concat = torch.cat([sigmoid_heatmaps_tensor[i] for i in range(n_samples)], dim=2)
             # Enregistrement des images concaténées dans TensorBoard
             writer.add_image("Sample/Images", images_concat, global_step)
-            writer.add_image("Sample/Masks", masks_concat, global_step)  
+            writer.add_image("Sample/Masks", masks_concat, global_step)
             writer.add_image("Sample/Predictions", predictions_concat, global_step)
             writer.add_image("Sample/Heatmaps", outputs_heatmaps_concat, global_step)
             writer.add_image("Sample/Sigmoid_Heatmaps", sigmoid_heatmaps_concat, global_step)
     return metric_scores
 
+
 # %%
 import RSA_deep_working.Metrics.simple_metrics as sm
 import RSA_deep_working.Metrics.topo_explicit_metrics as tm
 
-metrics = sm.all_metrics() 
-tubular_metrics = tm.all_metrics()    
+metrics = sm.all_metrics()
+tubular_metrics = tm.all_metrics()
 all_metrics = []
 for metric in metrics:
     all_metrics.append(metric)
 for metric in tubular_metrics:
     all_metrics.append(metric)
 
+
 # %% [markdown]
 # ## Training
 
 # %%
 # Train the model
-def train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=10, device='cpu', writer=None, writer_name=None, scheduler=None, lr_change_threshold=1e-5):
+def train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=10, device='cpu', writer=None,
+                writer_name=None, scheduler=None, lr_change_threshold=1e-5):
     torch.cuda.empty_cache()
     model.train()
     old_metric_scores = None
@@ -498,20 +511,19 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
     writer_folder = f"checkpoints/{writer_name}_Model"
     if not os.path.exists(writer_folder):
         os.makedirs(writer_folder)
-    
+
     list_train_loss = []
     lr_deacrease = 0
     for epoch in range(num_epochs):
         running_loss = 0.0
         for batch in tqdm(
-                train_loader, 
-                desc=f"Loss: {running_loss:.1e} / {len(train_loader)}, LR: {optimizer.param_groups[0]['lr']:.1e}", 
-                unit="batch", 
-                postfix=f"Epoch: {epoch+1}/{num_epochs}",
-                leave=True, 
+                train_loader,
+                desc=f"Loss: {running_loss:.1e} / {len(train_loader)}, LR: {optimizer.param_groups[0]['lr']:.1e}",
+                unit="batch",
+                postfix=f"Epoch: {epoch + 1}/{num_epochs}",
+                leave=True,
                 dynamic_ncols=True
-            ):
-            
+        ):
             images, masks, _, _ = batch
             images = images.to(device)
             masks = masks.to(device)
@@ -524,22 +536,23 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
             optimizer.step()
 
             running_loss += loss.item()
-            
 
         epoch_loss = running_loss / len(train_loader)
-        
+
         list_train_loss.append(epoch_loss)
         torch.cuda.empty_cache()
-        
+
         # if the loss didn't change more than 5 times in a row, we decrease the learning rate with a factor 0.8
-        if len(list_train_loss) > 5 and all(abs(list_train_loss[-i] - list_train_loss[-i-1]) < lr_change_threshold for i in range(1, 5)):
+        if len(list_train_loss) > 5 and all(
+                abs(list_train_loss[-i] - list_train_loss[-i - 1]) < lr_change_threshold for i in range(1, 5)):
             for param_group in optimizer.param_groups:
                 param_group['lr'] *= 0.8
                 print(f"Learning rate decreased to {param_group['lr']:.1e}")
                 lr_deacrease += 1
-                
+
         # if we decreased the learning rate more than 5 times and if the loss still didn't change, we stop the training
-        if lr_deacrease > 3 and len(list_train_loss) > 5 and all(abs(list_train_loss[-i] - list_train_loss[-i-1]) < lr_change_threshold for i in range(1, 5)):
+        if lr_deacrease > 3 and len(list_train_loss) > 5 and all(
+                abs(list_train_loss[-i] - list_train_loss[-i - 1]) < lr_change_threshold for i in range(1, 5)):
             print("Learning rate didn't change for 5 epochs and 5 different lr, stopping training.")
             break
 
@@ -560,15 +573,15 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
                 device=device
             )
             mean_metric_scores = {metric_name: np.mean(scores) for metric_name, scores in metric_scores.items()}
-            
+
         # Mise à jour du scheduler et vérification de l'évolution de la loss
         if scheduler is not None:
             scheduler.step(epoch_loss)
         torch.cuda.empty_cache()
-        
+
         # save model in checkpoints
         torch.save(model.state_dict(), os.path.join(writer_folder, f"model_last.pth"))
-        
+
         # for each metric in metrics, if there is an improvement, save the model as best_model_lossname_metric_name.pth
         if old_metric_scores is not None:
             for metric_name, score in mean_metric_scores.items():
@@ -580,6 +593,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
 
     return model
 
+
 # %%
 # cuda - clear cache
 torch.cuda.empty_cache()
@@ -587,12 +601,16 @@ torch.cuda.empty_cache()
 # %%
 # adam optimizer with weight decay for each model
 LR = 5e-5
+
+
 def get_optimizer(model, lr=5e-5):
     return optim.Adam(model.parameters(), lr=lr)
+
 
 optimizers = []
 for model in List_models:
     optimizers.append(get_optimizer(model, lr=LR))
+
 
 # %%
 def cldice(prediction, mask, time=0, mtg=None):
@@ -603,11 +621,13 @@ def cldice(prediction, mask, time=0, mtg=None):
     soft_cldice_instance = soft_cldice()
     return soft_cldice_instance(prediction, mask)
 
+
 def bce(prediction, mask, time=0, mtg=None):
     """
     Binary Cross Entropy loss function.
     """
     return F.binary_cross_entropy_with_logits(prediction, mask)
+
 
 def dice(prediction, mask, time=0, mtg=None):
     """
@@ -615,11 +635,13 @@ def dice(prediction, mask, time=0, mtg=None):
     """
     return smp.losses.DiceLoss(mode='binary')(prediction, mask)
 
+
 def dice_cldice(prediction, mask, time=0, mtg=None):
     """
     Combined Dice and clDice loss function.
     """
     return 0.5 * smp.losses.DiceLoss(mode='binary')(prediction, mask) + 0.5 * cldice(prediction, mask, time, mtg)
+
 
 def skeleton_recall(prediction, mask, time=0, mtg=None):
     """
@@ -632,10 +654,11 @@ def skeleton_recall(prediction, mask, time=0, mtg=None):
     mask_2c = torch.cat([1 - mask, mask], dim=1)
     return soft_skeleton_recall(prediction_2c, mask_2c)
 
+
 # list of loss functions corresponding to the models
 loss_functions = [
-    #bce,
-    #dice,
+    # bce,
+    # dice,
     cldice,
     dice_cldice,
     skeleton_recall,
@@ -646,8 +669,8 @@ loss_functions = [
 # one writer for each model
 writers = []
 writer_names = [
-    #"BCE",
-    #"Dice",
+    # "BCE",
+    # "Dice",
     "clDice",
     "Dice_clDice",
     "skRecall",
@@ -659,11 +682,14 @@ for i in range(len(loss_functions)):
     writers.append(writer)
 global_steps = [0] * len(loss_functions)
 
+
 # %%
-def train_and_evaluate(model, loss_function, optimizer, writer, writer_name, train_loader=train_loader, val_loader=val_loader, test_loader=test_loader, metrics=all_metrics, num_epochs=50, scheduler=None, lr_change_threshold=1e-8, device='cpu'):
+def train_and_evaluate(model, loss_function, optimizer, writer, writer_name, train_loader=train_loader,
+                       val_loader=val_loader, test_loader=test_loader, metrics=all_metrics, num_epochs=50,
+                       scheduler=None, lr_change_threshold=1e-8, device='cpu'):
     # TensorBoard writer
     writer = SummaryWriter(log_dir=f"runs/uc1_segmentation_{writer_name}")
-    
+
     # Training
     model = train_model(
         model,
@@ -695,12 +721,13 @@ def train_and_evaluate(model, loss_function, optimizer, writer, writer_name, tra
     # return the model
     return model
 
+
 # %%
 # for each model, train and evaluate
 i = 0
 for model, loss_function in zip(List_models, loss_functions):
     # Création du scheduler pour un optimizer avec une patience de 5 époques et une réduction par un facteur 0.5
-    
+
     trained_model = train_and_evaluate(
         model,
         loss_function,
@@ -718,5 +745,6 @@ for model, loss_function in zip(List_models, loss_functions):
     torch.cuda.empty_cache()
     # empty memory 
     import gc
+
     gc.collect()
     i += 1

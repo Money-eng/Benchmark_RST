@@ -2,7 +2,9 @@ import numpy as np
 from scipy.ndimage import distance_transform_edt
 from scipy.spatial import cKDTree
 from skimage.morphology import skeletonize
+
 from root_System_class import RootSystem
+
 
 def compute_skeleton_and_diameter(date_map, threshold=0):
     """
@@ -23,8 +25,9 @@ def compute_skeleton_and_diameter(date_map, threshold=0):
     # Opération vectorisée : affectation du diamètre pour tous les pixels du squelette
     diameter_map = np.zeros_like(skeleton, dtype=float)
     diameter_map[skeleton] = 2 * dt[skeleton]
-    
+
     return skeleton, diameter_map
+
 
 def project_root_system_on_diameter_map(root_system: RootSystem, threshold=0):
     """
@@ -40,12 +43,12 @@ def project_root_system_on_diameter_map(root_system: RootSystem, threshold=0):
                                        sous forme de liste.
     """
     skeleton, diameter_map = compute_skeleton_and_diameter(root_system.date_map, threshold)
-    
+
     # Récupération des coordonnées (indices) des pixels du squelette sous forme (row, col)
     skel_coords = np.column_stack(np.nonzero(skeleton))
     if skel_coords.shape[0] == 0:
         raise ValueError("Aucun pixel dans le squelette n'a été trouvé.")
-    
+
     tree = cKDTree(skel_coords)
     diameter_4_root_system = {}
 
@@ -68,7 +71,7 @@ def project_root_system_on_diameter_map(root_system: RootSystem, threshold=0):
                 best_index = np.argmin(distances)
                 best_coord = skel_coords[indices[best_index]]
                 best_diameter = diameter_map[best_coord[0], best_coord[1]]
-        
+
         # Limitation du diamètre entre 4 et 9
         best_diameter = max(min(best_diameter, 9), 4)
         # Constitution de la liste pour ce vertex :
@@ -82,7 +85,6 @@ def project_root_system_on_diameter_map(root_system: RootSystem, threshold=0):
     return diameter_4_root_system
 
 
-
 def rafine_diameter(root_system: RootSystem, diameter_4_root_system: dict):
     """ 
     Hypothesis: 
@@ -93,25 +95,7 @@ def rafine_diameter(root_system: RootSystem, diameter_4_root_system: dict):
     # For each root, we see if it countains a lot of "clear" pixels
     # If it does, we reduce the diameter of the root until these anomalies disappear
 
-    
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-    
+
 #### Maybe another time : 
 def compute_skeleton_and_diameter_more(date_map, threshold=0, threshold2=1):
     """
@@ -219,6 +203,7 @@ def project_root_system_on_diameter_maps(root_system: RootSystem, begin_threshol
         diameter_4_root_system[vertex] = vertex_diameters
     rafine_diameter(root_system, diameter_4_root_system)
     return diameter_4_root_system
+
 
 def rafine_diameter(root_system: RootSystem, diameter_4_root_system: dict):
     """ 

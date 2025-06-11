@@ -1,7 +1,8 @@
 import sys
-import os
-import numpy as np
+
 import importlib
+import numpy as np
+import os
 
 # Remontée de deux niveaux pour accéder à Data_loader
 current_dir = os.getcwd()
@@ -22,16 +23,12 @@ except ModuleNotFoundError as e:
     sys.exit(1)
 
 import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from tqdm.notebook import tqdm
 import matplotlib.pyplot as plt
 import rsml
 import tifffile
-
 
 from RSA_deep_working.Data_loader.class_data_loaders import DirectoryRSAClass
 
@@ -53,28 +50,29 @@ import torchvision.transforms as transforms
 H, W = (1166, 1348)
 
 H_new, W_new = (1184, 1376)
-padding_bottom, padding_right = H_new - H, W_new - W # the opposite lol
+padding_bottom, padding_right = H_new - H, W_new - W  # the opposite lol
 print("pad :", padding_right, padding_bottom)
 
 # Transformations pré-calculées
 img_transform = transforms.Compose([
     transforms.ToTensor(),
-    #transforms.Resize((H_new, W_new), interpolation=transforms.InterpolationMode.BILINEAR),
+    # transforms.Resize((H_new, W_new), interpolation=transforms.InterpolationMode.BILINEAR),
     transforms.Pad(padding=(0, 0, padding_right, padding_bottom), fill=0),
     transforms.Normalize(mean=[0.5], std=[0.5])
 ])
 mask_transform_series = transforms.Compose([
     transforms.ToTensor(),
-    #transforms.Resize((H_new, W_new), interpolation=transforms.InterpolationMode.NEAREST),
+    # transforms.Resize((H_new, W_new), interpolation=transforms.InterpolationMode.NEAREST),
     transforms.Pad(padding=(0, 0, padding_right, padding_bottom), fill=0),
-    
+
 ])
 mask_transform_image = transforms.Compose([
     transforms.ToTensor(),
-    
-    #transforms.Resize((H_new, W_new), interpolation=transforms.InterpolationMode.NEAREST),
+
+    # transforms.Resize((H_new, W_new), interpolation=transforms.InterpolationMode.NEAREST),
     transforms.Pad(padding=(0, 0, padding_right, padding_bottom), fill=0),
 ])
+
 
 def mtg_transform(mtg):
     """
@@ -84,6 +82,7 @@ def mtg_transform(mtg):
     # Par exemple, convertir les coordonnées en tenseur
     # ou appliquer d'autres transformations spécifiques
     return mtg
+
 
 class CachedTiffReader:
     def __init__(self):
@@ -97,7 +96,9 @@ class CachedTiffReader:
                 self.cache[img_path] = [page.asarray() for page in tif.pages]
         return self.cache[img_path][key]
 
+
 tiff_reader = CachedTiffReader()
+
 
 class RSASeg2DDataset(Dataset):
     def __init__(self, rsa_dir_loader, mode='series', img_transform=None,
@@ -135,7 +136,7 @@ class RSASeg2DDataset(Dataset):
 
     def __len__(self):
         return len(self.samples)
-    
+
     def num_times(self, idx):
         """
         Retourne le nombre de slices (temps) que comporte la série.
@@ -179,7 +180,7 @@ class RSASeg2DDataset(Dataset):
             img = img.repeat(3, 1, 1)
         # Gestion du retour : si image_with_mtg est activé, on retourne mtg_path, sinon un tensor nul
         additional = mtg_path if self.image_with_mtg else torch.tensor(0)
-        #mask to float64 
+        # mask to float64
         mask = mask.float()
         return img, mask, extra_info, additional
 
@@ -206,7 +207,7 @@ generator = torch.Generator().manual_seed(42)
 train_set, val_set, test_set = torch.utils.data.random_split(
     rsa_dataset_image,
     [int(len(rsa_dataset_image) * 0.7), int(len(rsa_dataset_image) * 0.2),
-     int(len(rsa_dataset_image) * 0.1)+2],
+     int(len(rsa_dataset_image) * 0.1) + 2],
     generator=generator
 )
 
@@ -220,64 +221,69 @@ print(f"Utilisation du device : {device}")
 
 BATCH_SIZE = 2
 # data loader optimization
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=8, pin_memory=True, worker_init_fn=lambda worker_id: np.random.seed(42 + worker_id))
-val_loader = torch.utils.data.DataLoader(val_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=8, pin_memory=True, worker_init_fn=lambda worker_id: np.random.seed(42 + worker_id))
-test_loader = torch.utils.data.DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=8, pin_memory=True, worker_init_fn=lambda worker_id: np.random.seed(42 + worker_id))
+train_loader = torch.utils.data.DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=8,
+                                           pin_memory=True,
+                                           worker_init_fn=lambda worker_id: np.random.seed(42 + worker_id))
+val_loader = torch.utils.data.DataLoader(val_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=8, pin_memory=True,
+                                         worker_init_fn=lambda worker_id: np.random.seed(42 + worker_id))
+test_loader = torch.utils.data.DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=8,
+                                          pin_memory=True,
+                                          worker_init_fn=lambda worker_id: np.random.seed(42 + worker_id))
 
 model_BCE = smp.Unet(
     encoder_name="resnet34",
     encoder_depth=5,
-    encoder_weights=None, # "imagenet",    
-    in_channels=1,                 
-    classes=1                      
+    encoder_weights=None,  # "imagenet",
+    in_channels=1,
+    classes=1
 )
 
 model_Dice = smp.Unet(
-    encoder_name="resnet34",       
+    encoder_name="resnet34",
     encoder_depth=5,
-    encoder_weights=None, # "imagenet",    
-    in_channels=1,                 
-    classes=1                      
+    encoder_weights=None,  # "imagenet",
+    in_channels=1,
+    classes=1
 )
 
 model_clDice = smp.Unet(
-    encoder_name="resnet34",       
+    encoder_name="resnet34",
     encoder_depth=5,
-    encoder_weights=None, # "imagenet",    
-    in_channels=1,                 
-    classes=1                      
+    encoder_weights=None,  # "imagenet",
+    in_channels=1,
+    classes=1
 )
 
 model_Dice_clDice = smp.Unet(
-    encoder_name="resnet34",       
+    encoder_name="resnet34",
     encoder_depth=5,
-    encoder_weights=None, # "imagenet",    
-    in_channels=1,                 
-    classes=1                      
+    encoder_weights=None,  # "imagenet",
+    in_channels=1,
+    classes=1
 )
 
 model_skRecall = smp.Unet(
-    encoder_name="resnet34",       
+    encoder_name="resnet34",
     encoder_depth=5,
-    encoder_weights=None, # "imagenet",    
-    in_channels=1,                 
-    classes=1                      
+    encoder_weights=None,  # "imagenet",
+    in_channels=1,
+    classes=1
 )
 
 model_superVoxel = smp.Unet(
-    encoder_name="resnet34",       
+    encoder_name="resnet34",
     encoder_depth=5,
-    encoder_weights=None, # "imagenet",    
-    in_channels=1,                 
-    classes=1                      
+    encoder_weights=None,  # "imagenet",
+    in_channels=1,
+    classes=1
 )
 
 model_skseg = smp.Unet(
-    encoder_name="resnet34",       
+    encoder_name="resnet34",
     encoder_depth=5,
-    encoder_weights=None, # "imagenet",    
-    in_channels=1,                 
-    classes=1                      
+    encoder_weights=None,  # "imagenet",
+    in_channels=1,
+    classes=1
 )
 
 # Charger les poids pré-entraînés si disponibles
@@ -291,31 +297,33 @@ List_models = [model_BCE, model_Dice, model_clDice, model_Dice_clDice, model_skR
 
 from PIL import Image
 
+
 def tensor_to_heatmap_image(tensor, cmap='hot'):
     """
     Convertit un tenseur PyTorch en une heatmap image qui sera sauvagardée dans tensorboard.
     """
     # Normaliser le tenseur entre 0 et 1
     tensor = (tensor - tensor.min()) / (tensor.max() - tensor.min())
-    
+
     cpu_tensor = tensor.cpu()
-    
+
     # Convertir le tenseur en image PIL
     image = Image.fromarray((cpu_tensor.numpy() * 255).astype(np.uint8), mode='L')
-    
+
     # Convertir l'image PIL en tableau numpy
     image_np = np.array(image)
-    
+
     # Créer la heatmap
     heatmap = plt.get_cmap(cmap)(image_np)[:, :, :3]  # Ignorer l'alpha channel
     heatmap = (heatmap * 255).astype(np.uint8)  # Convertir en uint8
-    
+
     return heatmap
+
 
 import torch
 import numpy as np
 from tqdm import tqdm
-import torchvision.transforms.functional as TF
+
 
 def evaluate_segmentation_on_loader(loader, metrics: list, device='cpu'):
     """
@@ -339,14 +347,14 @@ def evaluate_segmentation_on_loader(loader, metrics: list, device='cpu'):
 
     with torch.no_grad():
         for batch in tqdm(
-            loader,
-            desc="Evaluation iteration",
-            bar_format="{l_bar}{bar}{r_bar}",
-            unit="batch",
-            total=len(loader),
-            position=0,
-            leave=True,
-            dynamic_ncols=True
+                loader,
+                desc="Evaluation iteration",
+                bar_format="{l_bar}{bar}{r_bar}",
+                unit="batch",
+                total=len(loader),
+                position=0,
+                leave=True,
+                dynamic_ncols=True
         ):
             images, masks, time, mtgs = batch
             images, masks = images.to(device), masks.to(device)
@@ -356,20 +364,20 @@ def evaluate_segmentation_on_loader(loader, metrics: list, device='cpu'):
                 predictions = masks.clone()
                 score = metric(predictions, masks, time, mtg=mtgs[0])
                 metric_scores[metric.__name__].append(score)
-            
+
 
 import RSA_deep_working.Metrics.simple_metrics as sm
 import RSA_deep_working.Metrics.topo_explicit_metrics as tm
 
-metrics = sm.all_metrics() 
-tubular_metrics = tm.all_metrics()    
+metrics = sm.all_metrics()
+tubular_metrics = tm.all_metrics()
 connectivity_metric = tm.Connectivity_Preserving_Instance_Segmentation
 all_metrics = []
 for metric in metrics:
     all_metrics.append(metric)
 for metric in tubular_metrics:
     all_metrics.append(metric)
-    
+
 if __name__ == "__main__":
     # get number of times of first image of the val_loader
     num_times = rsa_dataset_image.num_times(0)
@@ -377,7 +385,7 @@ if __name__ == "__main__":
     dic_image_mask = {}
     for i in range(num_times):
         dic_image_mask[rsa_dataset_image[i][0][0]] = rsa_dataset_image[i][1][0]
-        
+
     # for each metric in all_metrics, compute the metric for each mask and mask clone, print the name and the score 
     for metric in all_metrics:
         print(f"Metric: {metric.__name__}")
@@ -388,12 +396,12 @@ if __name__ == "__main__":
             print(f"Image {i}: {score}")
             print(f"Metric: {metric.__name__} - Score: {score}")
         print("\n")
-        
+
     # superpose image (in green) and mask (in red)
-    #for i in range(num_times+5):
-     #   image = rsa_dataset_image[i][0][0].cpu().numpy()
-      #  mask = rsa_dataset_image[i][1][0].cpu().numpy()
-       # plt.imshow(image, cmap='gray')
-        #plt.imshow(mask, cmap='jet', alpha=0.5)
-      #  plt.axis('off')
-       # plt.show()
+    # for i in range(num_times+5):
+    #   image = rsa_dataset_image[i][0][0].cpu().numpy()
+    #  mask = rsa_dataset_image[i][1][0].cpu().numpy()
+    # plt.imshow(image, cmap='gray')
+    # plt.imshow(mask, cmap='jet', alpha=0.5)
+    #  plt.axis('off')
+    # plt.show()

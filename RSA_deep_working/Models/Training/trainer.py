@@ -2,25 +2,26 @@
 
 import os
 import torch
-from tqdm import tqdm
 from logging import Logger
+from tqdm import tqdm
 from utils.logger import TensorboardLogger
-from .evaluator import Evaluator
 from utils.misc import get_device
+
+from .evaluator import Evaluator
 
 
 class Trainer:
     def __init__(
-        self,
-        model: torch.nn.Module,
-        train_loader: torch.utils.data.DataLoader,
-        criterion: torch.nn.Module,
-        optimizer: torch.optim.Optimizer,
-        config: dict,
-        evaluator: Evaluator,
-        logger: Logger = None,
-        tb_logger: TensorboardLogger = None,
-        device: torch.device = None,
+            self,
+            model: torch.nn.Module,
+            train_loader: torch.utils.data.DataLoader,
+            criterion: torch.nn.Module,
+            optimizer: torch.optim.Optimizer,
+            config: dict,
+            evaluator: Evaluator,
+            logger: Logger = None,
+            tb_logger: TensorboardLogger = None,
+            device: torch.device = None,
     ):
         """
         - model : le réseau de neurones à entraîner
@@ -82,9 +83,6 @@ class Trainer:
         global_step = 0
 
         for epoch in range(1, self.epochs + 1):
-            # ---------------------
-            # 1) BOUCLE D'ENTRAINEMENT
-            # ---------------------
             self.model.train()
             epoch_loss = 0.0
 
@@ -97,8 +95,8 @@ class Trainer:
             for imgs, masks, _, _ in pbar:
                 imgs, masks = imgs.to(self.device), masks.to(self.device)
 
-                preds = self.model(imgs)
-                loss = self.criterion(preds, masks)
+                preds_logits_sigmoidee = self.model(imgs)
+                loss = self.criterion(preds_logits_sigmoidee, masks) # need for sigmoid !!! (in loss implementation)
 
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -128,29 +126,20 @@ class Trainer:
             if self.tb_logger:
                 self.tb_logger.log_scalar("train/epoch_loss", avg_epoch_loss, epoch)
 
-            # ---------------------
-            # 2) EVALUATION SUR VALIDATION
-            # ---------------------
             val_results = self.evaluator.evaluate(on_test=False, last_loss_value=avg_epoch_loss)
-            # val_serie_results = self.evaluator.evaluate(on_test=False, on_serie=True) # TODO
 
-            # String to log the validation results -> k
             val_str = ", ".join(f"{k}: {v:.4f}" for k, v in val_results.items())
             if self.logger:
                 self.logger.info(
-                    f"[Trainer] Epoch {epoch}/{self.epochs} | Val : {val_str}"
+                    f"[EVALUATOR] Epoch {epoch}/{self.epochs} | Values : {val_str}"
                 )
             else:
-                print(f"[Trainer] Epoch {epoch}/{self.epochs} | Val : {val_str}")
+                print(f"[EVALUATOR] Epoch {epoch}/{self.epochs} | Values : {val_str}")
 
-            # Logging TensorBoard
             if self.tb_logger:
                 for metric_name, metric_val in val_results.items():
                     self.tb_logger.log_scalar(f"val/{metric_name}", metric_val, epoch)
 
-            # ---------------------
-            # 3) SAUVEGARDE DU MEILLEUR MODELE pour chaque metrique
-            # ---------------------
             if not best_metric_val:
                 for metric_name, metric_val in val_results.items():
                     best_metric_val[metric_name] = metric_val
@@ -158,13 +147,12 @@ class Trainer:
             else:
                 for metric_name, metric_val in val_results.items():
                     if (
-                        metric_name not in best_metric_val
-                        or metric_val > best_metric_val[metric_name]
+                            metric_name not in best_metric_val
+                            or metric_val > best_metric_val[metric_name]
                     ):
                         best_metric_val[metric_name] = metric_val
                         self._save_checkpoint(epoch, metric_name, metric_val)
 
-        # Fin de la boucle d'entraînement
         if self.logger:
             self.logger.info("[Trainer] Entraînement terminé.")
         else:

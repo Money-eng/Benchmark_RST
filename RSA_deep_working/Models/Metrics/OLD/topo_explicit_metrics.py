@@ -1,12 +1,11 @@
-import torch
-import numpy as np
 import functools
+import numpy as np
+import torch
 from skimage.measure import label, euler_number
 from skimage.metrics import adapted_rand_error
 from sklearn.metrics import adjusted_rand_score, mutual_info_score
 from sklearn.metrics.cluster import entropy
-import torchmetrics.functional as FMF
-import torchmetrics.functional.segmentation as FMS
+
 
 ###############################################################################
 # Make sure to cite:
@@ -26,8 +25,9 @@ def all_metrics_cpu():
 
 
 def all_metrics_gpu():
-    return [        
+    return [
     ]
+
 
 ###############################################################################
 # Decorators to standardize input for metrics (conversion to float)
@@ -46,7 +46,9 @@ def standardize_float_metric(func):
         if msk.dim() == 4 and msk.size(1) == 1:
             msk = msk.squeeze(1)
         return func(pred, msk, time, mtg)
+
     return wrapper
+
 
 ###############################################################################
 # clDice Metric Definition
@@ -89,6 +91,7 @@ def cldice(prediction, mask, time=0, mtg=None):
     mask = mask.unsqueeze(0)
     soft_cldice_instance = soft_cldice()
     return soft_cldice_instance(prediction, mask).item()
+
 
 ###############################################################################
 # Skeleton Recall Metric Definition
@@ -135,6 +138,7 @@ def skeleton_recall(prediction, mask, time=0, mtg=None):
     mask = torch.cat((mask, mask), dim=1)
     # Compute the skeleton recall
     return soft_skeleton_recall(prediction, mask).item()
+
 
 ###############################################################################
 # Connectivity Preserving Instance Segmentation Metric (SuperVoxelLoss)

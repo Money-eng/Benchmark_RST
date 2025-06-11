@@ -2,6 +2,7 @@
 
 import torch
 import torchmetrics.functional as FMF
+
 from ..base import BaseMetric
 
 
@@ -11,7 +12,7 @@ class IoU(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor, time, mtg) -> float:
+    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Intersection over Union (Jaccard) for binary masks.
         We threshold both prediction and mask at 0.5, so that jaccard_index
@@ -19,11 +20,11 @@ class IoU(BaseMetric):
         """
         # Ensure float
         pred = prediction.float()
-        msk  = mask.float()
+        msk = mask.float()
 
         # Binarize: anything ≥0.5 → 1, anything <0.5 → 0
-        pred_bin = (pred >= 0.5).long() # TODO : check if this is the right way to binarize
-        msk_bin  = (msk  >= 0.5).long()
+        pred_bin = (pred >= 0.5).long()  # TODO : check if this is the right way to binarize
+        msk_bin = (msk >= 0.5).long()
 
         # Compute binary Jaccard (IoU)
         score = FMF.jaccard_index(pred_bin, msk_bin, task="binary")

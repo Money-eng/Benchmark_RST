@@ -1,6 +1,7 @@
 # Metrics/gpu/specificity.py
 
 import torch
+
 from ..base import BaseMetric
 
 
@@ -10,7 +11,7 @@ class Specificity(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor, time, mtg) -> float:
+    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Spécificité (TN / (TN + FP)) pour segmentation binaire, 
         calculée manuellement quand torchmetrics.stat_scores n'existe pas.

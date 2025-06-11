@@ -1,8 +1,9 @@
 # Metrics/cpu/connectivity.py
 
 import numpy as np
-from skimage.measure import label
 import torch
+from skimage.measure import label
+
 from ..base import BaseMetric
 
 
@@ -12,7 +13,7 @@ class Connectivity(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor, time, mtg) -> float:
+    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Connectivity metric :
         Pour chaque image du batch, on calcule le nombre de composantes connexes

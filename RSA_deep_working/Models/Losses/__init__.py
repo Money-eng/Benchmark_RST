@@ -1,12 +1,17 @@
 import torch
-from .dice_loss import DiceLoss
+
+from .bce_loss import BCEDiceLoss
 from .bce_dice_loss import BCEDiceLoss
+from .dice_loss import DiceLoss
+from .generalized_dice_loss import GeneralizedDiceLoss
 
 LOSS_FACTORIES = {
-    "bce": torch.nn.BCELoss,
+    "bce": BCEDiceLoss,
     "dice": DiceLoss,
-    "bce_dice": BCEDiceLoss
+    "bce_dice": BCEDiceLoss,
+    "generalized_dice": GeneralizedDiceLoss
 }
+
 
 def get_loss(loss_config: dict) -> torch.nn.Module:
     """

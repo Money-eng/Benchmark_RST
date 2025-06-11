@@ -3,6 +3,7 @@
 import numpy as np
 import torch
 from sklearn.metrics.cluster import entropy, mutual_info_score
+
 from ..base import BaseMetric
 
 
@@ -12,7 +13,7 @@ class VIIndex(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor, time, mtg) -> float:
+    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Variation of Information (VI) :
             VI = H(mask) + H(pred) - 2 * MI(mask, pred)

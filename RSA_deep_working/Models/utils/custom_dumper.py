@@ -21,15 +21,13 @@ Visualisation:
 # XML SmartRoot / RootNav reader and writer
 ##############################################################################
 
-from ast import literal_eval
-
 import xml.etree.ElementTree as xml
+from ast import literal_eval
+# from openalea.core.graph.property_graph import PropertyGraph
+from openalea.mtg import MTG, fat_mtg
+from rsml import metadata
 from xml.dom import minidom
 
-#from openalea.core.graph.property_graph import PropertyGraph
-from openalea.mtg import MTG, fat_mtg
-
-from rsml import metadata
 
 class Parser(object):
     """ Read an XML file an convert it into an MTG.
@@ -42,7 +40,7 @@ class Parser(object):
         self._g = MTG()
 
         # Current proxy node for managing properties
-        self._node = None 
+        self._node = None
 
         doc = xml.parse(filename)
         root = doc.getroot()
@@ -52,26 +50,26 @@ class Parser(object):
         g = fat_mtg(self._g)
 
         # Add metadata as property of the graph
-        #g.graph_property()
+        # g.graph_property()
 
         return g
 
     def dispatch(self, elt):
         """ Call the suitable function to process `elt` w.r.t to `elt.tag` """
-        #try:
-        tag = elt.tag.replace('-','_')
+        # try:
+        tag = elt.tag.replace('-', '_')
         return self.__getattribute__(tag)(list(elt), **elt.attrib)
-        #except Exception as e:
+        # except Exception as e:
         #    if self.debug:
         #        print(e)
         #        #raise Exception("Unvalid element %s"%elt.tag)
         #        print("Unvalid element %s"%elt.tag)
 
     @staticmethod
-    def add_field(elt, my_dict) :
+    def add_field(elt, my_dict):
         """ Update the properties in the MTG """
-        tag = elt.tag#.replace('-','_') 
-        my_dict[tag]=elt.text
+        tag = elt.tag  # .replace('-','_')
+        my_dict[tag] = elt.text
 
     def rsml(self, elts, **properties):
         """ A RSA with attributes, parameters and a recursive structure.
@@ -80,26 +78,25 @@ class Parser(object):
         for elt in elts:
             self.dispatch(elt)
 
-
     def metadata(self, elts, **properties):
         """ Parse image information """
-        #print('metadata')
-        meta  = self._metadata = dict()
+        # print('metadata')
+        meta = self._metadata = dict()
         gprop = self._g.graph_properties()
-        #print([elt.tag for elt in elts])
+        # print([elt.tag for elt in elts])
         for elt in elts:
             elt_tag = elt.tag
-            #print(elt_tag)
-            if elt_tag=='last-modified': 
+            # print(elt_tag)
+            if elt_tag == 'last-modified':
                 meta[elt_tag] = str2datetime(elt.text)
-            elif elt_tag in ['version','resolution']:
+            elif elt_tag in ['version', 'resolution']:
                 meta[elt_tag] = literal_eval(elt.text)
-            elif elt_tag in ['user','file-key','software','unit']:
+            elif elt_tag in ['user', 'file-key', 'software', 'unit']:
                 meta[elt_tag] = elt.text
-            elif elt_tag in ["property-definitions","time-sequence","image",'private']:
-                #print(elt_tag)
+            elif elt_tag in ["property-definitions", "time-sequence", "image", 'private']:
+                # print(elt_tag)
                 self.dispatch(elt)
-            elif elt_tag=='mtg_graph_properties':
+            elif elt_tag == 'mtg_graph_properties':
                 gprop.update(read_xml_tree(elt))
             else:
                 meta[elt_tag] = read_xml_tree(elt)
@@ -110,30 +107,30 @@ class Parser(object):
         """ A plant with parameters and a recursive structure.
 
         """
-        #print('property-definitions')
+        # print('property-definitions')
         self._propdef = {}
         for elt in elts:
             self.dispatch(elt)
-        
+
         self._metadata['property_definitions'] = self._propdef
 
     def property_definition(self, elts, **properties):
         """ A plant with parameters and a recursive structure """
         prop = dict()
         for elt in elts:
-            self.add_field(elt,prop)
+            self.add_field(elt, prop)
         label = prop.pop('label')
         if label:
-            self._propdef[label]=prop
+            self._propdef[label] = prop
 
     def function_definition(self, elts, **properties):
         """ A plant with parameters and a recursive structure """
         prop = dict()
         for elt in elts:
-            self.add_field(elt,prop)
+            self.add_field(elt, prop)
         label = prop.pop('label')
         if label:
-            self._propdef[label]=prop
+            self._propdef[label] = prop
 
     def time_sequence(self, elts, **properties):
         """ A plant with parameters and a recursive structure.
@@ -148,7 +145,7 @@ class Parser(object):
         meta = self._metadata
         meta['image'] = {}
         for elt in elts:
-            self.add_field(elt, meta['image'])     
+            self.add_field(elt, meta['image'])
 
     def scene(self, elts, **properties):
         """ A plant with parameters and a recursive structure.
@@ -176,11 +173,11 @@ class Parser(object):
         parent = self._node
 
         if parent.scale() == 1:
-            axis = parent.add_component(edge_type='/', **attrib) # 1st  order
+            axis = parent.add_component(edge_type='/', **attrib)  # 1st  order
         else:
-            axis = parent.add_child(edge_type='+',**attrib)      # 2nd+ order
-            
-        if ('label' not in attrib) or not(attrib['label']):
+            axis = parent.add_child(edge_type='+', **attrib)  # 2nd+ order
+
+        if ('label' not in attrib) or not (attrib['label']):
             axis.label = 'Root'
 
         self._node = axis
@@ -193,15 +190,15 @@ class Parser(object):
 
         self._node = parent
 
-    def properties(self, elts) :
+    def properties(self, elts):
         """ Update the tooy properties in the MTG """
         proxy_node = self._node
         for a in elts:
             # read mtg graph property that was stored in scene properties
-            if a.tag=="graph_property":
+            if a.tag == "graph_property":
                 gprop = self._g.graph_properties()
                 gprop.update(read_xml_tree(a))
-                
+
             # read property value
             elif 'value' in a.attrib:
                 proxy_node.__setattr__(a.tag, literal_eval(a.attrib['value']))
@@ -221,16 +218,15 @@ class Parser(object):
         for elt in elts:
             self.dispatch(elt)
 
-        if self._polyline: 
+        if self._polyline:
             self._node.geometry = self._polyline
             self._polyline = None
-        if self._time :
+        if self._time:
             self._node.time = self._time
             self._time = None
-        if self._time_hours :
+        if self._time_hours:
             self._node.time_hours = self._time_hours
             self._time_hours = None
-
 
     def point(self, elts, **properties):
         poly = self._polyline
@@ -253,10 +249,8 @@ class Parser(object):
         else:
             point = [float(elt.text) for elt in elts]
         poly.append(point)
-        
-        #print('point', point)
-        
 
+        # print('point', point)
 
     def functions(self, elts, **properties):
         """ A root axis with geometry, functions, properties.
@@ -275,26 +269,26 @@ class Parser(object):
         domain = properties['domain']
 
         samples = [self.sample(elt, domain=domain) for elt in elts]
-        node.__setattr__(name,samples)
-        funs = g.graph_properties()['metadata'].setdefault('functions',[])
+        node.__setattr__(name, samples)
+        funs = g.graph_properties()['metadata'].setdefault('functions', [])
         if name not in funs:
             funs.append(name)
 
     def sample(self, elt, domain):
         p = elt.attrib
-        
+
         if p:
             value = float(p['value'])
 
             if domain == "length":
-                position= float(p['position'])
+                position = float(p['position'])
                 return (position, value)
             else:
                 return value
         else:
             value = float(elt.text)
             return value
-    
+
     def annotations(self, elts, **properties):
         """ Annotations attached to a part of the MTG.
         """
@@ -306,7 +300,7 @@ class Parser(object):
         """ Annotations attached to a part of the MTG.
         """
         name = properties.get('name', 'default')
-        anno = Annotation(name=name) 
+        anno = Annotation(name=name)
         for elt in elts:
             if elt.tag == 'value':
                 anno.value = elt.text
@@ -321,20 +315,22 @@ class Parser(object):
                 # Error
                 print('Invalid Annotation format', elt.tag)
 
+
 class Annotation(object):
     def __init__(self, name):
         self.name = name
         self.points = []
-        self.value=''
+        self.value = ''
         self.software = ''
+
 
 def str2datetime(str_time):
     """ convert datetime string to datetime object """
     from datetime import datetime as dt
-    if len(str_time)==10: 
+    if len(str_time) == 10:
         time_format = '%Y-%m-%d'
         time_format2 = '%d-%m-%Y'
-    else:                 
+    else:
         time_format = '%Y-%m-%d %H:%M:%S'
         time_format2 = '%d-%m-%Y %H:%M:%S'
 
@@ -344,12 +340,13 @@ def str2datetime(str_time):
         try:
             date = dt.strptime(str_time[:19], time_format2)
         except:
-            date=str_time
+            date = str_time
     return date
+
 
 def read_xml_tree(elt):
     """ return xml tree `elt` """
-    children = list(elt) # getchildren() is removed in Py 3.9
+    children = list(elt)  # getchildren() is removed in Py 3.9
     if len(children):
         children_dict = {}
         for child in children:
@@ -357,7 +354,8 @@ def read_xml_tree(elt):
         return children_dict
     else:
         return elt.text
-            
+
+
 ##########################################################################
 # Create an XML file from an MTG
 
@@ -366,10 +364,11 @@ class Dumper(object):
 
     """
     accession = "{http://www.plantontology.org/xml-dtd/po.dtd}accession"
+
     def dump(self, graph):
         self._g = graph
         self.mtg()
-        
+
         xmlstr = xml.tostring(self.xml_root, encoding='UTF-8')
         prettystr = minidom.parseString(xmlstr)
         return prettystr.toprettyxml(indent="  ", encoding='UTF-8')
@@ -378,7 +377,7 @@ class Dumper(object):
         elt = xml.SubElement(parent, tag, attrib, **kwds)
         elt.text = text
         return elt
-        
+
     def SubTree(self, parent, tag, tree):
         """ recursively add `tree` to xml parent element
         
@@ -389,7 +388,7 @@ class Dumper(object):
         """
         elt = xml.SubElement(parent, tag)
         for name, child in tree.items():
-            if isinstance(child,dict):
+            if isinstance(child, dict):
                 self.SubTree(elt, name, child)
             else:
                 self.SubElement(elt, name, text=str(child))
@@ -398,10 +397,10 @@ class Dumper(object):
     def mtg(self):
         """ Convert the MTG into a XML tree. """
         # Create a DocType at the begining of the file
-        
+
         # Create the metadata
         self.xml_root = xml.Element('rsml',
-                        attrib={"xmlns:po":"http://www.plantontology.org/xml-dtd/po.dtd"})
+                                    attrib={"xmlns:po": "http://www.plantontology.org/xml-dtd/po.dtd"})
         self.xml_nodes = {}
 
         self.metadata()
@@ -409,54 +408,54 @@ class Dumper(object):
 
     def metadata(self):
         g = self._g
-        
-        self.xml_meta = xml.SubElement(self.xml_root,'metadata')
+
+        self.xml_meta = xml.SubElement(self.xml_root, 'metadata')
 
         gmetadata = metadata.set_metadata(g)
         list_metadata = metadata.flat_metadata
         if 'observation-hours' not in list_metadata:
             list_metadata.append('observation-hours')
-        
+
         for tag in metadata.flat_metadata:
             self.SubElement(self.xml_meta, tag=tag, text=str(gmetadata[tag]))
-            
+
         # image metadata
-                
+
         self.image(gmetadata)
         self.property_definitions(gmetadata)
         # print('TODO: time-sequence')
-        
-    def image(self,metadata):
+
+    def image(self, metadata):
         """ dump image element of metadata """
         image = metadata.get('image')
         if image is None: return
-        
+
         img = self.SubElement(self.xml_meta, 'image')
         for tag, text in image.items():
             self.SubElement(img, tag, text=str(text))
-                
+
     def property_definitions(self, metadata):
         """ dump property definitions of metadata """
 
-        #print('property definitions')
+        # print('property definitions')
         gproperties = metadata.get('property-definitions')
-        if gproperties is None: 
+        if gproperties is None:
             return
-        
-        #print('property definitions : inside')
+
+        # print('property definitions : inside')
         pdefs = self.SubElement(self.xml_meta, 'property-definitions')
-        for label,prop in gproperties.items():
+        for label, prop in gproperties.items():
             pdef = self.SubElement(pdefs, tag='property-definition')
             self.SubElement(pdef, tag='label', text=str(label))
             tags = list(prop.keys())
-            tags = [tag for tag in ['type','unit','default'] if tag in tags]
+            tags = [tag for tag in ['type', 'unit', 'default'] if tag in tags]
             for tag in tags:
                 self.SubElement(pdef, tag=tag, text=str(prop[tag]))
 
             pdef = self.SubElement(pdefs, tag='function-definition')
             self.SubElement(pdef, tag='label', text=str(label))
             tags = list(prop.keys())
-            tags = [tag for tag in ['type','unit','default'] if tag in tags]
+            tags = [tag for tag in ['type', 'unit', 'default'] if tag in tags]
             for tag in tags:
                 self.SubElement(pdef, tag=tag, text=str(prop[tag]))
 
@@ -467,16 +466,16 @@ class Dumper(object):
 
         # put non-metadata graph properties into 'graph_property' scene 
         # TODO: Add other scene properties?
-        gprop = dict((k,v) for (k,v) in g.graph_properties().items() if k!='metadata')
+        gprop = dict((k, v) for (k, v) in g.graph_properties().items() if k != 'metadata')
         if len(gprop):
             gprop = metadata.filter_literal(gprop)
-            #sc_prop  = self.SubElement(self.xml_scene, 'properties')
-            #sc_gprop = self.SubTree(sc_prop, 'graph_property', gprop)
-        
+            # sc_prop  = self.SubElement(self.xml_scene, 'properties')
+            # sc_gprop = self.SubTree(sc_prop, 'graph_property', gprop)
+
         # Traverse the MTG
         self.plants = []
-        #self.branching_point = {}
-        #self.spaces = 0
+        # self.branching_point = {}
+        # self.spaces = 0
         for tree_id in g.components_iter(g.root):
             self.plant(tree_id)
 
@@ -489,16 +488,15 @@ class Dumper(object):
     def plant(self, vid):
         g = self._g
 
-
         self.prev_node = g.node(vid)
         props = g[vid]
 
-        self.xml_nodes[vid] = plant = self.SubElement(self.xml_scene, 'plant')        
+        self.xml_nodes[vid] = plant = self.SubElement(self.xml_scene, 'plant')
 
         # Extract SegmentType & LeafType
         plant.attrib['id'] = str(props.pop('id', vid))
-        plant.attrib['label'] = str(props.pop('label', g.label(vid)))        
-        
+        plant.attrib['label'] = str(props.pop('label', g.label(vid)))
+
         for rid in g.component_roots_iter(vid):
             self.root(plant, rid)
         # Manage the recursive structure?
@@ -507,23 +505,22 @@ class Dumper(object):
     def root(self, xml_parent, mtg_vid):
         g = self._g
         vid = mtg_vid
-        
-        self.xml_nodes[vid] = axis = self.SubElement(xml_parent, 'root') 
+
+        self.xml_nodes[vid] = axis = self.SubElement(xml_parent, 'root')
 
         # set xml attributes
         props = g[vid]
-        
-        axis.attrib['id']    = str(props.pop('id', vid))
+
+        axis.attrib['id'] = str(props.pop('id', vid))
         axis.attrib['label'] = str(props.pop('label', g.label(vid)))
         if 'po:accession' in props:
             axis.attrib['po:accession'] = str(props.pop('po:accession'))
 
         # set xml axis element
-        self.geometry(axis,**props)
-        self.functions(axis,**props)
+        self.geometry(axis, **props)
+        self.functions(axis, **props)
         self.properties(vid, axis)
-        
-        
+
         # process children root axis
         # --------------------------
         for subroot in g.children(vid):
@@ -540,31 +537,31 @@ class Dumper(object):
         if 'geometry' in props:
             polyline = props['geometry']
             ta = self.SubElement(axis, 'geometry')
-            tb = self.SubElement(ta,   'polyline')
-            xyz=['x','y','z']
-            for pt in polyline: 
-                pt_elt = self.SubElement(tb, 'point', 
-                                         attrib=dict(list(zip(xyz,list(map(str,pt))))))
-                
+            tb = self.SubElement(ta, 'polyline')
+            xyz = ['x', 'y', 'z']
+            for pt in polyline:
+                pt_elt = self.SubElement(tb, 'point',
+                                         attrib=dict(list(zip(xyz, list(map(str, pt))))))
+
         else:
-            from warnings import warn 
-            xml2mtg_id = dict((xml_id,mtg_id) for mtg_id,xml_id in self.xml_nodes.items())
-            mtg_id = xml2mtg_id.get(axis,'undefined')
-            warn('Root axis with id={} has no geometry'.format(mtg_id)) # mandatory in rsml
-                    
+            from warnings import warn
+            xml2mtg_id = dict((xml_id, mtg_id) for mtg_id, xml_id in self.xml_nodes.items())
+            mtg_id = xml2mtg_id.get(axis, 'undefined')
+            warn('Root axis with id={} has no geometry'.format(mtg_id))  # mandatory in rsml
+
     def properties(self, vid, axis):
         """ set the `axis` properties """
         g = self._g
         meta = g.graph_properties()['metadata'].get('property-definitions', {})
         ax_prop = g[vid]
-        ax_prop = dict((p,ax_prop[p]) for p in meta if p in ax_prop)
-        
-        if len(ax_prop)==0: return
-        
+        ax_prop = dict((p, ax_prop[p]) for p in meta if p in ax_prop)
+
+        if len(ax_prop) == 0: return
+
         elt_prop = self.SubElement(axis, tag='properties')
-        for prop,value in ax_prop.items():
-            self.SubElement(elt_prop, tag=prop, attrib={'value':str(value)})
-        
+        for prop, value in ax_prop.items():
+            self.SubElement(elt_prop, tag=prop, attrib={'value': str(value)})
+
     def functions(self, axis, **props):
         """ Set the root `axis` functions
         
@@ -579,7 +576,7 @@ class Dumper(object):
             meta = graph_prop['metadata']
             if 'functions' in meta:
                 pname = meta['functions']
-        
+
         functions_elt = None
         for tag in pname:
             if tag in props:
@@ -588,15 +585,16 @@ class Dumper(object):
                 function_elt = self.SubElement(functions_elt, 'function')
                 function_elt.attrib['domain'] = 'polyline'
                 function_elt.attrib['name'] = tag
-        
+
                 for sample in props[tag]:
                     sample_elt = self.SubElement(function_elt, 'sample')
-                    if isinstance(sample, (tuple, list)) and len(sample)  == 2:
+                    if isinstance(sample, (tuple, list)) and len(sample) == 2:
                         sample_elt.attrib['position'] = str(sample[0])
                         sample_elt.attrib['value'] = str(sample[1])
                     else:
                         sample_elt.attrib['value'] = str(sample)
-                        
+
+
 ##########################################################################
 # Wrapper functions for OpenAlea usage.
 
@@ -607,6 +605,7 @@ def rsml2mtg(rsml_graph, debug=False):
     parser = Parser()
     return parser.parse(rsml_graph, debug=debug)
 
+
 def mtg2rsml(g, rsml_file):
     """
     Write **continuous** mtg `g` in `rsml_file`
@@ -615,8 +614,9 @@ def mtg2rsml(g, rsml_file):
     """
     dump = Dumper()
     s = dump.dump(g)
-    if isinstance(rsml_file,str):
-        with open(rsml_file, 'wb') as f: # F. Bauget 2022-04-11: with python 3 xml.tostring(self.xml_root, encoding='UTF-8') gives bytes so I open in binary mode
+    if isinstance(rsml_file, str):
+        with open(rsml_file,
+                  'wb') as f:  # F. Bauget 2022-04-11: with python 3 xml.tostring(self.xml_root, encoding='UTF-8') gives bytes so I open in binary mode
             f.write(s)
     else:
         rsml_file.write(s)

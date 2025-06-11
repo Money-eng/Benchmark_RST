@@ -1,6 +1,6 @@
 import segmentation_models_pytorch as smp
-from torch import sigmoid
 import torch.nn as nn
+
 
 class UNet(nn.Module):
     """
@@ -10,29 +10,30 @@ class UNet(nn.Module):
         out_channels (int): Number of output classes/channels.
         encoder_name (str): Encoder backbone (e.g. 'resnet34').
         encoder_weights (str|None): Pretrained weights, e.g. 'imagenet'.
+        return_logits (bool): If True, returns raw logits; otherwise returns probabilities.
     """
+
     def __init__(
-        self, 
-        in_channels=1, 
-        out_channels=1, 
-        encoder_name="resnet34", 
-        encoder_weights=None,
-        decoder_attention_type=None,
-        return_logits=False
+        self,
+        in_channels: int = 1,
+        out_channels: int = 1,
+        encoder_name: str = "resnet34",
+        encoder_weights: str = None,
+        decoder_attention_type: str = None,
+        return_logits: bool = False,
     ):
         super().__init__()
+        # If return_logits=True, activation=None gives raw logits.
+        activation = None if return_logits else "sigmoid"
         self.model = smp.Unet(
             encoder_name=encoder_name,
             encoder_weights=encoder_weights,
             in_channels=in_channels,
             classes=out_channels,
             decoder_attention_type=decoder_attention_type,
-            activation=None  # output raw logits, apply activation later
+            activation=activation,
         )
         self.return_logits = return_logits
 
     def forward(self, x):
-        if self.return_logits:
-            return self.model(x)
-        else: 
-            return sigmoid(self.model(x))
+        return self.model(x)

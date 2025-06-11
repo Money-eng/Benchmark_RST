@@ -3,6 +3,7 @@
 import numpy as np
 import torch
 from skimage.metrics import adapted_rand_error
+
 from ..base import BaseMetric
 
 
@@ -12,7 +13,7 @@ class AREError(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor, time, mtg) -> float:
+    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Adapted Rand Error pour segmentation binaire :
         ARE = 1 - ARI <– (adapted_rand_error renvoie (error, _, _)).

@@ -2,6 +2,7 @@ import numpy as np
 import os
 import re
 
+
 def load_all_interceptos(intercepto_dir="./interceptos"):
     """
     Charge toutes les courbes intercepto du dossier interceptos.
@@ -18,28 +19,35 @@ def load_all_interceptos(intercepto_dir="./interceptos"):
             curve_dict[(box, int(plant), int(t))] = arr
     return curve_dict
 
+
 from scipy.spatial.distance import euclidean
 from dtaidistance import dtw
+
 
 def ccc(y_true, y_pred):
     y_true, y_pred = np.array(y_true), np.array(y_pred)
     mean_true, mean_pred = np.mean(y_true), np.mean(y_pred)
     var_true, var_pred = np.var(y_true), np.var(y_pred)
     covar = np.mean((y_true - mean_true) * (y_pred - mean_pred))
-    return (2 * covar) / (var_true + var_pred + (mean_true - mean_pred)**2 + 1e-8)
+    return (2 * covar) / (var_true + var_pred + (mean_true - mean_pred) ** 2 + 1e-8)
+
 
 def chamfer_1d(y1, y2):
     # Chamfer simplifiée pour séries alignées
     return np.mean(np.abs(y1 - y2))
 
+
 from itertools import combinations
+
 
 def all_pairwise_keys(curve_dict):
     keys = list(curve_dict.keys())
     return list(combinations(keys, 2))
 
+
 from concurrent.futures import ProcessPoolExecutor
 from tqdm import tqdm
+
 
 def compute_pair_metrics(args):
     k1, k2, curve_dict = args
@@ -55,6 +63,7 @@ def compute_pair_metrics(args):
         "chamfer": chamfer_1d(y1, y2),
     }
 
+
 def compute_all_metrics(curve_dict, n_workers=ProcessPoolExecutor()._max_workers):
     args_list = [(k1, k2, curve_dict) for (k1, k2) in all_pairwise_keys(curve_dict)]
     results = []
@@ -63,7 +72,9 @@ def compute_all_metrics(curve_dict, n_workers=ProcessPoolExecutor()._max_workers
             results.append(res)
     return results
 
+
 from numpy import trapz
+
 
 def check_area_monotony(curve_dict):
     # Regroupe par box, plant
@@ -93,15 +104,18 @@ def check_area_monotony(curve_dict):
                 plt.legend(["Current", "Previous"])
                 plt.title(f"Area violation for box {box}, plant {plant}, t {t}")
                 plt.show()
-                
+
             prev_area = area
     return results
 
+
 import pickle
+
 
 def save_results(results, fname):
     with open(fname, "wb") as f:
         pickle.dump(results, f)
+
 
 if __name__ == "__main__":
     intercepto_dir = "./tmp_interceptos"

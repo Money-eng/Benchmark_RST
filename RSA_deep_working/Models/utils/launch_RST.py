@@ -1,16 +1,16 @@
-import subprocess
-import os
-import torch
-import tempfile
 import numpy as np
-import tifffile as tiff
-from utils.root_System_class import RootSystem
-from rsml import rsml2mtg
+import os
 import shutil
+import subprocess
+import tempfile
+import tifffile as tiff
+import torch
+from rsml import rsml2mtg
+from utils.root_System_class import RootSystem
 
 
 def preprocess_RST_pipeline(
-    prediction: torch.Tensor
+        prediction: torch.Tensor
 ):
     """
     À partir du tenseur de prédiction (batch de masques), crée un date_map unique,
@@ -49,13 +49,14 @@ def preprocess_RST_pipeline(
     # Pour le moment, on retourne None et l'appelant doit le remplir après chargement GT
     return pred_datemap, input_dir, output_dir, None
 
+
 def generate_graph_with_java(
-    input_path: str,
-    output_dir: str,
-    acq_times: str,
-    jar_path: str = "/home/loai/Documents/code/RSMLExtraction/RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar",
-    expected_filename: str = "61_graph.rsml",
-    timeout: int = 120,
+        input_path: str,
+        output_dir: str,
+        acq_times: str,
+        jar_path: str = "/home/loai/Documents/code/RSMLExtraction/RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar",
+        expected_filename: str = "61_graph.rsml",
+        timeout: int = 120,
 ):
     """
     Exécute le pipeline Java pour reconstruire un graphe et retourne le chemin du fichier généré.
@@ -98,10 +99,11 @@ def generate_graph_with_java(
         print(f"[ERREUR] Fichier attendu non trouvé : {expected_path}")
         return None
 
+
 def process_date_map(
-    mtg_paths: list,
-    predictions: torch.Tensor,
-    jar_path: str = "/home/loai/Documents/code/RSMLExtraction/RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar"
+        mtg_paths: list,
+        predictions: torch.Tensor,
+        jar_path: str = "/home/loai/Documents/code/RSMLExtraction/RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar"
 ):
     """
     Traite un batch issu de series_val_loader (ou équivalent) et renvoie deux MTG :
@@ -149,7 +151,7 @@ def process_date_map(
         acq_str = ",".join(str(h) for h in obs_hours)
     else:
         acq_str = str(obs_hours)
-        
+
     generated_rsml = generate_graph_with_java(
         input_path=input_dir,
         output_dir=output_dir,
@@ -164,10 +166,10 @@ def process_date_map(
     # 2.4) Charger MTG prédit en passant directement pred_datemap pour éviter rechargement
     rsystem_pred = RootSystem(folder_path=output_dir, date_map=pred_datemap)
     mtg_pred = rsystem_pred.mtg
-    
+
     # free up resources
     shutil.rmtree(input_dir, ignore_errors=True)
-    #shutil.rmtree(output_dir, ignore_errors=True)
+    # shutil.rmtree(output_dir, ignore_errors=True)
 
     # Retourne les deux MTG
     return mtg_gt, mtg_pred

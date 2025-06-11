@@ -1,15 +1,17 @@
-import os 
-import shutil
 import numpy as np
+import os
+import shutil
 import tifffile as tiff
-from rsml import hirros, rsml2mtg
 import utils.custom_dumper as CD
+from rsml import hirros, rsml2mtg
+
 
 class RootSystem:
     """
     Classe pour charger un système racinaire (RSML → MTG) et calculer les propriétés.
     On peut fournir directement date_map pour éviter de recharger le fichier depuis le disque.
     """
+
     def __init__(self, folder_path: str, date_map: np.ndarray = None):
         self.folder_path = folder_path
         self.date_map = date_map
@@ -100,6 +102,7 @@ class RootSystem:
         else:
             print("InfoSerieRootSystemTracker.csv non trouvé, pas copié.")
 
+
 # Re-write de mtg2rsml pour éviter l'erreur d'écriture
 def mtg2rsml(g, rsml_file):
     """
@@ -112,5 +115,4 @@ def mtg2rsml(g, rsml_file):
         with open(rsml_file, 'wb') as f:
             f.write(s)
     else:
-        rsml_file.write(s) 
-    
+        rsml_file.write(s)

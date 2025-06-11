@@ -1,15 +1,8 @@
-import torch.nn as nn
-from .dice_loss import DiceLoss
+from monai.losses import DiceCELoss
 
-
-class BCEDiceLoss(nn.Module):
-    def __init__(self, weight=0.5, smooth=1.0, **kwargs):
-        super(BCEDiceLoss, self).__init__()
-        self.bce = nn.BCELoss()
-        self.dice = DiceLoss(smooth=float(smooth)) # DiceLoss class from dice_loss.py
-        self.weight = float(weight)
+class BCEDiceLoss(DiceCELoss):
+    def __init__(self, **kwargs):
+        super().__init__(kwargs)
 
     def forward(self, inputs, targets):
-        bce_loss = self.bce(inputs, targets)
-        dice_loss = self.dice(inputs, targets)
-        return self.weight * bce_loss + (1 - self.weight) * dice_loss
+        return super().forward(inputs, targets)

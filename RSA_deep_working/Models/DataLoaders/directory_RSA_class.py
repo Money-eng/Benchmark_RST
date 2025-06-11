@@ -1,6 +1,6 @@
 import os
-import tifffile
 import rsml
+import tifffile
 
 
 class LightRSAClass:
@@ -73,7 +73,7 @@ class LightRSAClass:
         Charge toutes les données (image stack, MTG et date_map si activé).
         """
         _ = self.image_stack  # Force le chargement de l'image stack
-        _ = self.mtg          # Force le chargement du MTG
+        _ = self.mtg  # Force le chargement du MTG
         if self.load_date_map_flag:
             _ = self.date_map
 

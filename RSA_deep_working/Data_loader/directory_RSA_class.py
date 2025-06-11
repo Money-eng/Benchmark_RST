@@ -1,6 +1,7 @@
 import os
-import tifffile
 import rsml
+import tifffile
+
 
 class LightRSAClass:
     def __init__(self, folder_path: str, load_date_map: bool = False, lazy: bool = True):
@@ -21,7 +22,7 @@ class LightRSAClass:
         self.date_map_path = os.path.join(folder_path, "40_date_map.tif")
         self.rsml_expert_file = os.path.join(folder_path, "61_graph_expertized.rsml")
         self.rsml_default_file = os.path.join(folder_path, "61_graph.rsml")
-        
+
         # Initialisation des attributs (données)
         self._image_stack = None
         self._date_map = None
@@ -67,10 +68,9 @@ class LightRSAClass:
         Charge toutes les données (image stack, MTG et date_map si activé).
         """
         _ = self.image_stack  # Force le chargement de l'image stack
-        _ = self.mtg          # Force le chargement du MTG
+        _ = self.mtg  # Force le chargement du MTG
         if self.load_date_map_flag:
             _ = self.date_map
-            
 
     def get_data(self):
         """
@@ -84,6 +84,7 @@ class LightRSAClass:
             "mtg": self.mtg,
             "date_map": self.date_map
         }
+
 
 class DirectoryRSAClass:
     def __init__(self, base_dir: str, load_date_map: bool = False, lazy: bool = True):
@@ -118,7 +119,7 @@ class DirectoryRSAClass:
 
     def __iter__(self):
         return iter(self.loaders)
-    
+
     def __len__(self):
         return len(self.loaders)
 
@@ -130,15 +131,16 @@ class DirectoryRSAClass:
         loader = self.loaders[index]
         return loader.get_data()
 
+
 # Exemple d'utilisation pour un modèle de segmentation deep learning
 if __name__ == "__main__":
     base_directory = "/home/loai/Images/DataTest/UC1_data"
-    
+
     # Création d'un DirectoryRSAClass pour parcourir l'arborescence
     dataset = DirectoryRSAClass(base_directory, load_date_map=True, lazy=True)
-    
+
     print(f"{len(dataset)} dataset(s) trouvé(s) dans l'arborescence.")
-    
+
     # Exemple d'utilisation du getitem pour récupérer le dataset n°0
     try:
         data = dataset[0]  # Renvoie un dictionnaire contenant 'image_stack', 'mtg' et 'date_map'

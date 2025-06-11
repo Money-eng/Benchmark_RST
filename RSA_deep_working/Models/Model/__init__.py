@@ -1,11 +1,13 @@
 import torch
-from .unet import UNet
+
 from .segformer import Segformer
+from .unet import UNet
 
 MODEL_FACTORIES = {
     "unet": UNet,
     "segformer": Segformer,
 }
+
 
 def get_model(model_config: dict) -> torch.nn.Module:
     name = model_config["name"]

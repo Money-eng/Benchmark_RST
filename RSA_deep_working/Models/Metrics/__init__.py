@@ -1,6 +1,12 @@
 # Metrics/__init__.py
 
 from .base import BaseMetric
+from .cpu.are_error import AREError
+from .cpu.ari_index import ARIIndex
+from .cpu.betti0_difference import Betti0Difference
+from .cpu.connectivity import Connectivity
+from .cpu.euler_charac_difference import EulerCharacDifference
+from .cpu.vi_index import VIIndex
 from .gpu.dice import Dice
 from .gpu.f1_score import F1Score
 from .gpu.iou import IoU
@@ -8,13 +14,6 @@ from .gpu.pixel_accuracy import PixelAccuracy
 from .gpu.precision import Precision
 from .gpu.recall import Recall
 from .gpu.specificity import Specificity
-
-from .cpu.connectivity import Connectivity
-from .cpu.ari_index import ARIIndex
-from .cpu.are_error import AREError
-from .cpu.vi_index import VIIndex
-from .cpu.betti0_difference import Betti0Difference
-from .cpu.euler_charac_difference import EulerCharacDifference
 
 # Global dictionnary to map metric names to their corresponding classes
 METRIC_FACTORIES = {

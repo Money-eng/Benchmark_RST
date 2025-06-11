@@ -1,11 +1,12 @@
+import functools
+import numpy as np
+import torchmetrics.functional as FMF
+import torchmetrics.functional.segmentation as FMS
 from skimage.measure import label, euler_number
 from skimage.metrics import adapted_rand_error
 from sklearn.metrics import adjusted_rand_score, mutual_info_score
 from sklearn.metrics.cluster import entropy
-import torchmetrics.functional as FMF
-import torchmetrics.functional.segmentation as FMS
-import numpy as np
-import functools
+
 
 ## https://www.mdpi.com/2072-4292/16/12/2056
 # APLS ? PLS is used to measure the similarity between the extracted road network and the real road network. It is defined by Equation (7). By comparing the average path lengths between them, the accuracy and completeness of the road extraction results can be evaluated, determining whether the topology of the road network is consistent with the real situation. 
@@ -31,6 +32,7 @@ def all_metrics_cpu():
     return [connectivity_metric, ARI_index, VI_index, ARE_error,
             betti_0_difference, euler_charac_difference]
 
+
 # =============================================================================
 # Decorator for standardizing the inputs of metrics (conversion to int)
 # =============================================================================
@@ -47,6 +49,7 @@ def standardize_metric(func):
             pred = pred.squeeze(1)
             msk = msk.squeeze(1)
         return func(pred, msk, time, mtg)
+
     return wrapper
 
 
@@ -61,7 +64,9 @@ def standardize_float_metric(func):
             pred = pred.squeeze(1)
             msk = msk.squeeze(1)
         return func(pred, msk, time, mtg)
+
     return wrapper
+
 
 # =============================================================================
 # Standard Metrics Definitions
@@ -151,6 +156,7 @@ def specificity(prediction, mask, time=0, mtg=None):
     _, fp, tn, _, _ = FMS.stat_scores(prediction, mask, threshold=0.5)
     spec = tn / (tn + fp + 1e-8)
     return spec.mean().item()
+
 
 # =============================================================================
 # Topology-Aware Metrics Definitions

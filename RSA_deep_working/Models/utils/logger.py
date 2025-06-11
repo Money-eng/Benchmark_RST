@@ -36,8 +36,8 @@ class TensorboardLogger:
 
 
 def log_dataset_stats(
-    n_series, n_images, n_train_series, n_val_series, n_test_series,
-    n_train_images, n_val_images, n_test_images
+        n_series, n_images, n_train_series, n_val_series, n_test_series,
+        n_train_images, n_val_images, n_test_images
 ):
     """ 
     Logs dataset statistics including the number of series and images in training, validation, and testing sets.

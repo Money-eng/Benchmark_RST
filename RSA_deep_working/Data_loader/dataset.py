@@ -1,8 +1,9 @@
-import os
 import numpy as np
+import os
+import tifffile
 import torch
 from torch.utils.data import Dataset
-import tifffile
+
 from .tiff_reader import CachedTiffReader
 
 
@@ -45,15 +46,16 @@ class RSADataset(Dataset):
     Raises:
         ValueError: If the mode is not 'series' or 'image'.
     """
+
     def __init__(
-        self,
-        rsa_dir_loader: None,
-        mode='series',
-        img_transform=None,
-        mask_transform_series=None,
-        mask_transform_image=None,
-        image_with_mtg=False,
-        as_RGB=False
+            self,
+            rsa_dir_loader: None,
+            mode='series',
+            img_transform=None,
+            mask_transform_series=None,
+            mask_transform_image=None,
+            image_with_mtg=False,
+            as_RGB=False
     ):
         self.mode = mode
         self.samples = []
@@ -93,7 +95,7 @@ class RSADataset(Dataset):
         if self.mode == 'series':
             img = tifffile.imread(img_path)
             mask_raw = tifffile.imread(mask_path)
-            time = num_slices # here number of slices is the time
+            time = num_slices  # here number of slices is the time
             if self.img_transform:
                 img = self.img_transform(img)
             mask = (
@@ -102,10 +104,10 @@ class RSADataset(Dataset):
                 else mask_raw
             )
         else:
-            z = num_slices # not here, it's the slice number
+            z = num_slices  # not here, it's the slice number
             img = self.tiff_reader.get_page(img_path, z)
             mask_raw = tifffile.imread(mask_path)
-            mask = np.where((mask_raw != 0) & (mask_raw <= z+1), 1, 0)
+            mask = np.where((mask_raw != 0) & (mask_raw <= z + 1), 1, 0)
             if self.img_transform:
                 img = self.img_transform(img)
             mask = (
@@ -120,4 +122,3 @@ class RSADataset(Dataset):
         # mask to float tensor
         mask = torch.tensor(mask, dtype=torch.float32)
         return img, mask, time, mtg
-    

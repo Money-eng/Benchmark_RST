@@ -1,5 +1,6 @@
-from pathlib import Path
 import numpy as np
+from pathlib import Path
+
 
 def load_mtg_from_rsml(rsml_path: str):
     """
@@ -8,7 +9,8 @@ def load_mtg_from_rsml(rsml_path: str):
     from rsml import rsml2mtg
     return rsml2mtg(rsml_path)
 
-def compute_interceptos_for_mtg(mtg, times=range(1,29), nlengths=2500):
+
+def compute_interceptos_for_mtg(mtg, times=range(1, 29), nlengths=2500):
     """
     Pour chaque plante et chaque temps, calcule la courbe intercepto.
     Retourne: dict {plant_id: {t: intercepto_curve}}
@@ -19,7 +21,7 @@ def compute_interceptos_for_mtg(mtg, times=range(1,29), nlengths=2500):
 
     res = {}
     plant_ids = mtg.vertices(scale=1)
-    list_lengths = np.linspace(0, (nlengths-1)*1e-3, nlengths)
+    list_lengths = np.linspace(0, (nlengths - 1) * 1e-3, nlengths)
     for plant_id in plant_ids:
         res[plant_id] = {}
         sub_mtg = mtg.sub_mtg(plant_id)
@@ -30,27 +32,33 @@ def compute_interceptos_for_mtg(mtg, times=range(1,29), nlengths=2500):
             res[plant_id][t] = np.array(intercepto)
     return res, list_lengths
 
+
 # ========================
 # METRICS FUNCTIONS
 # ========================
 from scipy.spatial.distance import euclidean
 from dtaidistance import dtw
 
+
 def ccc(y1, y2):
     y1, y2 = np.array(y1), np.array(y2)
     m1, m2 = y1.mean(), y2.mean()
     v1, v2 = y1.var(), y2.var()
     cov = ((y1 - m1) * (y2 - m2)).mean()
-    return 2 * cov / (v1 + v2 + (m1 - m2)**2 + 1e-8)
+    return 2 * cov / (v1 + v2 + (m1 - m2) ** 2 + 1e-8)
+
 
 def chamfer_1d(y1, y2):
     return np.mean(np.abs(y1 - y2))
 
+
 def l1_area(y1, y2, x):
     return np.trapz(np.abs(y1 - y2), x)
 
+
 def l2_area(y1, y2, x):
-    return np.sqrt(np.trapz((y1 - y2)**2, x))
+    return np.sqrt(np.trapz((y1 - y2) ** 2, x))
+
 
 # ========================
 # METRIC COMPUTATION
@@ -65,7 +73,7 @@ def compute_all_metrics_for_plant(intercepto_dict, list_lengths):
     times = sorted(intercepto_dict.keys())
     for i, t1 in enumerate(times):
         y1 = intercepto_dict[t1]
-        for t2 in times[i+1:]:
+        for t2 in times[i + 1:]:
             y2 = intercepto_dict[t2]
             minlen = min(len(y1), len(y2))
             y1c, y2c = y1[:minlen], y2[:minlen]
@@ -86,6 +94,7 @@ def compute_all_metrics_for_plant(intercepto_dict, list_lengths):
             results.append(res)
             print(f"Comparing t1={t1} and t2={t2}: {res}")
     return results
+
 
 # ========================
 # MAIN FUNCTION
@@ -115,6 +124,7 @@ def main(rsml_path):
     print("Done. Example result (first plant):")
     first_plant = list(all_results.keys())[0]
     print(all_results[first_plant][:3])  # Affiche les 3 premières comparaisons
+
 
 if __name__ == "__main__":
     rsml_path = "/home/loai/Images/DataTest/UC1_data_backup/230629PN024/61_graph.rsml"

@@ -1,11 +1,12 @@
 import torch
+from random import Random
 from torch.utils.data import DataLoader, Subset, Sampler
 from torchvision import transforms
+from utils.logger import log_dataset_stats
+from utils.misc import set_seed, worker_init_fn
+
 from .dataset import RSADataset
 from .directory_RSA_class import DirectoryRSAClass
-from utils.misc import set_seed, worker_init_fn
-from utils.logger import log_dataset_stats
-from random import Random
 
 SEED = 42
 set_seed(SEED)  # Call only once at script startup!
@@ -34,13 +35,14 @@ class SeriesBatchSampler(Sampler):
 
 
 def create_dataloader(
-    base_directory: str,
-    img_transform: transforms.Compose,
-    mask_transform_image: transforms.Compose,
-    mask_transform_series: transforms.Compose,
-    default_batch_size: int = 32,
-    num_workers: int = 8,
-    seed: int = 42
+        base_directory: str,
+        img_transform: transforms.Compose,
+        img_transform_series: transforms.Compose,
+        mask_transform_image: transforms.Compose,
+        mask_transform_series: transforms.Compose,
+        default_batch_size: int = 32,
+        num_workers: int = 8,
+        seed: int = 42
 ):
     """
         Creates PyTorch DataLoaders for training, validation, and testing on the RSA dataset, 
@@ -72,7 +74,7 @@ def create_dataloader(
     dir_loader = DirectoryRSAClass(
         base_directory, load_date_map=True, lazy=True)
     series_dataset = RSADataset(
-        dir_loader, mode='series', img_transform=img_transform,
+        dir_loader, mode='series', img_transform=img_transform_series,
         mask_transform_series=mask_transform_series, image_with_mtg=True
     )
     image_dataset = RSADataset(

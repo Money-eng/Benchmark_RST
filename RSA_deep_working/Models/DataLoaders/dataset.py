@@ -1,9 +1,10 @@
-import os
 import numpy as np
-import torch
-from torch.utils.data import Dataset
+import os
 import tifffile
+import torch
 from PIL import Image
+from torch.utils.data import Dataset
+
 from .tiff_reader import CachedTiffReader
 
 
@@ -48,14 +49,14 @@ class RSADataset(Dataset):
     """
 
     def __init__(
-        self,
-        rsa_dir_loader=None,
-        mode='series',
-        img_transform=None,
-        mask_transform_series=None,
-        mask_transform_image=None,
-        image_with_mtg=False,
-        as_RGB=False
+            self,
+            rsa_dir_loader=None,
+            mode='series',
+            img_transform=None,
+            mask_transform_series=None,
+            mask_transform_image=None,
+            image_with_mtg=False,
+            as_RGB=False
     ):
         self.mode = mode
         self.samples = []
@@ -94,8 +95,8 @@ class RSADataset(Dataset):
         img_path, mask_path, num_slices, mtg_path = self.samples[idx]
 
         if self.mode == 'series':
-            img_np   = tifffile.imread(img_path)         # NumPy array, maybe uint16 or int
-            mask_raw = tifffile.imread(mask_path)        # Likely a date‐map int64
+            img_np = tifffile.imread(img_path)  # NumPy array, maybe uint16 or int
+            mask_raw = tifffile.imread(mask_path)  # Likely a date‐map int64
 
             # Convert image → PIL so that img_transform (Pad, etc.) works:
             img = Image.fromarray(img_np)
@@ -118,8 +119,8 @@ class RSADataset(Dataset):
 
         else:  # mode == 'image'
             z = num_slices
-            img_np   = self.tiff_reader.get_page(img_path, z)  # NumPy array
-            mask_raw = tifffile.imread(mask_path)              # date‐map int64
+            img_np = self.tiff_reader.get_page(img_path, z)  # NumPy array
+            mask_raw = tifffile.imread(mask_path)  # date‐map int64
 
             # Build binary mask up to slice z:
             mask_np = np.where((mask_raw != 0) & (mask_raw <= z + 1), 1, 0)

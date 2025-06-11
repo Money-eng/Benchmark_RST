@@ -1,5 +1,6 @@
 import tifffile
 
+
 class CachedTiffReader:
     """
     A class to read and cache pages from TIFF files.
@@ -18,6 +19,7 @@ class CachedTiffReader:
             Retrieves a specific page from a TIFF file. If the file is not
             already cached, it reads and caches all pages of the file.
     """
+
     def __init__(self):
         """
         Initializes the CachedTiffReader with an empty cache.

@@ -3,6 +3,7 @@
 import numpy as np
 import torch
 from skimage.measure import euler_number
+
 from ..base import BaseMetric
 
 
@@ -12,7 +13,7 @@ class EulerCharacDifference(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor, time, mtg) -> float:
+    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Difference de la caractéristique d’Euler :
         euler_diff = |E_pred - E_mask| / (E_pred + E_mask + ε), on renvoie 1 - mean(euler_diff).
