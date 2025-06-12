@@ -16,8 +16,9 @@ class VIIndex(BaseMetric):
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Variation of Information (VI) :
-            VI = H(mask) + H(pred) - 2 * MI(mask, pred)
-        Pour avoir un score « plus haut = meilleur », on renvoie 1/(1+VI).
+            VI(X; Y ) = - \sum_{i,j} r_{ij} \left[\log(r_{ij}/p_i)+\log(r_{ij}/q_j)
+        where r_{ij} is the intersection of the two distributions (divided by the total number of samples),
+        p_i is the marginal distribution of X, and q_j is the marginal distribution of Y.
         """
         pred_np = prediction.numpy().flatten()
         mask_np = mask.numpy().flatten()

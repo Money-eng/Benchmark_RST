@@ -15,8 +15,10 @@ class ARIIndex(BaseMetric):
 
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
-        Adjusted Rand Index (ARI) sur la segmentation binaire :
-        on aplatit les tenseurs et on applique sklearn.metrics.adjusted_rand_score.
+        Adjusted Rand Index (ARI)
+        
+        ARI = 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn))
+        
         """
         pred_np = prediction.numpy().flatten()
         mask_np = mask.numpy().flatten()

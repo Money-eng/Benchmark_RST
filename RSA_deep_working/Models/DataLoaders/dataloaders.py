@@ -59,6 +59,10 @@ def create_dataloader(
     image_dataset_3 = RSADataset(
         dir_loader, mode="image", img_transform=img_transforms[2], image_with_mtg=True
     )
+    
+    image_dataset_val_test = RSADataset(
+        dir_loader, mode="image", img_transform=img_transforms[3], image_with_mtg=True
+    )
 
     n_series = len(series_dataset)
     n_images = len(image_dataset_1)
@@ -126,8 +130,8 @@ def create_dataloader(
     train_dataset = torch.utils.data.ConcatDataset(
         [train_dataset_1, train_dataset_2, train_dataset_3]
     )
-    val_dataset = Subset(image_dataset_1, val_indices)
-    test_dataset = Subset(image_dataset_1, test_indices)
+    val_dataset = Subset(image_dataset_val_test, val_indices)
+    test_dataset = Subset(image_dataset_val_test, test_indices)
 
     val_batch_sampler = SeriesBatchSampler(val_indices_per_series, shuffle=False)
     test_batch_sampler = SeriesBatchSampler(test_indices_per_series, shuffle=False)

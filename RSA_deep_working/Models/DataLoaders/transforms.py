@@ -1,7 +1,7 @@
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
-def get_test_img_transform():
+def get__val_test_img_transform():
     return A.Compose([
         ToTensorV2(),
     ])

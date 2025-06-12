@@ -1,11 +1,13 @@
 # Metrics/__init__.py
 
 from .base import BaseMetric
-from .cpu.are_error import AREError
 from .cpu.ari_index import ARIIndex
-from .cpu.betti0_difference import Betti0Difference
-from .cpu.connectivity import Connectivity
-from .cpu.euler_charac_difference import EulerCharacDifference
+from .cpu.betti0_ratio import Betti0JaccardRatio
+from .cpu.betti0_relative_error import Betti0RelativeError
+from .cpu.betti0_variation_index import Betti0VariationIndex
+from .cpu.euler_charac_abs_ratio import EulerCharaJaccardsRatio
+from .cpu.euler_charac_relative_error import EulerCharacRelativeError
+from .cpu.euler_charac_variation_index import EulerCharacVariationIndex
 from .cpu.vi_index import VIIndex
 from .gpu.dice import Dice
 from .gpu.f1_score import F1Score
@@ -15,6 +17,7 @@ from .gpu.precision import Precision
 from .gpu.recall import Recall
 from .gpu.specificity import Specificity
 from .gpu.surface_difference import Surface_distance
+from .gpu.surface_dice import Surface_dice
 
 # Global dictionnary to map metric names to their corresponding classes
 METRIC_FACTORIES = {
@@ -27,14 +30,17 @@ METRIC_FACTORIES = {
     "recall": Recall,
     "specificity": Specificity,
     "surface_distance": Surface_distance,
+    "surface_dice": Surface_dice,
 
     # CPU
-    "connectivity": Connectivity,
     "ari_index": ARIIndex,
-    "are_error": AREError,
     "vi_index": VIIndex,
-    "betti0_difference": Betti0Difference,
-    "euler_charac_difference": EulerCharacDifference,
+    "betti0_jaccard_ratio": Betti0JaccardRatio,
+    "betti0_relative_error": Betti0RelativeError,
+    "betti0_variation_index": Betti0VariationIndex,
+    "euler_charac_jaccard_ratio": EulerCharaJaccardsRatio,
+    "euler_charac_relative_error": EulerCharacRelativeError,
+    "euler_charac_variation_index": EulerCharacVariationIndex,
 }
 
 

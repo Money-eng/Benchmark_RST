@@ -42,12 +42,18 @@ metrics:
     - { name: "precision" }
     - { name: "recall" }
     - { name: "specificity" }
+    - { name: "f1_score" }
+    - { name: "surface_distance" }
+    - { name: "surface_dice" }
   cpu:
-    - { name: "connectivity" }
     - { name: "ari_index" }
     - { name: "vi_index" }
-    - { name: "betti0_difference" }
-    - { name: "euler_charac_difference" }
+    - { name: "betti0_jaccard_ratio" }
+    - { name: "betti0_relative_error" }
+    - { name: "betti0_variation_index" }
+    - { name: "euler_charac_jaccard_ratio" }
+    - { name: "euler_charac_relative_error" }
+    - { name: "euler_charac_variation_index" }
 
 data:
   base_dir: /home/loai/data/UC1_data

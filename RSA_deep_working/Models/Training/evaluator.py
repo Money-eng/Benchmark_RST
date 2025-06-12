@@ -5,6 +5,7 @@ from logging import Logger
 from tqdm import tqdm
 from utils.launch_RST import process_date_map
 from utils.logger import TensorboardLogger
+from monai.inferers import SlidingWindowInfererAdapt
 
 
 class Evaluator:
@@ -52,6 +53,14 @@ class Evaluator:
             self.logger.info("[Evaluator] Initialisation terminée.")
         else:
             print("[Evaluator] Initialisation terminée.")
+            
+        self.sw_inferer = SlidingWindowInfererAdapt(
+            roi_size=(512, 512),       # La taille du patch à utiliser pour l'inférence
+            sw_batch_size=4,           # Nombre de patchs à traiter en même temps (ajuste selon la VRAM)
+            overlap=0.25,              # Recouvrement entre les fenêtres, 0.25=25%
+            mode="constant"            # Moyenne sur les recouvrements (classique)
+        )
+
 
     def evaluate(self, last_loss_value, on_test: bool = False) -> dict:
         """
@@ -70,8 +79,8 @@ class Evaluator:
 
         save_first_pred = True
         with torch.no_grad():
-            # if accuracy loss gives us more than 80% accuracy, we can process the whole series
-            if last_loss_value < 0.2:
+            # if accuracy loss gives us more than 60% accuracy, we can process the whole series
+            if last_loss_value < 0.4:
                 print("Processing the whole series")
                 for ts_imgs, masks, _, mtgs in tqdm(
                         data_loader_series, desc="Evaluating whole series", leave=False, dynamic_ncols=True
@@ -79,7 +88,7 @@ class Evaluator:
                     ts_imgs = ts_imgs.to(self.device)
                     masks = masks.to(self.device)
 
-                    preds = self.model(ts_imgs)
+                    preds_logits_sigmoidee = self.sw_inferer(inputs=imgs, network=self.model)
 
                     mtg_gt, mtg_pred = process_date_map(mtgs, preds, jar_path=self.jar_path)
 
@@ -89,7 +98,7 @@ class Evaluator:
                 imgs = imgs.to(self.device)
                 masks = masks.to(self.device)
 
-                preds_logits_sigmoidee = self.model(imgs) # SIGMOID + BINARY THRESHOLDING NEEDED IN METRICS
+                preds_logits_sigmoidee = self.sw_inferer(inputs=imgs, network=self.model) # SIGMOID + BINARY THRESHOLDING NEEDED IN METRICS
                 preds = (preds_logits_sigmoidee > self.threshold).float()
                 
                 for metric in self.gpu_metrics:
@@ -106,8 +115,7 @@ class Evaluator:
 
                 if save_first_pred and self.tb_logger:
                     # Sauvegarde la première image, masque et prédiction dans TensorBoard
-                    print(mtg)
-                    self.tb_logger.log_image("Image", imgs, global_step=self.epoch)
+                    self.tb_logger.log_image("Image", imgs * 255, global_step=self.epoch)
                     self.tb_logger.log_image("Mask", masks * 255, global_step=self.epoch)  # Multiplier par 255 pour visualiser en noir et blanc
                     self.tb_logger.log_image("Prediction", preds * 255, global_step=self.epoch)  # Multiplier par 255 pour visualiser en noir et blanc
                     save_first_pred = False

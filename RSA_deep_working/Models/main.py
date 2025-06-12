@@ -1,7 +1,7 @@
 import os
 import torch
 import yaml
-from DataLoaders.transforms import get_train_img_transform_1, get_train_img_transform_2, get_train_img_transform_3
+from DataLoaders.transforms import get_train_img_transform_1, get_train_img_transform_2, get_train_img_transform_3, get__val_test_img_transform
 
 from DataLoaders.dataloaders import create_dataloader
 from Losses import get_loss
@@ -28,7 +28,8 @@ if __name__ == "__main__":
         img_transforms=[
             get_train_img_transform_1(patch_size=512), 
             get_train_img_transform_2(patch_size=512), 
-            get_train_img_transform_3(patch_size=512)
+            get_train_img_transform_3(patch_size=512),
+            get__val_test_img_transform()
             ],
         default_batch_size=int(config["data"].get("batch_size", 32)),
         seed=42
