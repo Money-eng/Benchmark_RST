@@ -8,7 +8,7 @@ from .cpu.betti0_variation_index import Betti0VariationIndex
 from .cpu.euler_charac_abs_ratio import EulerCharaJaccardsRatio
 from .cpu.euler_charac_relative_error import EulerCharacRelativeError
 from .cpu.euler_charac_variation_index import EulerCharacVariationIndex
-from .gpu.vi_index import VIIndex
+from .cpu.vi_index import VIIndex
 from .gpu.dice import Dice
 from .gpu.f1_score import F1Score
 from .gpu.iou import IoU
