@@ -10,7 +10,7 @@ from .tiff_reader import CachedTiffReader
 
 class RSADataset(Dataset):
     """
-    RSADataset is a PyTorch Dataset class designed to handle RSA (Root System Architecture) data. 
+    RSADataset is a PyTorch Dataset class designed to handle RSA (Root System Architecture) data.
     It supports loading image stacks, masks, and metadata for either series or individual image slices.
 
     Attributes:
@@ -24,7 +24,7 @@ class RSADataset(Dataset):
         tiff_reader (CachedTiffReader): A cached TIFF reader for efficient image loading.
 
     Methods:
-        __init__(rsa_dir_loader, mode='series', img_transform=None, mask_transform_series=None, 
+        __init__(rsa_dir_loader, mode='series', img_transform=None, mask_transform_series=None,
                  mask_transform_image=None, image_with_mtg=False, as_RGB=False):
             Initializes the dataset with the given parameters and loads the samples.
 
@@ -32,7 +32,7 @@ class RSADataset(Dataset):
             Returns the number of samples in the dataset.
 
         __getitem__(idx):
-            Retrieves the sample at the specified index, including the image, mask, time/slice, 
+            Retrieves the sample at the specified index, including the image, mask, time/slice,
             and optionally the metadata (MTG).
 
     Args:
@@ -49,20 +49,17 @@ class RSADataset(Dataset):
     """
 
     def __init__(
-            self,
-            rsa_dir_loader=None,
-            mode='series',
-            img_transform=None,
-            mask_transform_series=None,
-            mask_transform_image=None,
-            image_with_mtg=False,
-            as_RGB=False
+        self,
+        rsa_dir_loader,
+        mode: str = "series",
+        img_transform=None,
+        image_with_mtg: bool = False,
+        as_RGB: bool = False,
     ):
+        assert mode in ('series', 'image'), "Mode must be 'series' or 'image'"
         self.mode = mode
         self.samples = []
         self.img_transform = img_transform
-        self.mask_transform_series = mask_transform_series
-        self.mask_transform_image = mask_transform_image
         self.image_with_mtg = image_with_mtg
         self.as_RGB = as_RGB
         self.tiff_reader = CachedTiffReader()
@@ -78,83 +75,70 @@ class RSADataset(Dataset):
             with tifffile.TiffFile(img_path) as tif:
                 num_slices = len(tif.pages)
 
-            if mode == 'series':
-                self.samples.append(
-                    (img_path, mask_path, num_slices, mtg_path))
-            elif mode == 'image':
+            if mode == "series":
+                self.samples.append({
+                    'img_path': img_path,
+                    'mask_path': mask_path,
+                    'slice_idx': None,
+                    'num_slices': num_slices,
+                    'mtg_path': mtg_path,
+                })
+            elif mode == "image":
                 for z in range(num_slices):
-                    self.samples.append((img_path, mask_path, z, mtg_path))
+                    self.samples.append({
+                        'img_path': img_path,
+                        'mask_path': mask_path,
+                        'slice_idx': z,
+                        'num_slices': num_slices,
+                        'mtg_path': mtg_path,
+                    })
             else:
-                raise ValueError(
-                    "Mode non reconnu, choisissez 'series' ou 'image'")
+                raise ValueError("Mode non reconnu, choisissez 'series' ou 'image'")
 
     def __len__(self):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        img_path, mask_path, num_slices, mtg_path = self.samples[idx]
+        sample = self.samples[idx]
+        img_path = sample['img_path']
+        mask_path = sample['mask_path']
+        z = sample['slice_idx']
+        num_slices = sample['num_slices']
+        mtg = sample['mtg_path'] if self.image_with_mtg else torch.tensor(0)
 
+        # Load and build mask
+        mask_full = tifffile.imread(mask_path)
         if self.mode == 'series':
-            img_np = tifffile.imread(img_path)  # NumPy array, maybe uint16 or int
-            mask_raw = tifffile.imread(mask_path)  # Likely a date‐map int64
-
-            # Convert image → PIL so that img_transform (Pad, etc.) works:
-            img = Image.fromarray(img_np)
-
-            # Cast mask_raw to uint8 before giving to PIL:
-            mask_uint8 = mask_raw.astype(np.uint8)
-            mask = Image.fromarray(mask_uint8)
-
+            mask_np = (mask_full > 0).astype(np.uint8)
+            img_np = self.tiff_reader.get_series(img_path)
             time = num_slices
-            if self.img_transform:
-                img = self.img_transform(img)
-
-            # If you have a transform for masks (series-level), remember to give it a PIL mask:
-            if self.mask_transform_series:
-                # (mask_transform_series may expect a PIL Image)
-                mask = self.mask_transform_series(mask)
-            else:
-                # If you want to keep it as a raw NumPy fallback, you could do:
-                mask = torch.from_numpy(mask_uint8).float()
-
-        else:  # mode == 'image'
-            z = num_slices
-            img_np = self.tiff_reader.get_page(img_path, z)  # NumPy array
-            mask_raw = tifffile.imread(mask_path)  # date‐map int64
-
-            # Build binary mask up to slice z:
-            mask_np = np.where((mask_raw != 0) & (mask_raw <= z + 1), 1, 0)
-
-            # Convert image → PIL:
-            img = Image.fromarray(img_np)
-
-            # Cast the binary mask to uint8:
-            mask_uint8 = mask_np.astype(np.uint8)
-            mask = Image.fromarray(mask_uint8)
-
-            if self.img_transform:
-                img = self.img_transform(img)
-
-            if self.mask_transform_image:
-                mask = self.mask_transform_image(mask)
-            else:
-                mask = torch.from_numpy(mask_uint8).float()
-
+        else:
+            mask_np = ((mask_full != 0) & (mask_full <= z + 1)).astype(np.uint8)
+            img_np = self.tiff_reader.get_page(img_path, z)
             time = z
 
-        # If you really need RGB channels (rare for RSA), you can do this later on a tensor.
-        if self.as_RGB:
-            # But if img is still PIL here, you’d do something like:
-            # img = transforms.Grayscale(num_output_channels=3)(img)
-            # or convert back to tensor then repeat channels. 
-            pass
+        # Apply image transform if provided
+        if self.img_transform:
+            if img_np.ndim == 2:
+                img_np_aug = img_np[..., None]
+            else:
+                img_np_aug = img_np
+                
+            # image and mask to float32
+            img_np_aug = img_np_aug.astype(np.float32)
+            mask_np = mask_np.astype(np.float32)
+            # image and mask augmentation
+            augmented = self.img_transform(image=img_np_aug, mask=mask_np)
+            img = augmented['image']   # tensor [C,H,W]
+            mask = augmented['mask']  
+            mask = mask.unsqueeze(0)  # tensor [1,H,W]
+        else:
+            img = torch.from_numpy(img_np)
+            if img.ndim == 2:
+                img = img.unsqueeze(0)
+            else:
+                img = img.permute(2, 0, 1)
+            img = img.float()
+            mask = torch.from_numpy(mask_np).float().unsqueeze(0)
 
-        mtg = mtg_path if self.image_with_mtg else torch.tensor(0)
-
-        # At this point, ensure `mask` is a tensor (if you want to do `mask.clone()`):
-        if isinstance(mask, Image.Image):
-            # Convert PIL mask back to tensor if your training loop expects that:
-            mask = torch.from_numpy(np.array(mask)).float()
-
-        # Now you can safely call `mask.clone().detach()` in your training loop.
-        return img, mask, time, mtg
+        return img, mask.clone(), time, mtg

@@ -94,7 +94,6 @@ class Trainer:
             )
             for imgs, masks, _, _ in pbar:
                 imgs, masks = imgs.to(self.device), masks.to(self.device)
-
                 preds_logits_sigmoidee = self.model(imgs)
                 loss = self.criterion(preds_logits_sigmoidee, masks) # need for sigmoid !!! (in loss implementation)
 
@@ -163,7 +162,9 @@ class Trainer:
         Sauvergarde du state_dict du modèle dans checkpoint_dir.
         On ajoute epoch et valeur de métrique dans le nom de fichier.
         """
-        filename = f"{self.model.__class__.__name__}_epoch{epoch:03d}_{metric_name}_{metric_val:.4f}.pth"
+        # remove older checkpoint for the same metric
+        
+        filename = f"{self.model.__class__.__name__}_{metric_name}_epoch{epoch:03d}_{metric_val:.4f}.pth"
         filepath = os.path.join(self.checkpoint_dir, filename)
         torch.save(self.model.state_dict(), filepath)
         if self.logger:

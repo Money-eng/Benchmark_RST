@@ -14,6 +14,7 @@ from .gpu.pixel_accuracy import PixelAccuracy
 from .gpu.precision import Precision
 from .gpu.recall import Recall
 from .gpu.specificity import Specificity
+from .gpu.surface_difference import Surface_distance
 
 # Global dictionnary to map metric names to their corresponding classes
 METRIC_FACTORIES = {
@@ -25,6 +26,7 @@ METRIC_FACTORIES = {
     "precision": Precision,
     "recall": Recall,
     "specificity": Specificity,
+    "surface_distance": Surface_distance,
 
     # CPU
     "connectivity": Connectivity,

@@ -1,7 +1,7 @@
 import os
 import torch
 import yaml
-from torchvision import transforms
+from DataLoaders.transforms import get_train_img_transform_1, get_train_img_transform_2, get_train_img_transform_3
 
 from DataLoaders.dataloaders import create_dataloader
 from Losses import get_loss
@@ -12,31 +12,26 @@ from Training.trainer import Trainer
 from utils.logger import get_logger, TensorboardLogger
 from utils.misc import get_device
 
+import os
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
+
+
 if __name__ == "__main__":
     
-    cfg_path = "RSA_deep_working/Models/config.yml"
+    cfg_path = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/config.yml"
     assert os.path.exists(cfg_path), f"Le fichier de config n'existe pas : {cfg_path}"
     with open(cfg_path, "r") as f:
         config = yaml.safe_load(f)
-        
-    pad = transforms.Pad(padding=(0, 0, 28, 18), fill=0)  # grayscale → fill=0
-
-    img_transform = transforms.Compose([
-        pad,
-        transforms.ToTensor(),
-    ])
-    mask_transform = transforms.Compose([
-        pad,
-        transforms.ToTensor(),
-    ])
 
     train_loader, val_loader, test_loader, series_val_loader, series_test_loader = create_dataloader(
         base_directory=config["data"]["base_dir"],
-        img_transform=img_transform,
-        img_transform_series=img_transform,
-        mask_transform_image=mask_transform,
-        mask_transform_series=mask_transform,
+        img_transforms=[
+            get_train_img_transform_1(patch_size=512), 
+            get_train_img_transform_2(patch_size=512), 
+            get_train_img_transform_3(patch_size=512)
+            ],
         default_batch_size=int(config["data"].get("batch_size", 32)),
+        seed=42
     )
 
     device = get_device(preferred=config["training"].get("device", "cuda"))

@@ -80,10 +80,6 @@ class Evaluator:
                     masks = masks.to(self.device)
 
                     preds = self.model(ts_imgs)
-                    # sigmoid to convert logits to probabilities
-                    preds = torch.sigmoid(preds)
-                    # binary thresholding
-                    preds = (preds > 0.5).float()
 
                     mtg_gt, mtg_pred = process_date_map(mtgs, preds, jar_path=self.jar_path)
 

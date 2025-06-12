@@ -35,55 +35,33 @@ class SeriesBatchSampler(Sampler):
 
 
 def create_dataloader(
-        base_directory: str,
-        img_transform: transforms.Compose,
-        img_transform_series: transforms.Compose,
-        mask_transform_image: transforms.Compose,
-        mask_transform_series: transforms.Compose,
-        default_batch_size: int = 32,
-        num_workers: int = 8,
-        seed: int = 42
+    base_directory: str,
+    img_transforms: list,
+    default_batch_size: int = 32,
+    num_workers: int = 8,
+    seed: int = 42,
 ):
-    """
-        Creates PyTorch DataLoaders for training, validation, and testing on the RSA dataset, 
-        with reproducible splitting at the series level and support for both image-level and series-level batching.
-
-        Args:
-            base_directory (str): Path to the root directory containing the RSA dataset.
-            img_transform (transforms.Compose): Transformations to apply to input images.
-            mask_transform_image (transforms.Compose): Transformations to apply to image-level masks.
-            mask_transform_series (transforms.Compose): Transformations to apply to series-level masks.
-            default_batch_size (int, optional): Batch size for training and evaluation DataLoaders. Defaults to 32.
-            num_workers (int, optional): Number of worker processes for data loading. Defaults to 8.
-            seed (int, optional): Random seed for reproducible splitting. Defaults to 42.
-
-        Returns:
-            tuple: 
-                - train_loader (DataLoader): DataLoader for training images.
-                - val_loader (DataLoader): DataLoader for validation images (shuffled).
-                - test_loader (DataLoader): DataLoader for test images (not shuffled).
-                - val_loader_series (DataLoader): DataLoader for validation, batching by series.
-                - test_loader_series (DataLoader): DataLoader for testing, batching by series.
-
-        Notes:
-            - The function ensures that the train/val/test splits are performed at the series level for reproducibility.
-            - Series-level DataLoaders (val_loader_series, test_loader_series) use custom batch samplers to group images by series.
-            - Worker initialization is seeded for reproducibility across DataLoader workers.    
-    """
     # Load datasets
-    dir_loader = DirectoryRSAClass(
-        base_directory, load_date_map=True, lazy=True)
+    dir_loader = DirectoryRSAClass(base_directory, load_date_map=True, lazy=True)
+
     series_dataset = RSADataset(
-        dir_loader, mode='series', img_transform=img_transform_series,
-        mask_transform_series=mask_transform_series, image_with_mtg=True
+        dir_loader, mode="series", img_transform=img_transforms[0], image_with_mtg=True
     )
-    image_dataset = RSADataset(
-        dir_loader, mode='image', img_transform=img_transform,
-        mask_transform_image=mask_transform_image, image_with_mtg=True
+
+    image_dataset_1 = RSADataset(
+        dir_loader, mode="image", img_transform=img_transforms[0], image_with_mtg=True
+    )
+
+    image_dataset_2 = RSADataset(
+        dir_loader, mode="image", img_transform=img_transforms[1], image_with_mtg=True
+    )
+
+    image_dataset_3 = RSADataset(
+        dir_loader, mode="image", img_transform=img_transforms[2], image_with_mtg=True
     )
 
     n_series = len(series_dataset)
-    n_images = len(image_dataset)
+    n_images = len(image_dataset_1)
 
     # Split series indices into train/val/test
     generator = torch.Generator().manual_seed(seed)
@@ -93,8 +71,9 @@ def create_dataloader(
 
     # Group image indices by series (using mtg_path as series identifier)
     series = {}
+
     for i in range(n_images):
-        mtg_path = image_dataset.samples[i][3]
+        mtg_path = image_dataset_1.samples[i]["mtg_path"]
         if mtg_path not in series:
             series[mtg_path] = [i, i, 1]
         else:
@@ -103,7 +82,8 @@ def create_dataloader(
 
     series = list(series.items())
     series_split = torch.utils.data.random_split(
-        series, [n_train, n_val, n_test], generator=generator)
+        series, [n_train, n_val, n_test], generator=generator
+    )
     series_train, series_val, series_test = series_split
 
     # Create image indices for each split
@@ -121,20 +101,36 @@ def create_dataloader(
 
     # Log stats
     log_dataset_stats(
-        n_series, n_images,
-        len(series_train), len(series_val), len(series_test),
-        len(train_indices), len(val_indices), len(test_indices)
+        n_series,
+        n_images,
+        len(series_train),
+        len(series_val),
+        len(series_test),
+        len(train_indices),
+        len(val_indices),
+        len(test_indices),
+    )
+    print(
+        (
+            f"Number of transformed images: "
+            f"{len(image_dataset_1)} (dataset 1), "
+            f"{len(image_dataset_2)} (dataset 2), "
+            f"{len(image_dataset_3)} (dataset 3)"
+        )
     )
 
     # Datasets and samplers
-    train_dataset = Subset(image_dataset, train_indices)
-    val_dataset = Subset(image_dataset, val_indices)
-    test_dataset = Subset(image_dataset, test_indices)
+    train_dataset_1 = Subset(image_dataset_1, train_indices)
+    train_dataset_2 = Subset(image_dataset_2, train_indices)
+    train_dataset_3 = Subset(image_dataset_3, train_indices)
+    train_dataset = torch.utils.data.ConcatDataset(
+        [train_dataset_1, train_dataset_2, train_dataset_3]
+    )
+    val_dataset = Subset(image_dataset_1, val_indices)
+    test_dataset = Subset(image_dataset_1, test_indices)
 
-    val_batch_sampler = SeriesBatchSampler(
-        val_indices_per_series, shuffle=False)
-    test_batch_sampler = SeriesBatchSampler(
-        test_indices_per_series, shuffle=False)
+    val_batch_sampler = SeriesBatchSampler(val_indices_per_series, shuffle=False)
+    test_batch_sampler = SeriesBatchSampler(test_indices_per_series, shuffle=False)
 
     # Dataloaders
     train_loader = DataLoader(  # only for training images - not series
@@ -162,14 +158,14 @@ def create_dataloader(
         pin_memory=True,
     )
     val_loader_series = DataLoader(  # work with series
-        image_dataset,
+        image_dataset_1,
         batch_sampler=val_batch_sampler,
         num_workers=num_workers,
         worker_init_fn=lambda wid: worker_init_fn(wid, base_seed=seed),
         pin_memory=True,
     )
     test_loader_series = DataLoader(  # work with series
-        image_dataset,
+        image_dataset_1,
         batch_sampler=test_batch_sampler,
         num_workers=num_workers,
         worker_init_fn=lambda wid: worker_init_fn(wid, base_seed=seed),

@@ -47,3 +47,21 @@ class CachedTiffReader:
             with tifffile.TiffFile(img_path) as tif:
                 self.cache[img_path] = [page.asarray() for page in tif.pages]
         return self.cache[img_path][key]
+    
+    def get_series(self, img_path):
+        """
+        Retrieves all pages from a TIFF file as a list of numpy arrays.
+
+        If the TIFF file is not already cached, it reads all pages of the file
+        and stores them in the cache. Then, it returns the list of all pages.
+
+        Args:
+            img_path (str): The file path to the TIFF file.
+
+        Returns:
+            list: A list of numpy arrays representing all pages of the TIFF file.
+        """
+        if img_path not in self.cache:
+            with tifffile.TiffFile(img_path) as tif:
+                self.cache[img_path] = [page.asarray() for page in tif.pages]
+        return self.cache[img_path]

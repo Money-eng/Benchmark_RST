@@ -5,7 +5,7 @@ defaults:
   - learning_rate: 1e-4
 
 model:
-  name: unet
+  name: segformer
   params:
     in_channels: 1
     out_channels: 1
@@ -15,7 +15,7 @@ model:
     return_logits: False
 
 loss:
-  name: dice
+  name: bce
   params:
     include_background: True,
     to_onehot_y: False,
@@ -30,7 +30,7 @@ loss:
 
 optimizer:
   name: Adam
-  learning_rate: 2.05E-02
+  learning_rate: 1E-5
   weight_decay: 0.0
 
 metrics:
@@ -50,8 +50,8 @@ metrics:
     - { name: "euler_charac_difference" }
 
 data:
-  base_dir: /home/loai/Images/DataTest/UC1_data
-  batch_size: 2
+  base_dir: /home/loai/data/UC1_data
+  batch_size: 16
 
 training:
   epochs: 500
