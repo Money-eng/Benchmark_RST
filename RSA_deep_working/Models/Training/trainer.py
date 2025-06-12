@@ -163,8 +163,10 @@ class Trainer:
         On ajoute epoch et valeur de métrique dans le nom de fichier.
         """
         # remove older checkpoint for the same metric
-        
-        filename = f"{self.model.__class__.__name__}_{metric_name}_epoch{epoch:03d}_{metric_val:.4f}.pth"
+        for file in os.listdir(self.checkpoint_dir):
+            if file.startswith(f"{self.model.__class__.__name__}_{metric_name}_epoch"):
+                os.remove(os.path.join(self.checkpoint_dir, file))
+        filename = f"{self.model.__class__.__name__}_{metric_name}_epoch{epoch:03d}.pth"
         filepath = os.path.join(self.checkpoint_dir, filename)
         torch.save(self.model.state_dict(), filepath)
         if self.logger:

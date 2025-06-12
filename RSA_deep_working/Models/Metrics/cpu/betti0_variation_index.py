@@ -1,7 +1,6 @@
 # Metrics/cpu/betti0_difference.py
 
 import numpy as np
-import torch
 from skimage.measure import label
 
 from ..base import BaseMetric
@@ -12,7 +11,7 @@ class Betti0VariationIndex(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
+    def __call__(self, prediction: np.ndarray, mask: np.ndarray) -> float:
         """ 
         Variation of Euler Characteristic (VEC) :
         VEC = (E(pred) - E(mask)) / (E(pred) + E(mask))
@@ -22,8 +21,8 @@ class Betti0VariationIndex(BaseMetric):
         - VEC > 0 means the prediction has more connected components or holes than the mask.
         - VEC < 0 means the prediction has fewer connected components or holes than the mask.
         """
-        pred_np = prediction.numpy().astype(np.uint8)
-        mask_np = mask.numpy().astype(np.uint8)
+        pred_np = prediction.astype(np.uint8)
+        mask_np = mask.astype(np.uint8)
         scores = []
         for i in range(pred_np.shape[0]):
             pred_img = pred_np[i]

@@ -1,11 +1,14 @@
 # Training/evaluator.py
 
+import os
 import torch
 from logging import Logger
 from tqdm import tqdm
 from utils.launch_RST import process_date_map
 from utils.logger import TensorboardLogger
 from monai.inferers import SlidingWindowInfererAdapt
+from dask import delayed, compute
+from dask.distributed import Client
 
 
 class Evaluator:
@@ -60,6 +63,8 @@ class Evaluator:
             overlap=0.25,              # Recouvrement entre les fenêtres, 0.25=25%
             mode="constant"            # Moyenne sur les recouvrements (classique)
         )
+        
+        self.client = Client(processes=True, n_workers=os.cpu_count())
 
 
     def evaluate(self, last_loss_value, on_test: bool = False) -> dict:
@@ -92,8 +97,8 @@ class Evaluator:
 
                     mtg_gt, mtg_pred = process_date_map(mtgs, preds, jar_path=self.jar_path)
 
-            for imgs, masks, _, mtg in tqdm(
-                    dataloader, desc="Evaluating image by image", leave=False, dynamic_ncols=True
+            for imgs, masks, _, _ in tqdm(
+                    dataloader, desc="Evaluating batch per batch", leave=False, dynamic_ncols=True
             ):
                 imgs = imgs.to(self.device)
                 masks = masks.to(self.device)
@@ -106,16 +111,23 @@ class Evaluator:
                     value = metric(preds, masks) 
                     results[name].append(value)
 
-                preds_cpu = preds.detach().cpu()
-                masks_cpu = masks.detach().cpu()
+                preds_cpu = preds.detach().cpu().numpy()
+                masks_cpu = masks.detach().cpu().numpy()
+                
+                results_futures = []
                 for metric in self.cpu_metrics:
+                    fut = delayed(metric)(preds_cpu, masks_cpu)
+                    results_futures.append(fut)
+                results_values = compute(*results_futures, scheduler='processes')
+
+                for metric, value in zip(self.cpu_metrics, results_values):
                     name = metric.__class__.__name__
-                    value = metric(preds_cpu, masks_cpu)
                     results[name].append(value)
 
                 if save_first_pred and self.tb_logger:
                     # Sauvegarde la première image, masque et prédiction dans TensorBoard
-                    self.tb_logger.log_image("Image", imgs * 255, global_step=self.epoch)
+                    # duplicate chanel on img 
+                    self.tb_logger.log_image("Image", imgs, global_step=self.epoch)
                     self.tb_logger.log_image("Mask", masks * 255, global_step=self.epoch)  # Multiplier par 255 pour visualiser en noir et blanc
                     self.tb_logger.log_image("Prediction", preds * 255, global_step=self.epoch)  # Multiplier par 255 pour visualiser en noir et blanc
                     save_first_pred = False
@@ -123,5 +135,4 @@ class Evaluator:
         mean_results = {}
         for name in results:
             mean_results[name] = torch.mean(torch.tensor(results[name])).item()
-
         return mean_results

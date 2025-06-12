@@ -1,7 +1,6 @@
 # Metrics/cpu/euler_charac_difference.py
 
 import numpy as np
-import torch
 from skimage.measure import euler_number
 
 from ..base import BaseMetric
@@ -13,7 +12,7 @@ class EulerCharacRelativeError(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
+    def __call__(self, prediction: np.ndarray, mask: np.ndarray) -> float:
         """ 
         Relative Euler Characteristic Error (RECE) :
         RECE = |E(pred) - E(mask)| / (|E(mask)| + 1e-8)
@@ -21,8 +20,8 @@ class EulerCharacRelativeError(BaseMetric):
         - RECE = 0 means the prediction matches the mask perfectly.
         - The higher the RECE, the greater the difference in connected components or holes between prediction and mask.
         """
-        pred_np = prediction.numpy().astype(np.uint8)
-        mask_np = mask.numpy().astype(np.uint8)
+        pred_np = prediction.astype(np.uint8)
+        mask_np = mask.astype(np.uint8)
         batch_size = pred_np.shape[0]
         scores = []
         for i in range(batch_size):
