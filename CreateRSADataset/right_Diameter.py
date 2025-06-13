@@ -71,29 +71,12 @@ def project_root_system_on_diameter_map(root_system: RootSystem, threshold=0):
         
         # Limitation du diamètre entre 4 et 9
         best_diameter = max(min(best_diameter, 9), 4)
-        # Constitution de la liste pour ce vertex :
-        # On crée d'abord une partie avec des zéros jusqu'au temps d'apparition,
-        # puis on complète avec le diamètre constant pour le reste des time_hours.
-        debut = int(root_system.time[vertex][0])
-        nb_time_points = len(root_system.time_hours)
-        diameter_list = [0] * debut + [float(best_diameter)] * (nb_time_points - debut)
+        
+        nb_time_points = len(root_system.time[vertex])
+        diameter_list = [float(best_diameter)] * nb_time_points
         diameter_4_root_system[vertex] = diameter_list
 
     return diameter_4_root_system
-
-
-
-def rafine_diameter(root_system: RootSystem, diameter_4_root_system: dict):
-    """ 
-    Hypothesis: 
-    - Diameter + position gives us an (almost) centered shape that overlaps with the root structures.
-    - The diameter of the root system can always increase in time. 
-    - The diameter of a root is almost constant in space. (at a given time, for each root, we look at the diameter of each node to look for anomalies (median value +- 10 percent))
-    """
-    # For each root, we see if it countains a lot of "clear" pixels
-    # If it does, we reduce the diameter of the root until these anomalies disappear
-
-    
    
    
    
@@ -104,13 +87,7 @@ def rafine_diameter(root_system: RootSystem, diameter_4_root_system: dict):
    
    
    
-   
-   
-   
-   
-   
-   
-   
+##########################################################################################################################""
     
 #### Maybe another time : 
 def compute_skeleton_and_diameter_more(date_map, threshold=0, threshold2=1):

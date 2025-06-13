@@ -3,6 +3,7 @@ import tifffile
 import numpy as np
 import rsml
 from rsml import hirros
+from openalea.mtg import MTG
 import utils.CustomDumper as CD
 from itertools import combinations
 
@@ -78,6 +79,7 @@ class RootSystem:
                 metadata['functions'] = {}
                 metadata['functions']['time'] = self.mtg.properties()['time']
                 metadata['functions']['time_hours'] = self.mtg.properties()['time_hours']
+                
                 # Ajout de la fonction "diameter" si elle n'existe pas déjà
                 if 'diameter' not in metadata['functions']:
                     if self.load_date_map and self.date_map is not None:
@@ -97,6 +99,8 @@ class RootSystem:
             self.mtg.graph_properties()['metadata'] = metadata
         # to remove unwanted date_map values
         self.correct_date_map()
+        
+        self.assert_len_consistency()  # Vérification de la cohérence des longueurs des propriétés
     
     # on calcule le diamètre avant de corriger la date_map ? on va supposer que ça passe :
     def correct_date_map(self):
@@ -434,8 +438,22 @@ class RootSystem:
                 print(f"Fichier InfoSerieRootSystemTracker.csv copié dans : {info_file_dst}")
             except Exception as e:
                 print(f"Erreur lors de la copie du fichier InfoSerieRootSystemTracker.csv : {e}")
-            
 
+    def assert_len_consistency(self):   
+        mtg = self.mtg
+        # for all nodes in mtg geometry, assert it has the same length as the time, time_hours and diameter properties
+        for vid in mtg.vertices_iter():
+            if mtg.scale(vid) != mtg.max_scale():
+                continue
+            geometry = mtg.property('geometry').get(vid, [])
+            time = mtg.property('time').get(vid, [])
+            time_hours = mtg.property('time_hours').get(vid, [])
+            diameter = mtg.property('diameter').get(vid, [])
+            
+            if len(geometry) != len(time) or len(time) != len(time_hours) or len(time_hours) != len(diameter):
+                raise ValueError(f"Longueur incohérente pour le vertex {vid}: "
+                                f"geometry={len(geometry)}, time={len(time)}, "
+                                f"time_hours={len(time_hours)}, diameter={len(diameter)}")
 
 # not used
 def find_crossing_edges(mtg):
@@ -487,7 +505,7 @@ def mtg2rsml(g, rsml_file):
         rsml_file.write(s) 
 
 # Exemple d'utilisation principal
-if __name__ == "__main_0_":
+if __name__ == "__main__0":
     folder = "/home/loai/Images/DataTest/230629PN016/"
     root_system = RootSystem(folder, load_date_map=True)
 
