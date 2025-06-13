@@ -36,24 +36,30 @@ optimizer:
 metrics:
   threshold: 0.5
   gpu:
+    - { name: "ari_score" }
     - { name: "dice" }
-    - { name: "iou" }
+    - { name: "generalized_dice" }
+    - { name: "f1_score" }
+    - { name: "mean_iou" }
     - { name: "pixel_accuracy" }
     - { name: "precision" }
     - { name: "recall" }
     - { name: "specificity" }
-    - { name: "f1_score" }
     - { name: "surface_distance" }
     - { name: "surface_dice" }
+    #- { name: "hausdorff_distance" }
+    - { name: "normalized_mutual_information" }
   cpu:
-    - { name: "ari_index" }
-    - { name: "vi_index" }
+    - { name: "variation_of_information" }
     - { name: "betti0_jaccard_ratio" }
     - { name: "betti0_relative_error" }
     - { name: "betti0_variation_index" }
     - { name: "euler_charac_jaccard_ratio" }
     - { name: "euler_charac_relative_error" }
     - { name: "euler_charac_variation_index" }
+    - { name: "persistence_bottleneck" }
+    #- { name: "persistence_wasserstein" }
+
 
 data:
   base_dir: /home/loai/data/UC1_data

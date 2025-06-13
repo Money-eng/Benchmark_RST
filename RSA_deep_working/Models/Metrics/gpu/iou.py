@@ -1,12 +1,12 @@
 # Metrics/gpu/iou.py
 
 import torch
-import torchmetrics.functional as FMF
+import torchmetrics.functional.segmentation as FMF
 
 from ..base import BaseMetric
 
 
-class IoU(BaseMetric):
+class MeanIoU(BaseMetric):
     type = "gpu"
 
     def __init__(self):
@@ -27,5 +27,8 @@ class IoU(BaseMetric):
         msk_bin = (msk >= 0.5).long()
 
         # Compute binary Jaccard (IoU)
-        score = FMF.jaccard_index(pred_bin, msk_bin, task="binary")
-        return score.mean().item()
+        score = FMF.mean_iou(
+            pred_bin, msk_bin, num_classes=2
+        )
+        # `score` is a tensor, we take the mean and convert to float
+        return score.mean().item() if isinstance(score, torch.Tensor) else float(score)

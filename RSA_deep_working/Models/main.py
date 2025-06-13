@@ -13,9 +13,6 @@ from utils.logger import get_logger, TensorboardLogger
 from utils.misc import get_device
 
 if __name__ == "__main__":
-    
-    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-    
     cfg_path = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/config.yml"
     assert os.path.exists(cfg_path), f"Le fichier de config n'existe pas : {cfg_path}"
     with open(cfg_path, "r") as f:

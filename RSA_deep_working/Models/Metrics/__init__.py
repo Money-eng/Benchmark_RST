@@ -1,46 +1,56 @@
 # Metrics/__init__.py
 
 from .base import BaseMetric
-from .cpu.ari_index import ARIIndex
+from .gpu.ari_index import ARIScore
 from .cpu.betti0_ratio import Betti0JaccardRatio
 from .cpu.betti0_relative_error import Betti0RelativeError
 from .cpu.betti0_variation_index import Betti0VariationIndex
 from .cpu.euler_charac_abs_ratio import EulerCharaJaccardsRatio
 from .cpu.euler_charac_relative_error import EulerCharacRelativeError
 from .cpu.euler_charac_variation_index import EulerCharacVariationIndex
-from .cpu.vi_index import VIIndex
+from .cpu.variation_of_information import VI
 from .gpu.dice import Dice
 from .gpu.f1_score import F1Score
-from .gpu.iou import IoU
+from .gpu.iou import MeanIoU
 from .gpu.pixel_accuracy import PixelAccuracy
 from .gpu.precision import Precision
 from .gpu.recall import Recall
 from .gpu.specificity import Specificity
 from .gpu.surface_difference import Surface_distance
 from .gpu.surface_dice import Surface_dice
+from .cpu.persistence_bottleneck import PeristenceBottleneck
+from .cpu.persistence_wasserstein import PeristenceWasserstein
+from .gpu.haussdorff import HausdorffDistance
+from .gpu.generalized_dice import GeneralizedDice
+from .gpu.mutual_information import NormalizedMutualInformation
 
 # Global dictionnary to map metric names to their corresponding classes
 METRIC_FACTORIES = {
     # GPU
+    "ari_score": ARIScore,
     "dice": Dice,
+    "generalized_dice": GeneralizedDice,
     "f1_score": F1Score,
-    "iou": IoU,
+    "mean_iou": MeanIoU,
     "pixel_accuracy": PixelAccuracy,
     "precision": Precision,
     "recall": Recall,
     "specificity": Specificity,
     "surface_distance": Surface_distance,
     "surface_dice": Surface_dice,
+    "hausdorff_distance": HausdorffDistance,
+    "normalized_mutual_information": NormalizedMutualInformation,
 
     # CPU
-    "ari_index": ARIIndex,
-    "vi_index": VIIndex,
+    "variation_of_information": VI,
     "betti0_jaccard_ratio": Betti0JaccardRatio,
     "betti0_relative_error": Betti0RelativeError,
     "betti0_variation_index": Betti0VariationIndex,
     "euler_charac_jaccard_ratio": EulerCharaJaccardsRatio,
     "euler_charac_relative_error": EulerCharacRelativeError,
     "euler_charac_variation_index": EulerCharacVariationIndex,
+    "persistence_bottleneck": PeristenceBottleneck,
+    "persistence_wasserstein": PeristenceWasserstein,
 }
 
 
