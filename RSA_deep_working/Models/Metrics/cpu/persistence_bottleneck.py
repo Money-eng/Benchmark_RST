@@ -43,7 +43,6 @@ class PeristenceBottleneck():
         pred = prediction.squeeze(1)
         msk = mask.squeeze(1)
         for i in range(pred.shape[0]):
-            print(f"[PeristenceBottleneck] Processing image {i+1}/{pred.shape[0]}")
             # calcule diagrammes
             diag_pred = self._compute_diagram(pred[i])
             diag_msk  = self._compute_diagram(msk[i])
@@ -63,5 +62,4 @@ class PeristenceBottleneck():
         mean_distances = {
             dim: np.mean([d[dim] for d in distances]) for dim in self.homology_dimensions
         }
-        print(f"[PeristenceBottleneck] Mean distances: {mean_distances}")
         return mean_distances

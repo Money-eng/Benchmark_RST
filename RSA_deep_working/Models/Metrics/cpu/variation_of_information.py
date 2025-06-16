@@ -9,7 +9,7 @@ class VI(BaseMetric):
 
     def __init__(self):
         super().__init__()
-
+        
     def __call__(self, prediction: np.ndarray, mask: np.ndarray) -> float:
         # Aplatir les masques
         pred = prediction.flatten()

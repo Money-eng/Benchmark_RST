@@ -1,4 +1,5 @@
 import torch
+import os
 from random import Random
 from torch.utils.data import DataLoader, Subset, Sampler
 from torchvision import transforms
@@ -38,7 +39,7 @@ def create_dataloader(
     base_directory: str,
     img_transforms: list,
     default_batch_size: int = 32,
-    num_workers: int = 8,
+    num_workers: int = 16,
     seed: int = 42,
 ):
     # Load datasets

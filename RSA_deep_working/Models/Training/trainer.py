@@ -6,9 +6,9 @@ from logging import Logger
 from tqdm import tqdm
 from utils.logger import TensorboardLogger
 from utils.misc import get_device
+from gc import collect
 
 from .evaluator import Evaluator
-
 
 class Trainer:
     def __init__(
@@ -64,7 +64,7 @@ class Trainer:
             self.criterion.to(self.device)
         except:
             pass
-
+    
     def train(self):
         """
         Boucle d'entraînement principale, avec :
@@ -124,9 +124,16 @@ class Trainer:
 
             if self.tb_logger:
                 self.tb_logger.log_scalar("train/epoch_loss", avg_epoch_loss, epoch)
-
+                
+            # free memory for next epoch
+            collect()
+            torch.cuda.synchronize()
+            torch.cuda.empty_cache()
             val_results = self.evaluator.evaluate(on_test=False, last_loss_value=avg_epoch_loss)
-
+            # free memory after evaluation
+            collect()
+            torch.cuda.synchronize()
+            torch.cuda.empty_cache()
             val_str = ", ".join(f"{k}: {v:.4f}" for k, v in val_results.items())
             if self.logger:
                 self.logger.info(
@@ -151,6 +158,15 @@ class Trainer:
                     ):
                         best_metric_val[metric_name] = metric_val
                         self._save_checkpoint(epoch, metric_name, metric_val)
+            
+            if self.logger:
+                self.logger.info(
+                    f"[Trainer] Epoch {epoch}/{self.epochs} | Best Metric Values: {best_metric_val}"
+                )
+            else:
+                print(
+                    f"[Trainer] Epoch {epoch}/{self.epochs} | Best Metric Values: {best_metric_val}"
+                )
 
         if self.logger:
             self.logger.info("[Trainer] Entraînement terminé.")

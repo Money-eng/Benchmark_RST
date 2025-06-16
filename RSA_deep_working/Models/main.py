@@ -62,7 +62,6 @@ if __name__ == "__main__":
     #lr_finder.range_test(train_loader, end_lr=1, num_iter=200)
     #lr_finder.plot() # to inspect the loss-learning rate graph
     #lr_finder.reset() # to reset the model and optimizer to their initial state
-    
 
     evaluator = Evaluator(
         model=model,

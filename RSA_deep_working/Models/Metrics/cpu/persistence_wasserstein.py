@@ -2,7 +2,6 @@ import numpy as np
 import gudhi as gd
 from scipy.ndimage import distance_transform_edt
 
-
 class PeristenceWasserstein():
     type = "cpu"
 
@@ -42,22 +41,24 @@ class PeristenceWasserstein():
         distances = []
         pred = prediction.squeeze(1)
         msk = mask.squeeze(1)
-        print(f"[PeristenceBottleneck] pred.shape={pred.shape}, msk.shape={msk.shape}")
         for i in range(pred.shape[0]):
-            print(f"[PeristenceBottleneck] Processing image {i+1}/{pred.shape[0]}")
             # calcule diagrammes
             diag_pred = self._compute_diagram(pred[i])
             diag_msk  = self._compute_diagram(msk[i])
             distance_per_dim = {}
-            # Wasserstein par dimension
+            # Bottleneck par dimension
             for dim in self.homology_dimensions:
                 dgm_pred = [(b, d) for dgm_dim, (b, d) in diag_pred if dgm_dim == dim]
                 dgm_msk  = [(b, d) for dgm_dim, (b, d) in diag_msk  if dgm_dim == dim]
-                distance_per_dim[dim] = gd.wasserstein_distance(
+                distance_per_dim[dim] = gd.wasserstein.wasserstein_distance(
                     dgm_pred, dgm_msk
                 )
+            # ignore if NA 
+            if any(np.isnan(list(distance_per_dim.values()))):
+                continue
             distances.append(distance_per_dim)
         # mean for homology dim 0 and 1 (cc and loops)
-        mean_distances = {dim: np.mean([d[dim] for d in distances]) for dim in self.homology_dimensions}
-        print(f"[PeristenceWasserstein] Mean distances: {mean_distances}")
+        mean_distances = {
+            dim: np.mean([d[dim] for d in distances]) for dim in self.homology_dimensions
+        }
         return mean_distances

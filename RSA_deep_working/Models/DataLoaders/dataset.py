@@ -5,7 +5,7 @@ import torch
 from PIL import Image
 from torch.utils.data import Dataset
 
-from .tiff_reader import CachedTiffReader
+from .tiff_reader import TiffReader
 
 
 class RSADataset(Dataset):
@@ -21,7 +21,7 @@ class RSADataset(Dataset):
         mask_transform_image (callable, optional): Transformation function to apply to the mask in 'image' mode.
         image_with_mtg (bool): Whether to include metadata (MTG) in the output.
         as_RGB (bool): Whether to convert grayscale images to RGB by repeating channels.
-        tiff_reader (CachedTiffReader): A cached TIFF reader for efficient image loading.
+        tiff_reader (TiffReader): A cached TIFF reader for efficient image loading.
 
     Methods:
         __init__(rsa_dir_loader, mode='series', img_transform=None, mask_transform_series=None,
@@ -62,7 +62,7 @@ class RSADataset(Dataset):
         self.img_transform = img_transform
         self.image_with_mtg = image_with_mtg
         self.as_RGB = as_RGB
-        self.tiff_reader = CachedTiffReader()
+        self.tiff_reader = TiffReader()
 
         for loader in rsa_dir_loader.loaders:
             img_path = loader.image_stack_path
