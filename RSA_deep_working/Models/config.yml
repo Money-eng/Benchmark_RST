@@ -1,11 +1,28 @@
-defaults:
-  - model: unet
-  - loss: dice
-  - optimizer: Adam
-  - learning_rate: 1e-4
+data:
+  base_dir: /home/loai/Images/DataTest/UC1_data
+  batch_size: 4
+
+training:
+  epochs: 500
+  epochs_btw_eval: 1 #5
+  device: cuda
+  save_best_only: true
+  early_stopping:
+    metric: f1_score
+    patience: 5
+    delta: 0.01
+  lr_scheduler:
+    name: ReduceLROnPlateau
+    mode: min
+    factor: 0.5
+    patience: 5
+  checkpoint_dir: /home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/Checkpoints
+  log_dir: /home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/Logs
+
 
 model:
-  name: unet
+  name: Unet
+  pretrained: false
   params:
     in_channels: 1
     out_channels: 1
@@ -14,24 +31,19 @@ model:
     decoder_attention_type: null
     return_logits: False
 
-loss:
-  name: bce
-  params:
-    include_background: True,
-    to_onehot_y: False,
-    sigmoid: False,
-    softmax: False,
-    squared_pred: False,
-    jaccard: False,
-    reduction: LossReduction.MEAN,
-    smooth_nr: 1e-5,
-    smooth_dr: 1e-5,
-    batch: False,
-
 optimizer:
-  name: Adam
-  learning_rate: 1e-5
-  weight_decay: 0.0
+  name: AdamW
+  learning_rate: 1e-4
+  weight_decay: 1e-5
+
+loss:
+  name: BCE
+  params:
+    weight: null
+    size_average: null
+    reduce: null
+    reduction: mean
+    pos_weight: null
 
 metrics:
   threshold: 0.5
@@ -59,17 +71,11 @@ metrics:
     - { name: "euler_charac_variation_index" }
     - { name: "persistence_bottleneck" }
     #- { name: "persistence_wasserstein" }
-
-
-data:
-  base_dir: /home/loai/Images/DataTest/UC1_data
-  batch_size: 4
-
-training:
-  epochs: 500
-  device: cuda
-  save_best_only: true
-  checkpoint_dir: /home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/Checkpoints
+  mtg:
+    #- { name: "area_below_intercep" }
+    #- { name: "dtw_below_intercep" }
+    - { name: "number_of_organs_ratio"}
+    - { name: "number_of_plants_ratio"}
 
 rst:
   jar_path: /home/loai/Documents/code/RSMLExtraction/RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar

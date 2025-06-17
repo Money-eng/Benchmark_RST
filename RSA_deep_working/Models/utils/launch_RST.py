@@ -26,7 +26,9 @@ def preprocess_RST_pipeline(
         obs_hours (float): Temps d'observation extrait du RSML ground truth (sera rempli après chargement MTG GT).
     """
     # Crée un dossier temporaire pour l'entrée
-    input_dir = tempfile.mkdtemp(prefix="rst_input_", dir="/home/loai/Documents/code/RSMLExtraction/temps")
+    temp_name = "./temps_" + str(os.getpid()) + '/'
+    os.makedirs(temp_name, exist_ok=True)  # Assure que le dossier temps existe
+    input_dir = tempfile.mkdtemp(prefix="rst_input_", dir=temp_name)
 
     # Récupère le batch sous forme de numpy (valeurs 0/1)
     prediction_np = prediction.cpu().numpy().astype(np.uint8)  # (batch_size, 1, H, W)
@@ -43,7 +45,7 @@ def preprocess_RST_pipeline(
     tiff.imwrite(input_file, pred_datemap.astype(np.float32))
 
     # Crée le dossier de sortie
-    output_dir = tempfile.mkdtemp(prefix="rst_output_", dir="/home/loai/Documents/code/RSMLExtraction/temps")
+    output_dir = tempfile.mkdtemp(prefix="rst_output_", dir=temp_name)
 
     # obs_hours est déterminé à partir du RSML ground truth
     # Pour le moment, on retourne None et l'appelant doit le remplir après chargement GT
@@ -151,7 +153,6 @@ def process_date_map(
         acq_str = ",".join(str(h) for h in obs_hours)
     else:
         acq_str = str(obs_hours)
-
     generated_rsml = generate_graph_with_java(
         input_path=input_dir,
         output_dir=output_dir,

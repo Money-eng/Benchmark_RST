@@ -29,3 +29,8 @@ def get_train_img_transform_3(patch_size=512):
         A.Normalize(mean=(0.5,), std=(0.5,)),
         ToTensorV2(),
     ])
+    
+def get_train_serie_transform():
+    return A.Compose([
+        ToTensorV2(),
+    ])

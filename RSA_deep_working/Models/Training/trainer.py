@@ -10,6 +10,7 @@ from gc import collect
 
 from .evaluator import Evaluator
 
+
 class Trainer:
     def __init__(
             self,
@@ -21,6 +22,7 @@ class Trainer:
             evaluator: Evaluator,
             logger: Logger = None,
             tb_logger: TensorboardLogger = None,
+            checkpoint_dir: str = "checkpoint_dir",
             device: torch.device = None,
     ):
         """
@@ -40,16 +42,21 @@ class Trainer:
         self.optimizer = optimizer
 
         self.epochs = int(config["training"]["epochs"])
-        self.checkpoint_dir = config["training"]["checkpoint_dir"]
+        self.epochs_btw_eval = int(
+            config["training"].get("epochs_btw_eval", 10))
+        self.checkpoint_dir = checkpoint_dir
         os.makedirs(self.checkpoint_dir, exist_ok=True)
 
         self.evaluator = evaluator
+        self.early_stopper = EarlyStopping(patience=int(config['training']["early_stopping"]['patience']), 
+                                           metric_name=config['training']["early_stopping"]['metric'],
+                                           delta=float(config['training']["early_stopping"]['delta']))
         self.device = (
             device
             if device is not None
             else get_device(preferred=config["training"].get("device", "cuda"))
         )
-
+        
         self.logger = logger
         self.tb_logger = tb_logger
 
@@ -58,13 +65,31 @@ class Trainer:
         else:
             print(f"[Trainer] Device : {self.device}")
 
-        # On envoie le modèle et la loss sur l'appareil
+        if config["training"]["lr_scheduler"]["name"] == "ReduceLROnPlateau":
+            self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                self.optimizer,
+                mode=config['training']['lr_scheduler']['mode'],
+                factor=config['training']['lr_scheduler']['factor'],
+                patience=config['training']['lr_scheduler']['patience']
+            )
+        elif config["training"]["lr_scheduler"]["name"] == "StepLR":
+            self.scheduler = torch.optim.lr_scheduler.StepLR(
+                self.optimizer,
+                step_size=config['training']['lr_scheduler']['step_size'],
+                gamma=config['training']['lr_scheduler']['gamma']
+            )
+        else:
+            self.scheduler = None
+
         self.model.to(self.device)
         try:
             self.criterion.to(self.device)
         except:
             pass
-    
+
+        self.scaler = torch.GradScaler(device=self.device)
+        self.logger.info('[Trainer] Initialisation du Trainer terminée.')
+        
     def train(self):
         """
         Boucle d'entraînement principale, avec :
@@ -77,97 +102,112 @@ class Trainer:
                 f"[Trainer] Démarrage de l'entraînement pour {self.epochs} epochs"
             )
         else:
-            print(f"[Trainer] Démarrage de l'entraînement pour {self.epochs} epochs")
+            print(
+                f"[Trainer] Démarrage de l'entraînement pour {self.epochs} epochs")
 
         best_metric_val = {}
-        global_step = 0
-
+        batch_step = 0
         for epoch in range(1, self.epochs + 1):
             self.model.train()
             epoch_loss = 0.0
-
-            pbar = tqdm(
-                self.train_loader,
-                desc=f"Epoch {epoch}/{self.epochs} [Train]",
-                leave=False,
-                dynamic_ncols=True,
-            )
-            for imgs, masks, _, _ in pbar:
-                imgs, masks = imgs.to(self.device), masks.to(self.device)
-                preds_logits_sigmoidee = self.model(imgs)
-                loss = self.criterion(preds_logits_sigmoidee, masks) # need for sigmoid !!! (in loss implementation)
+            pbar = tqdm(self.train_loader, desc=f"Epoch {epoch}/{self.epochs} [Train]", leave=False, dynamic_ncols=True)
+            for imgs, masks, *_ in pbar:
+                imgs  = imgs.to(self.device)
+                masks = masks.to(self.device)
+                self.optimizer.zero_grad()
+                with torch.autocast(device_type=self.device.type):
+                    preds = self.model(imgs)
+                    loss = self.criterion(preds, masks)
 
                 self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
+                self.scaler.scale(loss).backward() # 1. scale & backward
+                self.scaler.unscale_(self.optimizer)  # 2. unscale gradients
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0, norm_type=2) # 3. clip gradients
+                self.scaler.step(self.optimizer) # 4. step optimizer
+                self.scaler.update() # 5. update scaler
 
                 epoch_loss += loss.item()
                 pbar.set_postfix({"batch_loss": f"{loss.item():.4f}"})
 
                 if self.tb_logger:
-                    self.tb_logger.log_scalar(
-                        "train/batch_loss", loss.item(), global_step
-                    )
-
-                global_step += 1
+                    self.tb_logger.log_scalar("train/batch_loss", loss.item(), batch_step)
+                batch_step += 1
 
             avg_epoch_loss = epoch_loss / len(self.train_loader)
 
             if self.logger:
                 self.logger.info(
-                    f"[Trainer] Epoch {epoch}/{self.epochs} | Train Loss: {avg_epoch_loss:.4f}"
+                    f"[Trainer] Epoch {epoch}/{self.epochs} | Train Loss: {avg_epoch_loss:.4f} | Learning Rate: {self.optimizer.param_groups[0]['lr']}"
                 )
             else:
                 print(
-                    f"[Trainer] Epoch {epoch}/{self.epochs} | Train Loss: {avg_epoch_loss:.4f}"
+                    f"[Trainer] Epoch {epoch}/{self.epochs} | Train Loss: {avg_epoch_loss:.4f} | Learning Rate: {self.optimizer.param_groups[0]['lr']}"
                 )
 
             if self.tb_logger:
-                self.tb_logger.log_scalar("train/epoch_loss", avg_epoch_loss, epoch)
-                
+                self.tb_logger.log_scalar(
+                    "train/epoch_loss", avg_epoch_loss, epoch)
+
             # free memory for next epoch
             collect()
             torch.cuda.synchronize()
             torch.cuda.empty_cache()
-            val_results = self.evaluator.evaluate(on_test=False, last_loss_value=avg_epoch_loss)
-            # free memory after evaluation
-            collect()
-            torch.cuda.synchronize()
-            torch.cuda.empty_cache()
-            val_str = ", ".join(f"{k}: {v:.4f}" for k, v in val_results.items())
-            if self.logger:
-                self.logger.info(
-                    f"[EVALUATOR] Epoch {epoch}/{self.epochs} | Values : {val_str}"
-                )
-            else:
-                print(f"[EVALUATOR] Epoch {epoch}/{self.epochs} | Values : {val_str}")
+            
+            ### EVALUATION ###
+            if epoch % self.epochs_btw_eval == 0:
+                val_results = self.evaluator.evaluate(on_test=False, last_loss_value=avg_epoch_loss)
+                # free memory after evaluation
+                collect()
+                torch.cuda.synchronize()
+                torch.cuda.empty_cache()
+                val_str = ", ".join(f"{k}: {v:.4f}" for k,
+                                    v in val_results.items())
+                if self.logger:
+                    self.logger.info(
+                        f"[EVALUATOR] Epoch {epoch}/{self.epochs} | Values : {val_str}"
+                    )
+                else:
+                    print(
+                        f"[EVALUATOR] Epoch {epoch}/{self.epochs} | Values : {val_str}")
 
-            if self.tb_logger:
-                for metric_name, metric_val in val_results.items():
-                    self.tb_logger.log_scalar(f"val/{metric_name}", metric_val, epoch)
+                if self.tb_logger:
+                    for metric_name, metric_val in val_results.items():
+                        self.tb_logger.log_scalar(
+                            f"val/{metric_name}", metric_val, epoch)
 
-            if not best_metric_val:
-                for metric_name, metric_val in val_results.items():
-                    best_metric_val[metric_name] = metric_val
-                    self._save_checkpoint(epoch, metric_name, metric_val)
-            else:
-                for metric_name, metric_val in val_results.items():
-                    if (
-                            metric_name not in best_metric_val
-                            or metric_val > best_metric_val[metric_name]
-                    ):
+                if not best_metric_val:
+                    for metric_name, metric_val in val_results.items():
                         best_metric_val[metric_name] = metric_val
                         self._save_checkpoint(epoch, metric_name, metric_val)
-            
-            if self.logger:
-                self.logger.info(
-                    f"[Trainer] Epoch {epoch}/{self.epochs} | Best Metric Values: {best_metric_val}"
-                )
-            else:
-                print(
-                    f"[Trainer] Epoch {epoch}/{self.epochs} | Best Metric Values: {best_metric_val}"
-                )
+                else:
+                    for metric_name, metric_val in val_results.items():
+                        if (
+                                metric_name not in best_metric_val
+                                or metric_val > best_metric_val[metric_name]
+                        ):
+                            best_metric_val[metric_name] = metric_val
+                            self._save_checkpoint(epoch, metric_name, metric_val)
 
+                if self.logger:
+                    self.logger.info(
+                        f"[Trainer] Epoch {epoch}/{self.epochs} | Best Metric Values: {best_metric_val}"
+                    )
+                else:
+                    print(
+                        f"[Trainer] Epoch {epoch}/{self.epochs} | Best Metric Values: {best_metric_val}"
+                    )
+
+                self.early_stopper(val_results)
+                if self.early_stopper.early_stop:
+                    if self.logger:
+                        self.logger.info(
+                            f"[Trainer] Early stopping triggered at epoch {epoch}."
+                        )
+                    else:
+                        print(
+                            f"[Trainer] Early stopping triggered at epoch {epoch}."
+                        )
+                    break
         if self.logger:
             self.logger.info("[Trainer] Entraînement terminé.")
         else:
@@ -189,3 +229,32 @@ class Trainer:
             self.logger.info(f"[Trainer] Checkpoint sauvegardé : {filepath}")
         else:
             print(f"[Trainer] Checkpoint sauvegardé : {filepath}")
+            
+class EarlyStopping:
+    def __init__(self, patience, metric_name="f1_score", delta=0.0):
+        self.patience = patience
+        self.metric_name = metric_name
+        self.delta = delta
+        self.last_score = None
+        self.counter = 0
+        self.early_stop = False
+
+    def __call__(self, val_score: dict):
+        current_score = val_score.get(self.metric_name, None)
+        if current_score is None:
+            return False
+        elif self.last_score is None:
+            self.last_score = current_score
+            return False
+        
+        # if L2 distance is less than delta, consider it as no improvement
+        elif abs(current_score - self.last_score) < self.delta:
+            self.counter += 1
+            if self.counter >= self.patience:
+                self.early_stop = True
+                return True
+        else:
+            self.last_score = current_score
+            self.counter = 0
+
+        return False

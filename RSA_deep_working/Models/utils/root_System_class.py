@@ -64,8 +64,8 @@ class RootSystem:
             if self.date_map is not None:
                 # Calcul du diamètre à partir de date_map
                 try:
-                    import right_Diameter as grd
-                    diameter = grd.project_root_system_on_diameter_map(self)
+                    
+                    diameter = project_root_system_on_diameter_map(self)
                     metadata['functions']['diameter'] = diameter
                     self.mtg.add_property('diameter')
                     self.mtg.properties()['diameter'] = diameter
@@ -116,3 +116,87 @@ def mtg2rsml(g, rsml_file):
             f.write(s)
     else:
         rsml_file.write(s)
+
+
+######## DIAMETER CALCULATION ########
+
+import numpy as np
+from scipy.ndimage import distance_transform_edt
+from scipy.spatial import cKDTree
+from skimage.morphology import skeletonize
+
+def compute_skeleton_and_diameter(date_map, threshold=0):
+    """
+    Calcule le masque binaire, la transformée de distance, le squelette et la carte de diamètre.
+    
+    Args:
+        date_map (ndarray): Image (grayscale) du date_map.
+        threshold (float): Seuil pour binariser l'image (par défaut 0).
+        
+    Returns:
+        skeleton (ndarray): Squelette binaire extrait du masque.
+        diameter_map (ndarray): Carte où pour chaque pixel du squelette, la valeur est 2*distance,
+                                correspondant au diamètre estimé.
+    """
+    mask = date_map > threshold
+    dt = distance_transform_edt(mask)
+    skeleton = skeletonize(mask)
+    # Opération vectorisée : affectation du diamètre pour tous les pixels du squelette
+    diameter_map = np.zeros_like(skeleton, dtype=float)
+    diameter_map[skeleton] = 2 * dt[skeleton]
+    
+    return skeleton, diameter_map
+
+def project_root_system_on_diameter_map(root_system: RootSystem, threshold=0):
+    """
+    Pour chaque vertex du système racinaire, trouve le point le plus proche sur le squelette
+    et récupère le diamètre estimé à cet endroit.
+    
+    Args:
+        root_system (RootSystem): Instance du système racinaire contenant notamment le date_map.
+        threshold (float): Seuil pour la binarisation (par défaut 0).
+    
+    Returns:
+        diameter_4_root_system (dict): Dictionnaire associant à chaque vertex (clé) le diamètre (valeur)
+                                       sous forme de liste.
+    """
+    skeleton, diameter_map = compute_skeleton_and_diameter(root_system.date_map, threshold)
+    
+    # Récupération des coordonnées (indices) des pixels du squelette sous forme (row, col)
+    skel_coords = np.column_stack(np.nonzero(skeleton))
+    if skel_coords.shape[0] == 0:
+        raise ValueError("Aucun pixel dans le squelette n'a été trouvé.")
+    
+    tree = cKDTree(skel_coords)
+    diameter_4_root_system = {}
+
+    for vertex, polyline in root_system.geometry.items():
+        polyline = np.array(polyline)
+        if polyline.size == 0:
+            best_diameter = 0
+        else:
+            # Conversion des coordonnées (x, y) en indices (row, col)
+            rows = np.rint(polyline[:, 1]).astype(int)
+            cols = np.rint(polyline[:, 0]).astype(int)
+            # Filtrer les points hors bornes
+            valid = (rows >= 0) & (rows < skeleton.shape[0]) & (cols >= 0) & (cols < skeleton.shape[1])
+            if not np.any(valid):
+                best_diameter = 0
+            else:
+                valid_points = np.column_stack((rows[valid], cols[valid]))
+                distances, indices = tree.query(valid_points)
+                # Sélection du point avec la distance minimale
+                best_index = np.argmin(distances)
+                best_coord = skel_coords[indices[best_index]]
+                best_diameter = diameter_map[best_coord[0], best_coord[1]]
+        
+        # Limitation du diamètre entre 4 et 9
+        best_diameter = max(min(best_diameter, 9), 4)
+        
+        nb_time_points = len(root_system.time[vertex])
+        diameter_list = [float(best_diameter)] * nb_time_points
+        diameter_4_root_system[vertex] = diameter_list
+
+    return diameter_4_root_system
+   
+   

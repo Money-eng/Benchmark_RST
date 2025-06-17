@@ -10,7 +10,7 @@ MODEL_FACTORIES = {
 
 
 def get_model(model_config: dict) -> torch.nn.Module:
-    name = model_config["name"]
+    name = model_config["name"].lower()
     params = model_config.get("params", {})
     if name not in MODEL_FACTORIES:
         raise ValueError(f"Unknown model: {name}. Known: {list(MODEL_FACTORIES)}")

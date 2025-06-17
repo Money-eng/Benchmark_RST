@@ -1,7 +1,6 @@
 # Metrics/__init__.py
 
 from .base import BaseMetric
-from .gpu.ari_index import ARIScore
 from .cpu.betti0_ratio import Betti0JaccardRatio
 from .cpu.betti0_relative_error import Betti0RelativeError
 from .cpu.betti0_variation_index import Betti0VariationIndex
@@ -9,6 +8,10 @@ from .cpu.euler_charac_abs_ratio import EulerCharaJaccardsRatio
 from .cpu.euler_charac_relative_error import EulerCharacRelativeError
 from .cpu.euler_charac_variation_index import EulerCharacVariationIndex
 from .cpu.variation_of_information import VI
+from .cpu.persistence_bottleneck import PeristenceBottleneck
+from .cpu.persistence_wasserstein import PeristenceWasserstein
+
+from .gpu.ari_index import ARIScore
 from .gpu.dice import Dice
 from .gpu.f1_score import F1Score
 from .gpu.iou import MeanIoU
@@ -18,11 +21,14 @@ from .gpu.recall import Recall
 from .gpu.specificity import Specificity
 from .gpu.surface_difference import Surface_distance
 from .gpu.surface_dice import Surface_dice
-from .cpu.persistence_bottleneck import PeristenceBottleneck
-from .cpu.persistence_wasserstein import PeristenceWasserstein
 from .gpu.haussdorff import HausdorffDistance
 from .gpu.generalized_dice import GeneralizedDice
 from .gpu.mutual_information import NormalizedMutualInformation
+
+from .mtg.area_below_intercep import AreaBetweenIntercepts
+from .mtg.dtw_below_intercep import DTWBetweenIntercepts
+from .mtg.number_of_organs_ratio import NumberOfOrgansRatio
+from .mtg.number_of_plants_ratio import NumberOfPlantsRatio
 
 # Global dictionnary to map metric names to their corresponding classes
 METRIC_FACTORIES = {
@@ -51,6 +57,11 @@ METRIC_FACTORIES = {
     "euler_charac_variation_index": EulerCharacVariationIndex,
     "persistence_bottleneck": PeristenceBottleneck,
     "persistence_wasserstein": PeristenceWasserstein,
+    # CPU / MTG
+    "area_below_intercep": AreaBetweenIntercepts,
+    "dtw_below_intercep": DTWBetweenIntercepts,
+    "number_of_organs_ratio" : NumberOfOrgansRatio,
+    "number_of_plants_ratio": NumberOfPlantsRatio,
 }
 
 
@@ -65,11 +76,13 @@ def get_metric(metric_config: dict) -> BaseMetric:
     name = metric_config["name"]
     params = metric_config.get("params", {})
     if name not in METRIC_FACTORIES:
-        raise ValueError(f"Unknown metric: {name}. Known: {list(METRIC_FACTORIES.keys())}")
+        raise ValueError(
+            f"Unknown metric: {name}. Known: {list(METRIC_FACTORIES.keys())}")
     try:
         return METRIC_FACTORIES[name](**params)
     except TypeError as e:
-        raise TypeError(f"Error instantiating metric '{name}' with params {params}: {e}")
+        raise TypeError(
+            f"Error instantiating metric '{name}' with params {params}: {e}")
 
 
 def get_metrics(metrics_config: dict) -> dict:
@@ -89,8 +102,8 @@ def get_metrics(metrics_config: dict) -> dict:
         ]
     }
     """
-    result = {"cpu": [], "gpu": []}
-    for t in ["cpu", "gpu"]:
+    result = {"cpu": [], "gpu": [], "mtg": []}
+    for t in ["cpu", "gpu", "mtg"]:
         for cfg in metrics_config.get(t, []):
             metric = get_metric(cfg)
             result[t].append(metric)

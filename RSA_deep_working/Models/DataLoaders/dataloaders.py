@@ -46,7 +46,11 @@ def create_dataloader(
     dir_loader = DirectoryRSAClass(base_directory, load_date_map=True, lazy=True)
 
     series_dataset = RSADataset(
-        dir_loader, mode="series", img_transform=img_transforms[0], image_with_mtg=True
+        dir_loader, mode="series", img_transform=img_transforms[4], image_with_mtg=True
+    )
+    
+    series_dataset_v0 = RSADataset(
+        dir_loader, mode="image", img_transform=img_transforms[4], image_with_mtg=True
     )
 
     image_dataset_1 = RSADataset(
@@ -163,18 +167,18 @@ def create_dataloader(
         pin_memory=True,
     )
     val_loader_series = DataLoader(  # work with series
-        image_dataset_1,
+        series_dataset_v0,
         batch_sampler=val_batch_sampler,
         num_workers=num_workers,
         worker_init_fn=lambda wid: worker_init_fn(wid, base_seed=seed),
         pin_memory=True,
     )
     test_loader_series = DataLoader(  # work with series
-        image_dataset_1,
+        series_dataset_v0,
         batch_sampler=test_batch_sampler,
         num_workers=num_workers,
         worker_init_fn=lambda wid: worker_init_fn(wid, base_seed=seed),
         pin_memory=True,
     )
-
+    
     return train_loader, val_loader, test_loader, val_loader_series, test_loader_series
