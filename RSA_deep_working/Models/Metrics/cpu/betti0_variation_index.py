@@ -10,10 +10,22 @@ class Betti0VariationIndex(BaseMetric):
 
     def __init__(self):
         super().__init__()
+        
+    def is_better(self, old_score: float, new_score: float) -> bool:
+        """
+        Variation of Betti-0 Characteristic (VEC):
+        VEC = (E(pred) - E(mask)) / (E(pred) + E
+        - VEC = 0 means the prediction matches the mask perfectly.
+        - VEC > 0 means the prediction has more connected components or holes than the mask.
+        - VEC < 0 means the prediction has fewer connected components or holes than the mask.
+        """
+        if abs(new_score) <= abs(old_score):
+            return True
+        return False
 
     def __call__(self, prediction: np.ndarray, mask: np.ndarray) -> float:
         """ 
-        Variation of Euler Characteristic (VEC) :
+        Variation of Betti-0 Characteristic (VEC):
         VEC = (E(pred) - E(mask)) / (E(pred) + E(mask))
         where E is the Betti-0 characteristic (number of connected components).
         

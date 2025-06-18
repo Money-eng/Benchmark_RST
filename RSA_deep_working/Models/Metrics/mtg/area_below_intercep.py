@@ -11,6 +11,13 @@ class AreaBetweenIntercepts(BaseMetric):
 
     def __init__(self):
         super().__init__()
+        
+    def is_better(self, old_score: float, new_score: float) -> bool:
+        """
+        Area between intercepts. On considère que `old_score` et `new_score`
+        sont des scores de type float.
+        """
+        return new_score < old_score
 
     @staticmethod
     def area_between_curves(x1, y1, x2, y2, num=1000) -> float:

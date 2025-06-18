@@ -10,6 +10,17 @@ class ARIScore(BaseMetric):
 
     def __init__(self):
         super().__init__()
+        
+    def is_better(self, old_score: float, new_score: float) -> bool:
+        """
+        Adjusted Rand Score (ARS):
+        - ARS = 1 means the prediction matches the mask perfectly.
+        - ARS = 0 means the prediction is completely random.
+        - ARS < 0 means the prediction is worse than random.
+        """
+        if abs(new_score - 1) <= abs(old_score - 1):
+            return True
+        return False
 
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         r"""Compute `Adjusted Rand Score`_ (also known as Adjusted Rand Index).

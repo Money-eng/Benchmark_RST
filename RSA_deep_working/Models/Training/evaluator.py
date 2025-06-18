@@ -146,17 +146,18 @@ class Evaluator:
                         for i in range(len(pred_list)):
                             pred_list[i] = np.expand_dims(pred_list[i], axis=0)
                             mask_list[i] = np.expand_dims(mask_list[i], axis=0)
+                        
+                        pred_refs = self.client.scatter(pred_list, broadcast=True)
+                        mask_refs = self.client.scatter(mask_list, broadcast=True)
 
                         all_futs = []
                         for metric in self.cpu_metrics:
                             name = metric.__class__.__name__
-                            futs = self.client.map(
-                                metric, pred_list, mask_list)
+                            futs = self.client.map(metric, pred_refs, mask_refs)
                             all_futs.extend([(name, f) for f in futs])
 
                         fut_only = [f for _, f in all_futs]
-                        pbar.set_postfix_str(
-                            f"Gathering {len(fut_only)} futures")
+                        pbar.set_postfix_str(f"Gathering {len(fut_only)} futures")
                         vals = self.client.gather(fut_only)
 
                         results_by_metric = defaultdict(list)

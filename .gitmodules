@@ -1,3 +1,7 @@
 [submodule "RootSystemTracker"]
 	path = RootSystemTracker
 	url = https://github.com/Money-eng/RootSystemTracker
+[submodule "external/rsml"]
+	path = external/rsml
+	url = https://github.com/openalea/RSML.git
+	branch = hirros

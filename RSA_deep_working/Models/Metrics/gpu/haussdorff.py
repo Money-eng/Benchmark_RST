@@ -12,6 +12,12 @@ class HausdorffDistance(BaseMetric):
     def __init__(self):
         super().__init__()
 
+    def is_better(self, old_score: float, new_score: float) -> bool:
+        """
+        Hausdorff Distance (Binary).new_score est "meilleur" si elle est plus petite que old_score.
+        """
+        return new_score < old_score
+
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Dice coefficient (Binary). On considère que `prediction` et `mask`

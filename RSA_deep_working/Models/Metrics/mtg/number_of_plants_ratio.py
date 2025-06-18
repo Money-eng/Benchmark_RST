@@ -10,6 +10,13 @@ class NumberOfPlantsRatio(BaseMetric):
     def __init__(self):
         super().__init__()
 
+    def is_better(self, old_score: float, new_score: float) -> bool:
+        """
+        Ratio of predicted to ground truth number of plants.
+        On considère que `old_score` et `new_score`
+        sont des scores de type float.
+        """
+        return abs(new_score - 1) <= abs(old_score - 1)
 
     def __call__(self, mtg_pred: MTG, mtg_gt: MTG) -> float:
         plant_scale = 1
