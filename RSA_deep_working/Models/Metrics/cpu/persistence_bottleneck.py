@@ -30,6 +30,14 @@ class PeristenceBottleneck():
             lambda data: distance_transform_edt(data > 0)
         )
 
+    def is_better(self, old_score: float, new_score: float) -> bool:
+        """
+        Bottleneck distance : 
+        - plus la distance est petite, plus la prédiction est proche du masque.
+        - distance = 0 signifie que les diagrammes sont identiques.
+        """
+        return new_score < old_score
+
     def _compute_diagram(self, array: np.ndarray):
         # applique le filtre puis construit le complexe et calcule la persistance
         data = self.filter_fn(array.astype(np.float32))

@@ -11,6 +11,14 @@ class EulerCharacRelativeError(BaseMetric):
 
     def __init__(self):
         super().__init__()
+        
+    def is_better(self, old_score: float, new_score: float) -> bool:
+        """
+        Relative Euler Characteristic Error (RECE) :
+        - RECE = 0 means the prediction matches the mask perfectly.
+        - The higher the RECE, the greater the difference in connected components or holes between prediction and mask.
+        """
+        return new_score < old_score
 
     def __call__(self, prediction: np.ndarray, mask: np.ndarray) -> float:
         """ 

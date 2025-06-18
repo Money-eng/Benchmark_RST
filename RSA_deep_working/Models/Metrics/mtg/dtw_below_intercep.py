@@ -11,6 +11,13 @@ class DTWBetweenIntercepts(BaseMetric):
 
     def __init__(self):
         super().__init__()
+        
+    def is_better(self, old_score: float, new_score: float) -> bool:    
+        """
+        Dynamic Time Warping (DTW) between intercepts. On considère que `old_score` et `new_score`
+        sont des scores de type float.
+        """
+        return new_score < old_score
 
     def __call__(self, mtg_pred: MTG, mtg_gt: MTG) -> float:
         plant_scale = 1

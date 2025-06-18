@@ -11,6 +11,15 @@ class EulerCharacVariationIndex(BaseMetric):
 
     def __init__(self):
         super().__init__()
+        
+    def is_better(self, old_score: float, new_score: float) -> bool:
+        """
+        Variation of Euler Characteristic (VEC):
+        - VEC = 0 means the prediction matches the mask perfectly.
+        - VEC > 0 means the prediction has more connected components or holes than the mask.
+        - VEC < 0 means the prediction has fewer connected components or holes than the mask.
+        """
+        return abs(new_score) <= abs(old_score)
 
     def __call__(self, prediction: np.ndarray, mask: np.ndarray) -> float:
         """ 

@@ -9,6 +9,14 @@ class NumberOfOrgansRatio(BaseMetric):
 
     def __init__(self):
         super().__init__()
+        
+    def is_better(self, old_score: float, new_score: float) -> bool:
+        """
+        Ratio of predicted to ground truth number of organs.
+        On considère que `old_score` et `new_score`
+        sont des scores de type float.
+        """
+        return abs(new_score - 1) <= abs(old_score - 1)
 
 
     def __call__(self, mtg_pred: MTG, mtg_gt: MTG) -> float:
@@ -16,7 +24,7 @@ class NumberOfOrgansRatio(BaseMetric):
         verts_gt = list(mtg_gt.vertices(scale=root_scale))
         verts_pred = list(mtg_pred.vertices(scale=root_scale))
         
-        num_plants_gt = len(verts_gt)
-        num_plants_pred = len(verts_pred)
+        num_root_gt = len(verts_gt)
+        num_root_pred = len(verts_pred)
         
-        return num_plants_pred / num_plants_gt if num_plants_gt > 0 else 0.0
+        return num_root_pred / num_root_gt if num_root_gt > 0 else 0.0

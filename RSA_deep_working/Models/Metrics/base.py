@@ -12,6 +12,14 @@ class BaseMetric(abc.ABC):
       doit renvoyer un scalaire (float) correspondant à la valeur de la métrique sur ce batch.
     """
     type: str  # doit être "cpu" ou "gpu"
+    
+    @abc.abstractmethod
+    def is_better(self, old_score: float, new_score: float) -> bool:
+        """
+        Compare deux scores de type float.
+        Retourne True si `new_score` est meilleur que `old_score`.
+        """
+        pass
 
     @abc.abstractmethod
     def __call__(self, prediction, mask) -> float:

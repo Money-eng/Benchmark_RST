@@ -48,7 +48,7 @@ class Trainer:
         os.makedirs(self.checkpoint_dir, exist_ok=True)
 
         self.evaluator = evaluator
-        self.early_stopper = EarlyStopping(patience=int(config['training']["early_stopping"]['patience']), 
+        self.early_stopper = EarlyStopping(patience=int(config['training']["early_stopping"]['patience']),
                                            metric_name=config['training']["early_stopping"]['metric'],
                                            delta=float(config['training']["early_stopping"]['delta']))
         self.device = (
@@ -56,7 +56,7 @@ class Trainer:
             if device is not None
             else get_device(preferred=config["training"].get("device", "cuda"))
         )
-        
+
         self.logger = logger
         self.tb_logger = tb_logger
 
@@ -86,10 +86,8 @@ class Trainer:
             self.criterion.to(self.device)
         except:
             pass
-
-        self.scaler = torch.GradScaler(device=self.device)
         self.logger.info('[Trainer] Initialisation du Trainer terminée.')
-        
+
     def train(self):
         """
         Boucle d'entraînement principale, avec :
@@ -110,39 +108,41 @@ class Trainer:
         for epoch in range(1, self.epochs + 1):
             self.model.train()
             epoch_loss = 0.0
-            pbar = tqdm(self.train_loader, desc=f"Epoch {epoch}/{self.epochs} [Train]", leave=False, dynamic_ncols=True)
+            pbar = tqdm(
+                self.train_loader, desc=f"Epoch {epoch}/{self.epochs} [Train]", leave=False, dynamic_ncols=True)
             for imgs, masks, *_ in pbar:
-                imgs  = imgs.to(self.device)
+                imgs = imgs.to(self.device)
                 masks = masks.to(self.device)
-                self.optimizer.zero_grad()
-                with torch.autocast(device_type=self.device.type):
-                    preds = self.model(imgs)
-                    loss = self.criterion(preds, masks)
+
+                preds = self.model(imgs)
+                loss = self.criterion(preds, masks)
 
                 self.optimizer.zero_grad()
-                self.scaler.scale(loss).backward() # 1. scale & backward
-                self.scaler.unscale_(self.optimizer)  # 2. unscale gradients
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0, norm_type=2) # 3. clip gradients
-                self.scaler.step(self.optimizer) # 4. step optimizer
-                self.scaler.update() # 5. update scaler
+                loss.backward()
+                self.optimizer.step()
 
                 epoch_loss += loss.item()
                 pbar.set_postfix({"batch_loss": f"{loss.item():.4f}"})
 
                 if self.tb_logger:
-                    self.tb_logger.log_scalar("train/batch_loss", loss.item(), batch_step)
+                    self.tb_logger.log_scalar(
+                        "train/batch_loss", loss.item(), batch_step)
                 batch_step += 1
 
             avg_epoch_loss = epoch_loss / len(self.train_loader)
 
+            if self.scheduler:
+                if isinstance(self.scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                    self.scheduler.step(loss.item())
+                else:
+                    self.scheduler.step()
+
             if self.logger:
                 self.logger.info(
-                    f"[Trainer] Epoch {epoch}/{self.epochs} | Train Loss: {avg_epoch_loss:.4f} | Learning Rate: {self.optimizer.param_groups[0]['lr']}"
-                )
+                    f"[Trainer] Epoch {epoch}/{self.epochs} | Train Loss: {avg_epoch_loss:.4f} | Learning Rate: {self.optimizer.param_groups[0]['lr']}")
             else:
                 print(
-                    f"[Trainer] Epoch {epoch}/{self.epochs} | Train Loss: {avg_epoch_loss:.4f} | Learning Rate: {self.optimizer.param_groups[0]['lr']}"
-                )
+                    f"[Trainer] Epoch {epoch}/{self.epochs} | Train Loss: {avg_epoch_loss:.4f} | Learning Rate: {self.optimizer.param_groups[0]['lr']}")
 
             if self.tb_logger:
                 self.tb_logger.log_scalar(
@@ -152,10 +152,11 @@ class Trainer:
             collect()
             torch.cuda.synchronize()
             torch.cuda.empty_cache()
-            
+
             ### EVALUATION ###
             if epoch % self.epochs_btw_eval == 0:
-                val_results = self.evaluator.evaluate(on_test=False, last_loss_value=avg_epoch_loss)
+                val_results = self.evaluator.evaluate(
+                    on_test=False, last_loss_value=avg_epoch_loss)
                 # free memory after evaluation
                 collect()
                 torch.cuda.synchronize()
@@ -181,12 +182,10 @@ class Trainer:
                         self._save_checkpoint(epoch, metric_name, metric_val)
                 else:
                     for metric_name, metric_val in val_results.items():
-                        if (
-                                metric_name not in best_metric_val
-                                or metric_val > best_metric_val[metric_name]
-                        ):
+                        if (metric_name not in best_metric_val or self.evaluator.cpu_metrics[metric_name].is_better(best_metric_val[metric_name], metric_val)):
                             best_metric_val[metric_name] = metric_val
-                            self._save_checkpoint(epoch, metric_name, metric_val)
+                            self._save_checkpoint(
+                                epoch, metric_name, metric_val)
 
                 if self.logger:
                     self.logger.info(
@@ -229,7 +228,8 @@ class Trainer:
             self.logger.info(f"[Trainer] Checkpoint sauvegardé : {filepath}")
         else:
             print(f"[Trainer] Checkpoint sauvegardé : {filepath}")
-            
+
+
 class EarlyStopping:
     def __init__(self, patience, metric_name="f1_score", delta=0.0):
         self.patience = patience
@@ -246,7 +246,7 @@ class EarlyStopping:
         elif self.last_score is None:
             self.last_score = current_score
             return False
-        
+
         # if L2 distance is less than delta, consider it as no improvement
         elif abs(current_score - self.last_score) < self.delta:
             self.counter += 1

@@ -10,6 +10,14 @@ class VI(BaseMetric):
     def __init__(self):
         super().__init__()
         
+    def is_better(self, old_score: float, new_score: float) -> bool:
+        """
+        Variation of Information (VI):
+        - VI = 0 means the prediction matches the mask perfectly.
+        - The lower the VI, the closer the prediction is to the mask.
+        """
+        return new_score < old_score
+        
     def __call__(self, prediction: np.ndarray, mask: np.ndarray) -> float:
         # Aplatir les masques
         pred = prediction.flatten()
