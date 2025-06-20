@@ -2,7 +2,6 @@ import torch
 import os
 from random import Random
 from torch.utils.data import DataLoader, Subset, Sampler
-from torchvision import transforms
 from utils.logger import log_dataset_stats
 from utils.misc import set_seed, worker_init_fn
 

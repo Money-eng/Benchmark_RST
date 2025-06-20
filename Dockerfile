@@ -1,48 +1,74 @@
-#############################################
-# 1) Builder Java + native-image (GraalVM) #
-#############################################
-FROM ghcr.io/graalvm/graalvm-community:24.0.1-ol8-20250415 AS java-builder
+# Stage 1: build Java native binary with Native Image Community Edition
+FROM ghcr.io/graalvm/native-image-community:24.0.1-ol8-20250415 AS java-builder
 
-# Installer native-image
-RUN gu install native-image
+# Passer en root pour installer git et maven
+USER root
+RUN microdnf update -y \
+    && microdnf install -y git maven \
+    && microdnf clean all
 
-# Copier et packager avec Maven (Shade pour jar "uber")
-WORKDIR /app/RootSystemTracker
-COPY RootSystemTracker/pom.xml .
-COPY RootSystemTracker/src ./src
+# Copier et compiler le projet RootSystemTracker
+WORKDIR /build
+COPY RootSystemTracker /build/RootSystemTracker
+WORKDIR /build/RootSystemTracker
+RUN mvn clean package -DskipTests
 
-RUN mvn clean package -DskipTests \ 
- && native-image \
-      -cp target/*-jar-with-dependencies.jar \
-      -H:Name=rsml-tracker \
-      io.github.rocsg.gui.RSMLNoGUI
+# Générer l'exécutable natif à partir du JAR
+RUN native-image -jar target/rootsystemtracker-*-jar-with-dependencies.jar \
+    --no-server \
+    -H:Name=rootsystemtracker
 
-##################################
-# 2) Image finale Python + mamba #
-##################################
+# Stage 2: Python environment avec micromamba
 FROM mambaorg/micromamba:latest AS python-builder
 
-# 2a) Créer l'env Python via micromamba
-#    - placez votre environment.yml à la racine du contexte Docker
-COPY RSA_deep_working/environment.yml .
-RUN micromamba create -n rsa-env -f environment.yml \
- && micromamba clean --all --yes
+# Passer en root pour installer les certificats
+USER root
+RUN apt-get update \
+    && apt-get install -y ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# 2b) Ajouter le binaire Java natif
-COPY --from=java-builder /app/RootSystemTracker/rsml-tracker /usr/local/bin/rsml-tracker
+# Ajouter le certificat Fortinet et mettre à jour le store
+COPY Fortinet_CA_SSL.crt /usr/local/share/ca-certificates/Fortinet_CA_SSL.crt
+RUN update-ca-certificates
 
-# 2c) Copier le code Python
-COPY RSA_deep_working ./RSA_deep_working
-COPY CreateRSADataset ./CreateRSADataset
+# Utiliser bash pour micromamba
+SHELL ["bash", "-lc"]
 
-# 2d) Activer l'env mamba par défaut
-ENV MAMBA_ROOT_PREFIX=/opt/conda
-ENV PATH=/opt/conda/envs/rsa-env/bin:$PATH
+# Créer et activer un environnement Python 3.12
+RUN micromamba create -y -n py312 python=3.12 -c conda-forge \
+    && micromamba clean --all -f -y
+ENV PATH=/opt/conda/envs/py312/bin:$PATH
 
-# Entrypoint qui lance votre pipeline
+# Copier et installer les dépendances Python
 WORKDIR /app
-ENTRYPOINT ["python", "RSA_deep_working/main.py"]
-CMD ["--config", "RSA_deep_working/config.yml"]
+COPY py312.yaml /app/
+RUN micromamba install -y -n py312 -f py312.yaml \
+    && micromamba clean --all -f -y
 
+# Copier et installer le module RSML en mode editable
+COPY external/rsml /build/rsml
+WORKDIR /build/rsml
+# Installer git et définir une version fallback pour setuptools-scm
+USER root
+RUN apt-get update && apt-get install -y git \
+    && rm -rf /var/lib/apt/lists/*
+# Bypass setuptools-scm missing git repository by fixant la version
+ENV SETUPTOOLS_SCM_PRETEND_VERSION=0.1.0
 
-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
+# Installer en editable
+RUN micromamba run -n py312 pip install -e .
+
+# Copier le code Python du projet
+COPY RSA_deep_working /app/
+
+# Copier l'exécutable natif Java construit précédemment
+COPY --from=java-builder /build/RootSystemTracker/rootsystemtracker /usr/local/bin/rootsystemtracker
+RUN chmod +x /usr/local/bin/rootsystemtracker
+
+# Exposer le port TensorBoard (optionnel)
+EXPOSE 8080
+
+WORKDIR /app/RSA_deep_working
+
+# Execute python script main.py
+CMD ["python3", "/app/RSA_deep_working/Models/main.py"]

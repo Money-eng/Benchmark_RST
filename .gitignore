@@ -49,5 +49,7 @@ __pycache__/
 .tiff 
 .rsml
 .csv
-.pyc
+*.pyc
 events.*
+Data/
+*.crt

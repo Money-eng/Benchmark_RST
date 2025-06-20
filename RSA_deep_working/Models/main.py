@@ -15,7 +15,7 @@ from utils.misc import get_device
 if __name__ == "__main__":
     
     ##### Path to the config file #####
-    cfg_path = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/config.yml"
+    cfg_path = "./Models/config.yml"
     assert os.path.exists(cfg_path), f"Le fichier de config n'existe pas : {cfg_path}"
     with open(cfg_path, "r") as f:
         config = yaml.safe_load(f)
