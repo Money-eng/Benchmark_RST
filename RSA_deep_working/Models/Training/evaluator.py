@@ -187,7 +187,9 @@ class Evaluator:
                         results_raw[name].extend(values)
                     
                 # if accuracy loss gives us more than 60% accuracy, we can process the whole series
-                if last_loss_value < 0.3:
+                dice_result = results_raw.get("Dice", [])
+                mean_dice = np.mean(dice_result) if dice_result else 10000
+                if mean_dice > 0.95:
                     with tqdm(data_loader_series, desc="Evaluating serie per serie", leave=False, dynamic_ncols=True) as pbar:
                         for ts_imgs, masks, _, mtgs in pbar:
                             ts_imgs = ts_imgs.to(self.device)
