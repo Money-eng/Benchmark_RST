@@ -11,11 +11,14 @@ from Training.evaluator import Evaluator
 from Training.trainer import Trainer
 from utils.logger import get_logger, TensorboardLogger
 from utils.misc import get_device
+from torch.nn import DataParallel
 
 if __name__ == "__main__":
     
     ##### Path to the config file #####
-    cfg_path = "./Models/config.yml"
+    # get current file directory
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cfg_path = os.path.join(current_dir, "config.yml")
     assert os.path.exists(cfg_path), f"Le fichier de config n'existe pas : {cfg_path}"
     with open(cfg_path, "r") as f:
         config = yaml.safe_load(f)
@@ -24,9 +27,9 @@ if __name__ == "__main__":
     train_loader, val_loader, test_loader, series_val_loader, series_test_loader = create_dataloader(
         base_directory=config["data"]["base_dir"],
         img_transforms=[
-            get_train_img_transform_1(patch_size=512), 
-            get_train_img_transform_2(patch_size=512), 
-            get_train_img_transform_3(patch_size=512),
+            get_train_img_transform_1(patch_size=config["data"]["patch_size"]), 
+            get_train_img_transform_2(patch_size=config["data"]["patch_size"]), 
+            get_train_img_transform_3(patch_size=config["data"]["patch_size"]),
             get__val_test_img_transform(),
             get_train_serie_transform()
             ],
@@ -35,9 +38,12 @@ if __name__ == "__main__":
     )
     
     ##### Initialize model, loss, optimizer, metrics, logger, and evaluator #####
+    n_gpus = torch.cuda.device_count()
+    print(f"{n_gpus} GPU(s) detected")
     device = get_device(preferred=config["training"].get("device", "cuda"))
 
     model = get_model(config["model"])
+    model = DataParallel(model) if n_gpus > 1 else model
     model = model.to(device)
 
     criterion = get_loss(config["loss"])
@@ -111,6 +117,8 @@ if __name__ == "__main__":
         tb_logger=tb_logger,
         jar_path=config["rst"].get("jar_path",
                                    "/home/loai/Documents/code/RSMLExtraction/RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar"),
+        patch_size=config["data"].get("patch_size", 512),
+        log_metric_path=log_model_path,
     )
 
     trainer = Trainer(

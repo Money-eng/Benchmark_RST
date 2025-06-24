@@ -1,4 +1,4 @@
-import tifffile
+from tifffile import imread
 
 
 class TiffReader:
@@ -11,9 +11,7 @@ class TiffReader:
         
 
     def get_page(self, img_path, key):
-        with tifffile.TiffFile(img_path) as tif:
-            return tif.pages[key].asarray()
+        return imread(img_path, key=key)
     
     def get_series(self, img_path):
-        with tifffile.TiffFile(img_path) as tif:
-            return tif.asarray()
+        return imread(img_path)

@@ -38,7 +38,7 @@ def create_dataloader(
     base_directory: str,
     img_transforms: list,
     default_batch_size: int = 32,
-    num_workers: int = 16,
+    num_workers: int = 4,
     seed: int = 42,
 ):
     # Load datasets
@@ -147,7 +147,7 @@ def create_dataloader(
         shuffle=True,
         num_workers=num_workers,
         worker_init_fn=lambda wid: worker_init_fn(wid, base_seed=seed),
-        pin_memory=True,
+        pin_memory=False,
     )
     val_loader = DataLoader(  # only for validation images - not series
         val_dataset,
@@ -155,7 +155,7 @@ def create_dataloader(
         shuffle=True,
         num_workers=num_workers,
         worker_init_fn=lambda wid: worker_init_fn(wid, base_seed=seed),
-        pin_memory=True,
+        pin_memory=False,
     )
     test_loader = DataLoader(  # only for test images - not series
         test_dataset,
@@ -163,21 +163,21 @@ def create_dataloader(
         shuffle=False,
         num_workers=num_workers,
         worker_init_fn=lambda wid: worker_init_fn(wid, base_seed=seed),
-        pin_memory=True,
+        pin_memory=False,
     )
     val_loader_series = DataLoader(  # work with series
         series_dataset_v0,
         batch_sampler=val_batch_sampler,
         num_workers=num_workers,
         worker_init_fn=lambda wid: worker_init_fn(wid, base_seed=seed),
-        pin_memory=True,
+        pin_memory=False,
     )
     test_loader_series = DataLoader(  # work with series
         series_dataset_v0,
         batch_sampler=test_batch_sampler,
         num_workers=num_workers,
         worker_init_fn=lambda wid: worker_init_fn(wid, base_seed=seed),
-        pin_memory=True,
+        pin_memory=False,
     )
     
     return train_loader, val_loader, test_loader, val_loader_series, test_loader_series

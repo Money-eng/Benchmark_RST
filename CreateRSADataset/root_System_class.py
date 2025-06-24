@@ -505,8 +505,8 @@ def mtg2rsml(g, rsml_file):
         rsml_file.write(s) 
 
 # Exemple d'utilisation principal
-if __name__ == "__main__0":
-    folder = "/home/loai/Images/DataTest/230629PN016/"
+if __name__ == "__main__":
+    folder = "/home/loai/Images/DataTest/UC1/230629PN026/"
     root_system = RootSystem(folder, load_date_map=True)
 
     print("Image stack shape:", root_system.image_stack.shape)
@@ -526,7 +526,7 @@ if __name__ == "__main__0":
     root_system2 = RootSystem(dest_folder, load_date_map=False)
     root_system2.save2folder(new_dest_Folder)
 
-if __name__ == "__main__":
+if __name__ == "__main__0":
     # Chemin de base contenant tous les dossiers à traiter
     source_base = '/home/loai/Images/DataTest/UC1'
     # Dossier de destination où sera recréée l'arborescence et sauvegardé chaque dataset

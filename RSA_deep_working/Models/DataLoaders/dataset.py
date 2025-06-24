@@ -108,6 +108,7 @@ class RSADataset(Dataset):
 
         # Load and build mask
         mask_full = tifffile.imread(mask_path)
+        
         if self.mode == 'series':
             mask_np = (mask_full > 0).astype(np.uint8)
             img_np = self.tiff_reader.get_series(img_path)

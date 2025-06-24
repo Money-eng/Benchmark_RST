@@ -155,6 +155,7 @@ class Trainer:
 
             ### EVALUATION ###
             if epoch % self.epochs_btw_eval == 0:
+                self.evaluator.epoch = epoch
                 val_results = self.evaluator.evaluate(
                     on_test=False, last_loss_value=avg_epoch_loss)
                 # free memory after evaluation
@@ -182,7 +183,16 @@ class Trainer:
                         self._save_checkpoint(epoch, metric_name, metric_val)
                 else:
                     for metric_name, metric_val in val_results.items():
-                        if (metric_name not in best_metric_val or self.evaluator.cpu_metrics[metric_name].is_better(best_metric_val[metric_name], metric_val)):
+                        # if metric is in evaluator.cpu_metrics, use its is_better method
+                        if metric_name in self.evaluator.cpu_metrics:
+                            isBetter = self.evaluator.cpu_metrics[metric_name].is_better(best_metric_val[metric_name], metric_val)
+                        elif metric_name in self.evaluator.gpu_metrics:
+                            isBetter = self.evaluator.gpu_metrics[metric_name].is_better(best_metric_val[metric_name], metric_val)
+                        elif metric_name in self.evaluator.mtg_metrics:
+                            isBetter = self.evaluator.mtg_metrics[metric_name].is_better(best_metric_val[metric_name], metric_val)
+                        else:
+                            isBetter = metric_val > best_metric_val[metric_name]
+                        if ((metric_name not in best_metric_val) or isBetter):
                             best_metric_val[metric_name] = metric_val
                             self._save_checkpoint(
                                 epoch, metric_name, metric_val)
@@ -207,6 +217,7 @@ class Trainer:
                             f"[Trainer] Early stopping triggered at epoch {epoch}."
                         )
                     break
+        self.evaluator.done_evaluating()
         if self.logger:
             self.logger.info("[Trainer] Entraînement terminé.")
         else:

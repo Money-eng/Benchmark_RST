@@ -1,10 +1,11 @@
 data:
-  base_dir: ./Data
-  batch_size: 4
+  base_dir: RSA_deep_working/Data
+  patch_size: 256
+  batch_size: 16
 
 training:
   epochs: 500
-  epochs_btw_eval: 5
+  epochs_btw_eval: 1
   device: cuda
   save_best_only: true
   early_stopping:
@@ -16,8 +17,8 @@ training:
     mode: min
     factor: 0.5
     patience: 5
-  checkpoint_dir: ./Models/Checkpoints
-  log_dir: ./RSA_deep_working/Models/Logs
+  checkpoint_dir: RSA_deep_working/Models/Checkpoints
+  log_dir: RSA_deep_working/Models/Logs
 
 
 model:
@@ -78,4 +79,4 @@ metrics:
     - { name: "number_of_plants_ratio"}
 
 rst:
-  jar_path: ./RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar
+  jar_path: RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar
