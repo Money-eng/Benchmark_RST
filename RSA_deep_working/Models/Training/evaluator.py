@@ -72,7 +72,7 @@ class Evaluator:
 
         if patch_size is not None:
             self.sw_inferer = SlidingWindowInfererAdapt(
-                roi_size=(512, 512),
+                roi_size=(patch_size, patch_size),
                 sw_batch_size=4,
                 overlap=0.25,
                 mode="constant",
