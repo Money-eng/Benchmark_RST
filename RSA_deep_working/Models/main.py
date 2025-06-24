@@ -117,7 +117,7 @@ if __name__ == "__main__":
         tb_logger=tb_logger,
         jar_path=config["rst"].get("jar_path",
                                    "/home/loai/Documents/code/RSMLExtraction/RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar"),
-        patch_size=config["data"].get("patch_size", 512),
+        patch_size=int(config["data"].get("patch_size", 512)),
         log_metric_path=log_model_path,
     )
 
