@@ -5,3 +5,6 @@
 	path = external/rsml
 	url = https://github.com/openalea/RSML.git
 	branch = hirros
+[submodule "RSA_deep_working/Models/Losses/clDice"]
+	path = RSA_deep_working/Models/Losses/clDice
+	url = https://github.com/jocpae/clDice
