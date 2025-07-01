@@ -63,7 +63,7 @@ def generate_graph_with_java(input_path: str, output_dir: str, acq_times: list,
         str | None: Chemin complet du fichier généré, ou None si échec.
     """
     cmd = [
-        "xvfb-run", "-a", "java", "-cp", jar_path,
+        "java", "-Djava.awt.headless=true", "-cp", jar_path,
         "io.github.rocsg.rootsystemtracker.PipelineActionsHandler",
         f"--input={input_path}",
         f"--output={output_dir}",

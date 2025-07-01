@@ -51,7 +51,7 @@ def preprocess_RST_pipeline(
     # Pour le moment, on retourne None et l'appelant doit le remplir après chargement GT
     return pred_datemap, input_dir, output_dir, None
 
-
+from pyvirtualdisplay import Display
 def generate_graph_with_java(
         input_path: str,
         output_dir: str,
@@ -75,23 +75,22 @@ def generate_graph_with_java(
     Returns:
         str | None: Chemin complet du fichier généré, ou None si échec.
     """
-    cmd = [
-        "xvfb-run",
-        "-a",
-        "java",
-        "-cp",
-        jar_path,
-        "io.github.rocsg.rootsystemtracker.PipelineActionsHandler",
-        f"--input={input_path}",
-        f"--output={output_dir}",
-        f"--acqTimes={acq_times}",
-    ]
-    try:
-        # On ne log pas stdout, juste les vraies erreurs
-        _ = subprocess.run(cmd, capture_output=False, text=False, timeout=timeout)
-    except Exception as e:
-        print(f"[ERREUR] Java failed for {input_path} → {e}")
-        return None
+    with Display(visible=False, size=(1024, 768)) as _:
+        cmd = [
+            "java",
+            "-cp",
+            jar_path,
+            "io.github.rocsg.rootsystemtracker.PipelineActionsHandler",
+            f"--input={input_path}",
+            f"--output={output_dir}",
+            f"--acqTimes={acq_times}",
+        ]
+        try:
+            # On ne log pas stdout, juste les vraies erreurs
+            _ = subprocess.run(cmd, capture_output=False, text=False, timeout=timeout)
+        except Exception as e:
+            print(f"[ERREUR] Java failed for {input_path} → {e}")
+            return None
 
     # Vérifie la présence du fichier attendu
     expected_path = os.path.join(output_dir, expected_filename)
@@ -170,7 +169,7 @@ def process_date_map(
 
     # free up resources
     shutil.rmtree(input_dir, ignore_errors=True)
-    # shutil.rmtree(output_dir, ignore_errors=True)
+    shutil.rmtree(output_dir, ignore_errors=True)
 
     # Retourne les deux MTG
     return mtg_gt, mtg_pred

@@ -128,18 +128,19 @@ class RSADataset(Dataset):
             # image and mask to float32
             img_np_aug = img_np_aug.astype(np.float32)
             mask_np = mask_np.astype(np.float32)
+            # H and W are not determined by the image size 
+            
             # image and mask augmentation
             augmented = self.img_transform(image=img_np_aug, mask=mask_np)
             img = augmented['image']   # tensor [C,H,W]
             mask = augmented['mask']  
             mask = mask.unsqueeze(0)  # tensor [1,H,W]
-        else:
-            img = torch.from_numpy(img_np)
-            if img.ndim == 2:
-                img = img.unsqueeze(0)
-            else:
-                img = img.permute(2, 0, 1)
-            img = img.float()
-            mask = torch.from_numpy(mask_np).float().unsqueeze(0)
+            #print(f'type of img: {type(img)}, shape: {img.shape}, type of mask: {type(mask)}, shape: {mask.shape}')
+            #import matplotlib.pyplot as plt
+            #plt.imshow(img.permute(1, 2, 0).cpu().numpy())
+            #plt.imshow(mask.permute(1, 2, 0).cpu().numpy(), cmap='jet', alpha=0.5)
+            #plt.show()
+            
+            # TODO other no transform cases
 
         return img, mask.clone(), time, mtg

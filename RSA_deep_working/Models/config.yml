@@ -1,7 +1,7 @@
 data:
   base_dir: RSA_deep_working/Data
-  patch_size: 256
-  batch_size: 16
+  patch_size: null
+  batch_size: 1
 
 training:
   epochs: 500
@@ -34,11 +34,11 @@ model:
 
 optimizer:
   name: AdamW
-  learning_rate: 1e-4
+  learning_rate: 1e-2
   weight_decay: 1e-5
 
 loss:
-  name: BCE
+  name: bce
   params:
     weight: null
     size_average: null
@@ -73,8 +73,8 @@ metrics:
     - { name: "persistence_bottleneck" }
     #- { name: "persistence_wasserstein" }
   mtg:
-    #- { name: "area_below_intercep" }
-    #- { name: "dtw_below_intercep" }
+    - { name: "area_below_intercep" }
+    - { name: "dtw_below_intercep" }
     - { name: "number_of_organs_ratio"}
     - { name: "number_of_plants_ratio"}
 

@@ -90,18 +90,17 @@ class Trainer:
 
     def train(self):
         """
-        Boucle d'entraînement principale, avec :
-        - forward + backward / mise à jour des poids
-        - calcul de la loss au *batch* et à la fin de chaque epoch
-        - évaluation sur validation + TensorBoard + sauvegarde du meilleur modèle
+        Training loop for the model.
+        - It iterates over epochs and batches, computes loss, performs backpropagation,
+        - updates model weights, and evaluates the model at specified intervals.
+        - It also handles logging and saving checkpoints.
+        - It calls the Evaluator to evaluate the model on validation data every `epochs_btw_eval` epochs and saves the best model based on evaluation metrics.
         """
+    
         if self.logger:
-            self.logger.info(
-                f"[Trainer] Démarrage de l'entraînement pour {self.epochs} epochs"
-            )
+            self.logger.info(f"[Trainer] Démarrage de l'entraînement pour {self.epochs} epochs")
         else:
-            print(
-                f"[Trainer] Démarrage de l'entraînement pour {self.epochs} epochs")
+            print(f"[Trainer] Démarrage de l'entraînement pour {self.epochs} epochs")
 
         best_metric_val = {}
         batch_step = 0
@@ -148,20 +147,18 @@ class Trainer:
                 self.tb_logger.log_scalar(
                     "train/epoch_loss", avg_epoch_loss, epoch)
 
-            # free memory for next epoch
-            collect()
-            torch.cuda.synchronize()
-            torch.cuda.empty_cache()
+            self._save_checkpoint_at_epoch(epoch)
 
             ### EVALUATION ###
             if epoch % self.epochs_btw_eval == 0:
                 self.evaluator.epoch = epoch
-                val_results = self.evaluator.evaluate(
-                    on_test=False, last_loss_value=avg_epoch_loss)
+                val_results, _ = self.evaluator.evaluate(
+                    on_test=False)
                 # free memory after evaluation
                 collect()
                 torch.cuda.synchronize()
                 torch.cuda.empty_cache()
+                
                 val_str = ", ".join(f"{k}: {v:.4f}" for k,
                                     v in val_results.items())
                 if self.logger:
@@ -169,33 +166,40 @@ class Trainer:
                         f"[EVALUATOR] Epoch {epoch}/{self.epochs} | Values : {val_str}"
                     )
                 else:
-                    print(
-                        f"[EVALUATOR] Epoch {epoch}/{self.epochs} | Values : {val_str}")
+                    print(f"[EVALUATOR] Epoch {epoch}/{self.epochs} | Values : {val_str}")
 
+                # log metrics to TensorBoard
                 if self.tb_logger:
                     for metric_name, metric_val in val_results.items():
                         self.tb_logger.log_scalar(
                             f"val/{metric_name}", metric_val, epoch)
 
+                # save best metric values if not already saved
                 if not best_metric_val:
                     for metric_name, metric_val in val_results.items():
                         best_metric_val[metric_name] = metric_val
-                        self._save_checkpoint(epoch, metric_name, metric_val)
+                        self._save_best_checkpoint(
+                            epoch, metric_name)
                 else:
+                    # compare each metric in val_results with best_metric_val
+                    # and save the best one
                     for metric_name, metric_val in val_results.items():
                         # if metric is in evaluator.cpu_metrics, use its is_better method
                         if metric_name in self.evaluator.cpu_metrics:
-                            isBetter = self.evaluator.cpu_metrics[metric_name].is_better(best_metric_val[metric_name], metric_val)
+                            isBetter = self.evaluator.cpu_metrics[metric_name].is_better(
+                                best_metric_val[metric_name], metric_val)
                         elif metric_name in self.evaluator.gpu_metrics:
-                            isBetter = self.evaluator.gpu_metrics[metric_name].is_better(best_metric_val[metric_name], metric_val)
+                            isBetter = self.evaluator.gpu_metrics[metric_name].is_better(
+                                best_metric_val[metric_name], metric_val)
                         elif metric_name in self.evaluator.mtg_metrics:
-                            isBetter = self.evaluator.mtg_metrics[metric_name].is_better(best_metric_val[metric_name], metric_val)
+                            isBetter = self.evaluator.mtg_metrics[metric_name].is_better(
+                                best_metric_val[metric_name], metric_val)
                         else:
                             isBetter = metric_val > best_metric_val[metric_name]
                         if ((metric_name not in best_metric_val) or isBetter):
                             best_metric_val[metric_name] = metric_val
-                            self._save_checkpoint(
-                                epoch, metric_name, metric_val)
+                            self._save_best_checkpoint(
+                                epoch, metric_name)
 
                 if self.logger:
                     self.logger.info(
@@ -217,13 +221,14 @@ class Trainer:
                             f"[Trainer] Early stopping triggered at epoch {epoch}."
                         )
                     break
+
         self.evaluator.done_evaluating()
         if self.logger:
             self.logger.info("[Trainer] Entraînement terminé.")
         else:
             print("[Trainer] Entraînement terminé.")
 
-    def _save_checkpoint(self, epoch: int, metric_name: str, metric_val: float):
+    def _save_best_checkpoint(self, epoch: int, metric_name: str):
         """
         Sauvergarde du state_dict du modèle dans checkpoint_dir.
         On ajoute epoch et valeur de métrique dans le nom de fichier.
@@ -234,6 +239,22 @@ class Trainer:
                 os.remove(os.path.join(self.checkpoint_dir, file))
         filename = f"{self.model.__class__.__name__}_{metric_name}_epoch{epoch:03d}.pth"
         filepath = os.path.join(self.checkpoint_dir, filename)
+        torch.save(self.model.state_dict(), filepath)
+        if self.logger:
+            self.logger.info(f"[Trainer] Checkpoint sauvegardé : {filepath}")
+        else:
+            print(f"[Trainer] Checkpoint sauvegardé : {filepath}")
+
+    def _save_checkpoint_at_epoch(self, epoch: int):
+        """
+        Sauvegarde du state_dict du modèle à la fin de l'epoch.
+        On ajoute epoch dans le nom de fichier.
+        """
+        # create subfolder "by_epochs" in checkpoint_dir if it doesn't exist
+        by_epochs_dir = os.path.join(self.checkpoint_dir, "by_epochs")
+        os.makedirs(by_epochs_dir, exist_ok=True)
+        filename = f"{self.model.__class__.__name__}_epoch{epoch:03d}.pth"
+        filepath = os.path.join(by_epochs_dir, filename)
         torch.save(self.model.state_dict(), filepath)
         if self.logger:
             self.logger.info(f"[Trainer] Checkpoint sauvegardé : {filepath}")

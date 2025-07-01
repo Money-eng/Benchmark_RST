@@ -2,9 +2,6 @@
 import numpy as np
 from openalea.mtg import MTG
 #from utils.intercept import intercept_curve_at_all_time
-from fastdtw import fastdtw
-from scipy.optimize import linear_sum_assignment
-
 #from ..base import BaseMetric
 
 
@@ -66,73 +63,74 @@ def intercept_curve_at_all_time(mtg: MTG, plant_id=1, nlengths=2500, step=1e-3):
         intercepto_all.append(intercepto)
     intercepto_all = np.array(intercepto_all)
     return lengths, intercepto_all
-class DTWBetweenIntercepts():
+
+class EuclidianDistancebtwIntercepts():
     type = "cpu"
     need = "serie"
 
     def __init__(self):
         super().__init__()
-
-    def is_better(self, old_score: float, new_score: float) -> bool:
-        """Plus le score est petit, meilleur c'est."""
+        
+    def is_better(self, old_score: float, new_score: float) -> bool:    
+        """
+        Dynamic Time Warping (DTW) between intercepts. On considère que `old_score` et `new_score`
+        sont des scores de type float.
+        """
         return new_score < old_score
 
     def __call__(self, mtg_pred: MTG, mtg_gt: MTG) -> float:
-        # 1) Récupération des racines (scale=1)
-        scale = 1
-        verts_gt   = list(mtg_gt.vertices(scale=scale))
-        verts_pred = list(mtg_pred.vertices(scale=scale))
+        import numpy as np
+        from scipy.spatial.distance import euclidean
 
-        # 2) Extraction des sous-arbres
-        sub_gt   = {v: mtg_gt.sub_mtg(v)   for v in verts_gt}
-        sub_pred = {v: mtg_pred.sub_mtg(v) for v in verts_pred}
+        plant_scale = 1
+        verts_gt   = list(mtg_gt.vertices(scale=plant_scale))
+        verts_pred = list(mtg_pred.vertices(scale=plant_scale))
+        
+        # Construire les sous-MTG pour chaque racine
+        map_subtree_gt   = {v: mtg_gt.sub_mtg(v)   for v in verts_gt}
+        map_subtree_pred = {v: mtg_pred.sub_mtg(v) for v in verts_pred}
 
-        # 3) Calcul des courbes (x, y) pour chaque sous-arbre
-        curves_gt = {}
-        for v, g in sub_gt.items():
-            x, y = intercept_curve_at_all_time(g, 0)
-            curves_gt[v] = (x, y)
+        # Calcul des courbes d’interception pour chaque sous-arbre
+        map_curve_gt   = {v: intercept_curve_at_all_time(map_subtree_gt[v],   0)
+                          for v in verts_gt}
+        map_curve_pred = {v: intercept_curve_at_all_time(map_subtree_pred[v], 0)
+                          for v in verts_pred}
 
-        curves_pred = {}
-        for v, g in sub_pred.items():
-            x, y = intercept_curve_at_all_time(g, 0)
-            curves_pred[v] = (x, y)
+        distances = []
+        all_vs = set(map_curve_gt.keys()) | set(map_curve_pred.keys())
+        for v in all_vs:
+            # Récupérer (x, y) ; si absent, y_pred ou y_gt devient matrice nulle de même forme
+            if v in map_curve_gt:
+                x_gt, y_gt = map_curve_gt[v]
+            else:
+                x_gt, y_gt = map_curve_pred[v]
+                y_gt = np.zeros_like(y_gt)
 
-        # 4) Construction de la matrice de coûts
-        n_gt, n_pred = len(verts_gt), len(verts_pred)
-        cost = np.zeros((n_gt, n_pred), dtype=float)
+            if v in map_curve_pred:
+                x_pred, y_pred = map_curve_pred[v]
+            else:
+                x_pred, y_pred = map_curve_gt[v]
+                y_pred = np.zeros_like(y_pred)
 
-        for i, v_gt in enumerate(verts_gt):
-            x_gt, y_gt = curves_gt[v_gt]  # y_gt : (T_gt, L)
-            for j, v_pred in enumerate(verts_pred):
-                x_pr, y_pr = curves_pred[v_pred]  # y_pr : (T_pr, L')
+            # Si les grilles x diffèrent, on ré-échantillonne y_pred sur x_gt
+            if not np.array_equal(x_gt, x_pred):
+                # interpolation ligne à ligne (sur l’axe des distances)
+                y_pred_interp = np.vstack([
+                    np.interp(x_gt, x_pred, y_pred_t)
+                    for y_pred_t in y_pred
+                ])
+            else:
+                y_pred_interp = y_pred
 
-                # 4a) Rééchantillonnage sur x_gt si nécessaire
-                if not np.array_equal(x_gt, x_pr):
-                    # pour chaque pas de temps, interpole sur la grille x_gt
-                    y_pr = np.vstack([
-                        np.interp(x_gt, x_pr, row)
-                        for row in y_pr
-                    ])
+            # Aligner la dimension temps (prendre le plus petit)
+            T_common = min(y_gt.shape[0], y_pred_interp.shape[0])
+            y1 = y_gt[:T_common].flatten()
+            y2 = y_pred_interp[:T_common].flatten()
 
-                # 4b) Séquences de vecteurs 
-                seq_gt = [tuple(row) for row in y_gt]
-                seq_pr = [tuple(row) for row in y_pr]
+            distances.append(euclidean(y1, y2))
 
-                # 4c) DTW sur la séquence de vecteurs
-                dist, _ = fastdtw(seq_gt, seq_pr) # retourne la distance DTW (un float)
-                cost[i, j] = dist
-
-
-        row_ind, col_ind = linear_sum_assignment(cost) # retourne les indices optimaux - ceux qui minimisent la somme des coûts
-        if row_ind != col_ind:
-            raise ValueError("Indices de lignes et de colonnes ne correspondent pas.")
-        print(f"DTW cost matrix:\n{cost}")
-        print(f"Row indices: {row_ind}")
-        print(f"Column indices: {col_ind}")
-        total = cost[row_ind, col_ind].sum()
-        print(f"Total DTW cost: {total} avec { cost[row_ind, col_ind] }")
-        return total
+        # Retourner la distance moyenne sur tous les sous-arbres
+        return float(np.mean(distances))
         
 
 
@@ -143,6 +141,6 @@ if __name__ == "__main__":
     # remove 1 index from mtg_pred (max scale)
     mtg_pred.remove_vertex(mtg_pred.vertices(scale=mtg_pred.max_scale())[-1])  # remove
     
-    metric = DTWBetweenIntercepts()
+    metric = EuclidianDistancebtwIntercepts()
     score = metric(mtg_pred, mtg_gt)
-    print(f"DTW between intercepts: {score}")
+    print(f"L2-distance between intercepts: {score}")

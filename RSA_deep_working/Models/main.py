@@ -1,5 +1,16 @@
-import os
+import os, random, numpy as np
+SEED = 42
+os.environ['PYTHONHASHSEED'] = str(SEED)            # fixe PYTHONHASHSEED
+os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':16:8'     # pour cuBLAS déterministe
+random.seed(SEED)                                   # seed du module random
+np.random.seed(SEED)                                # seed NumPy
 import torch
+torch.manual_seed(SEED)                             # seed CPU
+torch.cuda.manual_seed_all(SEED)                    # seed GPU
+torch.backends.cudnn.deterministic = True           # désactive les algos non-déterministes
+torch.backends.cudnn.benchmark = False              # fixe les algos cuDNN
+torch.use_deterministic_algorithms(True)
+
 import yaml
 from DataLoaders.transforms import get_train_img_transform_1, get_train_img_transform_2, get_train_img_transform_3, get__val_test_img_transform, get_train_serie_transform
 
@@ -24,18 +35,21 @@ if __name__ == "__main__":
         config = yaml.safe_load(f)
 
     ##### Create dataloaders #####
-    train_loader, val_loader, test_loader, series_val_loader, series_test_loader = create_dataloader(
+    train_loader, val_loader, test_loader = create_dataloader(
         base_directory=config["data"]["base_dir"],
         img_transforms=[
             get_train_img_transform_1(patch_size=config["data"]["patch_size"]), 
             get_train_img_transform_2(patch_size=config["data"]["patch_size"]), 
             get_train_img_transform_3(patch_size=config["data"]["patch_size"]),
-            get__val_test_img_transform(),
-            get_train_serie_transform()
+            get__val_test_img_transform()
             ],
-        default_batch_size=int(config["data"].get("batch_size", 32)),
-        seed=42
+        batch_size=int(config["data"].get("batch_size", 32))
     )
+    
+    # print unique mtg value for every dataset - reminder "return img, mask.clone(), time, mtg"
+    print("Unique mtg values in train dataset:", set([str(train_loader.dataset[i][-1]).split("/")[-2] for i in range(len(train_loader.dataset))]))
+    print("Unique mtg values in val_loader dataset:", set([val_loader.dataset[i][-1].split("/")[-2] for i in range(len(val_loader.dataset))]))
+    print("Unique mtg values in test_loader dataset:", set([test_loader.dataset[i][-1].split("/")[-2] for i in range(len(test_loader.dataset))]))
     
     ##### Initialize model, loss, optimizer, metrics, logger, and evaluator #####
     n_gpus = torch.cuda.device_count()
@@ -108,8 +122,6 @@ if __name__ == "__main__":
         model=model,
         val_dataloader=val_loader,
         test_dataloader=test_loader,
-        val_series_dataloader=series_val_loader,
-        test_series_dataloader=series_test_loader,
         metrics=metrics_dict,
         device=device,
         logger=logger,
@@ -117,9 +129,11 @@ if __name__ == "__main__":
         tb_logger=tb_logger,
         jar_path=config["rst"].get("jar_path",
                                    "/home/loai/Documents/code/RSMLExtraction/RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar"),
-        patch_size=int(config["data"].get("patch_size", 512)),
+        patch_size=config["data"].get("patch_size", 512),
         log_metric_path=log_model_path,
     )
+
+    #evaluator.evaluate()  # Initial evaluation before training
 
     trainer = Trainer(
         model=model,
