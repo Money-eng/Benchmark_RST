@@ -1,11 +1,12 @@
 # Metrics/cpu/dtw_between_intercepts.py
 import numpy as np
 from openalea.mtg import MTG
-#from utils.intercept import intercept_curve_at_all_time
+# from utils.intercept import intercept_curve_at_all_time
 from fastdtw import fastdtw
 from scipy.optimize import linear_sum_assignment
 
-#from ..base import BaseMetric
+
+# from ..base import BaseMetric
 
 
 def mtg_at_time_t(mtg: MTG, temps_max: float) -> MTG:
@@ -45,6 +46,7 @@ def mtg_at_time_t(mtg: MTG, temps_max: float) -> MTG:
 
     return new_g
 
+
 def intercept_curve_at_all_time(mtg: MTG, plant_id=1, nlengths=2500, step=1e-3):
     """
     Calcule la courbe intercepto pour une plante d'un mtg, éventuellement à un temps donné.
@@ -66,6 +68,8 @@ def intercept_curve_at_all_time(mtg: MTG, plant_id=1, nlengths=2500, step=1e-3):
         intercepto_all.append(intercepto)
     intercepto_all = np.array(intercepto_all)
     return lengths, intercepto_all
+
+
 class DTWBetweenIntercepts():
     type = "cpu"
     need = "serie"
@@ -80,11 +84,11 @@ class DTWBetweenIntercepts():
     def __call__(self, mtg_pred: MTG, mtg_gt: MTG) -> float:
         # 1) Récupération des racines (scale=1)
         scale = 1
-        verts_gt   = list(mtg_gt.vertices(scale=scale))
+        verts_gt = list(mtg_gt.vertices(scale=scale))
         verts_pred = list(mtg_pred.vertices(scale=scale))
 
         # 2) Extraction des sous-arbres
-        sub_gt   = {v: mtg_gt.sub_mtg(v)   for v in verts_gt}
+        sub_gt = {v: mtg_gt.sub_mtg(v) for v in verts_gt}
         sub_pred = {v: mtg_pred.sub_mtg(v) for v in verts_pred}
 
         # 3) Calcul des courbes (x, y) pour chaque sous-arbre
@@ -120,29 +124,29 @@ class DTWBetweenIntercepts():
                 seq_pr = [tuple(row) for row in y_pr]
 
                 # 4c) DTW sur la séquence de vecteurs
-                dist, _ = fastdtw(seq_gt, seq_pr) # retourne la distance DTW (un float)
+                dist, _ = fastdtw(seq_gt, seq_pr)  # retourne la distance DTW (un float)
                 cost[i, j] = dist
 
-
-        row_ind, col_ind = linear_sum_assignment(cost) # retourne les indices optimaux - ceux qui minimisent la somme des coûts
+        row_ind, col_ind = linear_sum_assignment(
+            cost)  # retourne les indices optimaux - ceux qui minimisent la somme des coûts
         if row_ind != col_ind:
             raise ValueError("Indices de lignes et de colonnes ne correspondent pas.")
         print(f"DTW cost matrix:\n{cost}")
         print(f"Row indices: {row_ind}")
         print(f"Column indices: {col_ind}")
         total = cost[row_ind, col_ind].sum()
-        print(f"Total DTW cost: {total} avec { cost[row_ind, col_ind] }")
+        print(f"Total DTW cost: {total} avec {cost[row_ind, col_ind]}")
         return total
-        
 
 
 if __name__ == "__main__":
     from rsml import rsml2mtg
+
     mtg_gt = rsml2mtg("/home/loai/Images/DataTest/UC1_data/Train/230629PN011/61_graph.rsml")
     mtg_pred = rsml2mtg("/home/loai/Images/DataTest/UC1_data/Train/230629PN011/61_graph.rsml")
     # remove 1 index from mtg_pred (max scale)
     mtg_pred.remove_vertex(mtg_pred.vertices(scale=mtg_pred.max_scale())[-1])  # remove
-    
+
     metric = DTWBetweenIntercepts()
     score = metric(mtg_pred, mtg_gt)
     print(f"DTW between intercepts: {score}")

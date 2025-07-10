@@ -6,6 +6,9 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 from .tiff_reader import TiffReader
+from utils.misc import set_seed, SEED
+
+set_seed(SEED)
 
 
 class RSADataset(Dataset):
@@ -49,12 +52,12 @@ class RSADataset(Dataset):
     """
 
     def __init__(
-        self,
-        rsa_dir_loader,
-        mode: str = "series",
-        img_transform=None,
-        image_with_mtg: bool = False,
-        as_RGB: bool = False,
+            self,
+            rsa_dir_loader,
+            mode: str = "series",
+            img_transform=None,
+            image_with_mtg: bool = False,
+            as_RGB: bool = False,
     ):
         assert mode in ('series', 'image'), "Mode must be 'series' or 'image'"
         self.mode = mode
@@ -108,7 +111,7 @@ class RSADataset(Dataset):
 
         # Load and build mask
         mask_full = tifffile.imread(mask_path)
-        
+
         if self.mode == 'series':
             mask_np = (mask_full > 0).astype(np.uint8)
             img_np = self.tiff_reader.get_series(img_path)
@@ -124,23 +127,21 @@ class RSADataset(Dataset):
                 img_np_aug = img_np[..., None]
             else:
                 img_np_aug = img_np
-                
-            # image and mask to float32
-            img_np_aug = img_np_aug.astype(np.float32)
-            mask_np = mask_np.astype(np.float32)
-            # H and W are not determined by the image size 
-            
-            # image and mask augmentation
-            augmented = self.img_transform(image=img_np_aug, mask=mask_np)
-            img = augmented['image']   # tensor [C,H,W]
-            mask = augmented['mask']  
-            mask = mask.unsqueeze(0)  # tensor [1,H,W]
-            #print(f'type of img: {type(img)}, shape: {img.shape}, type of mask: {type(mask)}, shape: {mask.shape}')
-            #import matplotlib.pyplot as plt
-            #plt.imshow(img.permute(1, 2, 0).cpu().numpy())
-            #plt.imshow(mask.permute(1, 2, 0).cpu().numpy(), cmap='jet', alpha=0.5)
-            #plt.show()
-            
-            # TODO other no transform cases
 
-        return img, mask.clone(), time, mtg
+            img_np_aug = img_np_aug.astype(np.uint8)
+            mask_np = mask_np.astype(np.uint8)
+
+            augmented = self.img_transform(image=img_np_aug, mask=mask_np)
+            img = augmented['image']  # tensor [C,H,W]
+            mask = augmented['mask']
+            
+            # print(f'type of img: {type(img)}, shape: {img.shape}, type of mask: {type(mask)}, shape: {mask.shape}')
+            # import matplotlib.pyplot as plt
+            # print("Transform recap: ", self.img_transform)
+            # plt.imshow(img.numpy().transpose(1, 2, 0))
+            #plt.imshow(mask.numpy(), alpha=0.5, cmap='jet')
+            # plt.title(f"Image and Mask at index {idx} (time={time})")
+            # plt.axis('off')
+            # plt.show()
+
+        return img, mask, time, mtg

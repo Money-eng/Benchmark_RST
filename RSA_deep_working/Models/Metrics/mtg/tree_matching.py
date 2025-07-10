@@ -11,7 +11,7 @@ class TreeMatching(BaseMetric):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, mtg_pred:MTG, mtg_gt:MTG, **kwargs):
+    def __call__(self, mtg_pred: MTG, mtg_gt: MTG, **kwargs):
         """
         Compute the tree matching between two MTGs.
         :param mtg_pred: predicted MTG

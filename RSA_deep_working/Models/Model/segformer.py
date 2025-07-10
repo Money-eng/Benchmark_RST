@@ -1,6 +1,5 @@
 import segmentation_models_pytorch as smp
 import torch.nn as nn
-from torch import sigmoid
 
 
 class Segformer(nn.Module):
@@ -14,13 +13,13 @@ class Segformer(nn.Module):
     """
 
     def __init__(
-        self,
-        in_channels: int = 1,
-        out_channels: int = 1,
-        encoder_name: str = "resnet34",
-        encoder_weights: str = None,
-        decoder_attention_type: str = None,
-        return_logits: bool = False,
+            self,
+            in_channels: int = 1,
+            out_channels: int = 1,
+            encoder_name: str = "resnet34",
+            encoder_weights: str = None,
+            decoder_attention_type: str = None,
+            return_logits: bool = False,
     ):
         super().__init__()
         activation = None if return_logits else "sigmoid"

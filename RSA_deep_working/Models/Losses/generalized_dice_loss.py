@@ -1,5 +1,6 @@
 from monai.losses import GeneralizedDiceLoss
 
+
 class GeneralDiceLoss(GeneralizedDiceLoss):
     def __init__(self, **kwargs):
         super().__init__(kwargs)

@@ -4,12 +4,13 @@ import numpy as np
 
 from ..base import BaseMetric
 
+
 class VI(BaseMetric):
     type = "cpu"
 
     def __init__(self):
         super().__init__()
-        
+
     def is_better(self, old_score: float, new_score: float) -> bool:
         """
         Variation of Information (VI):
@@ -17,7 +18,7 @@ class VI(BaseMetric):
         - The lower the VI, the closer the prediction is to the mask.
         """
         return new_score < old_score
-        
+
     def __call__(self, prediction: np.ndarray, mask: np.ndarray) -> float:
         # Aplatir les masques
         pred = prediction.flatten()

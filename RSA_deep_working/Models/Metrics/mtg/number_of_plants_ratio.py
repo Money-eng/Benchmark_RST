@@ -22,8 +22,8 @@ class NumberOfPlantsRatio(BaseMetric):
         plant_scale = 1
         verts_gt = list(mtg_gt.vertices(scale=plant_scale))
         verts_pred = list(mtg_pred.vertices(scale=plant_scale))
-        
+
         num_plants_gt = len(verts_gt)
         num_plants_pred = len(verts_pred)
-        
+
         return num_plants_pred / num_plants_gt if num_plants_gt > 0 else 0.0

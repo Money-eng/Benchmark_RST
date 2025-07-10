@@ -5,12 +5,13 @@ from torchmetrics.clustering import AdjustedRandScore
 
 from ..base import BaseMetric
 
+
 class ARIScore(BaseMetric):
     type = "gpu"
 
     def __init__(self):
         super().__init__()
-        
+
     def is_better(self, old_score: float, new_score: float) -> bool:
         """
         Adjusted Rand Score (ARS):

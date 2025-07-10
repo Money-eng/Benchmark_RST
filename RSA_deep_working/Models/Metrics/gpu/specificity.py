@@ -10,7 +10,7 @@ class Specificity(BaseMetric):
 
     def __init__(self):
         super().__init__()
-        
+
     def is_better(self, old_score: float, new_score: float) -> bool:
         """
         Spécificité (TN / (TN + FP)) pour segmentation binaire.

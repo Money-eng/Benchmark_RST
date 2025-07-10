@@ -27,5 +27,5 @@ class HausdorffDistance(BaseMetric):
         msk = mask.long()
 
         score = FMS.hausdorff_distance(pred, msk, num_classes=2, include_background=False)
-        # distance="euclidean", average="macro"
+        #  distance="euclidean", average="macro"
         return score.mean().item() if isinstance(score, torch.Tensor) else float(score)

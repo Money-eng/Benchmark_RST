@@ -26,10 +26,14 @@ from .gpu.generalized_dice import GeneralizedDice
 from .gpu.mutual_information import NormalizedMutualInformation
 
 from .mtg.area_below_intercep import AreaBetweenIntercepts
-#from .mtg.dtw_below_intercep import DTWBetweenIntercepts
+# from .mtg.dtw_below_intercep import DTWBetweenIntercepts
 from .mtg.euclidian_btw_intercepts import EuclidianDistancebtwIntercepts
 from .mtg.number_of_organs_ratio import NumberOfOrgansRatio
 from .mtg.number_of_plants_ratio import NumberOfPlantsRatio
+
+from utils.misc import set_seed, SEED
+
+set_seed(SEED)  # Ensure reproducibility
 
 # Global dictionnary to map metric names to their corresponding classes
 METRIC_FACTORIES = {
@@ -60,9 +64,9 @@ METRIC_FACTORIES = {
     "persistence_wasserstein": PeristenceWasserstein,
     # CPU / MTG
     "area_below_intercep": AreaBetweenIntercepts,
-    #"dtw_below_intercep": DTWBetweenIntercepts,
+    # "dtw_below_intercep": DTWBetweenIntercepts,
     "euclidian_btw_intercepts": EuclidianDistancebtwIntercepts,
-    "number_of_organs_ratio" : NumberOfOrgansRatio,
+    "number_of_organs_ratio": NumberOfOrgansRatio,
     "number_of_plants_ratio": NumberOfPlantsRatio,
 }
 

@@ -5,12 +5,14 @@ import numpy as np
 from scipy.ndimage import distance_transform_edt
 from skimage.morphology import skeletonize_3d
 
+
 class RadialDistanceLoss(nn.Module):
     """
     Radial Distance Loss pour structures tubulaires 3D.
     L = -1/2 * sum_k W_k * (2 * sum_i p_i,k * d_i,k) / (sum_i p_i,k^2 + sum_i d_i,k^2)
     où d_i,k est la carte de distance normalisée issue du squelette de la classe k.
     """
+
     def __init__(self, weight: torch.Tensor = None, smooth: float = 1e-5):
         """
         :param weight: tensor de taille (C,) pour pondérer chaque classe k

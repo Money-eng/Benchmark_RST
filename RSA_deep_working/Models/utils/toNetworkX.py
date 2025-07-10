@@ -5,6 +5,7 @@ from openalea.mtg import traversal, algo
 import networkx as nx
 import numpy as np
 
+
 def distance_polyline(p1, p2):
     """
     Compute the distance between two polylines.
@@ -22,13 +23,13 @@ def distance_polyline(p1, p2):
     if distance > 5:
         print("Distance to the closest point ", distance)
 
-    return closest_index 
+    return closest_index
 
 
 # Be carefull, the diameter is not of the
 def convert_fine_mtg(fn):
     # the conversion of the MTG is at the axis level, not at the segment level.
-    g= rsml.rsml2mtg(fn)
+    g = rsml.rsml2mtg(fn)
 
     plants = g.vertices(scale=1)
 
@@ -41,7 +42,7 @@ def convert_fine_mtg(fn):
 
     g2 = g.copy()
     for pid in plants:
-        aid =  next(g.component_roots_iter(pid))
+        aid = next(g.component_roots_iter(pid))
         for axis_id in traversal.pre_order2(g, vtx_id=aid):
             poly = geometry[axis_id]
             time_v = time[axis_id]
@@ -50,11 +51,11 @@ def convert_fine_mtg(fn):
 
             if g.parent(axis_id) is None:
                 # create the axis at segment level
-                vid = g2.add_component(complex_id=axis_id, label='Segment', 
-                                      x=poly[0][0], y=poly[0][1], 
-                                      time=time_v[0], 
-                                      time_hours=time_hours_v[0],
-                                      diameter= diams[0])
+                vid = g2.add_component(complex_id=axis_id, label='Segment',
+                                       x=poly[0][0], y=poly[0][1],
+                                       time=time_v[0],
+                                       time_hours=time_hours_v[0],
+                                       diameter=diams[0])
                 indexes[axis_id] = [vid]
             else:
                 # find the closest point in the parent axis
@@ -64,43 +65,44 @@ def convert_fine_mtg(fn):
 
                 pid = indexes[parent_axis][closest_index]
                 vid, complex_ = g2.add_child_and_complex(
-                            parent=pid,
-                            child=None,
-                            complex=axis_id, 
-                            edge_type=g.edge_type(axis_id),
-                            label='Segment', 
-                            x=poly[0][0], y=poly[0][1], 
-                            time=time_v[0], 
-                            time_hours=time_hours_v[0],
-                            diameter= diams[0],
-                            )
+                    parent=pid,
+                    child=None,
+                    complex=axis_id,
+                    edge_type=g.edge_type(axis_id),
+                    label='Segment',
+                    x=poly[0][0], y=poly[0][1],
+                    time=time_v[0],
+                    time_hours=time_hours_v[0],
+                    diameter=diams[0],
+                )
                 indexes[axis_id] = [vid]
 
-            for i, (x,y) in enumerate(poly[1:]):
+            for i, (x, y) in enumerate(poly[1:]):
                 vid = g2.add_child(
-                            parent=vid,
-                            child=None,
-                            edge_type='<',
-                            label='Segment', 
-                            x=x, y=y, 
-                            time=time_v[i+1], 
-                            time_hours=time_hours_v[i+1],
-                            diameter= diams[i+1],
-                            )
+                    parent=vid,
+                    child=None,
+                    edge_type='<',
+                    label='Segment',
+                    x=x, y=y,
+                    time=time_v[i + 1],
+                    time_hours=time_hours_v[i + 1],
+                    diameter=diams[i + 1],
+                )
                 indexes[axis_id].append(vid)
     return g2
+
 
 def split(g):
     return algo.split(g)
 
-def convert_nx(g):
 
+def convert_nx(g):
     orders = algo.orders(g)
     g.properties()['root_deg'] = orders
     max_scale = g.max_scale()
     root_id = next(g.component_roots_at_scale_iter(g.root, scale=max_scale))
 
-    root_coord =[g.node(root_id).x, g.node(root_id).y]
+    root_coord = [g.node(root_id).x, g.node(root_id).y]
 
     edge_list = []
     nodes = list(traversal.pre_order2(g, vtx_id=root_id))
@@ -129,20 +131,14 @@ def convert_nx(g):
         g_nx.nodes[node]['LR_index'] = lr_index[g.complex(node)] if lr_index[g.complex(node)] else None
 
     for node in g_nx.nodes:
-        x= g_nx.nodes[node]['x']-root_coord[0]
-        y= g_nx.nodes[node]['y']-root_coord[1]
+        x = g_nx.nodes[node]['x'] - root_coord[0]
+        y = g_nx.nodes[node]['y'] - root_coord[1]
         g_nx.nodes[node]['pos'] = [x, y]
-        
+
     tree_nx = nx.convert_node_labels_to_integers(g_nx)
     return tree_nx
 
 
-
-
-
-
-
-                
 def test_all():
     """
     Test the conversion of the MTG to a fine MTG and then to a networkx graph.
@@ -157,6 +153,7 @@ def test_all():
 
 if __name__ == "__main__":
     from rsml import rsml2mtg
+
     fn = "/home/loai/Images/DataTest/UC1_data/Train/230629PN011/61_graph.rsml"
     g = rsml2mtg(fn)
     g_fine = convert_fine_mtg(fn)
@@ -164,13 +161,11 @@ if __name__ == "__main__":
 
     print("Number of nodes in the fine MTG: ", len(g_fine))
     print("Number of nodes in the networkx graph: ", len(g_nx))
-    
+
     # Test the conversion
     dgs = test_all()
     print("Number of graphs in the split: ", len(dgs))
     for i, dg in enumerate(dgs):
-        print(f"Graph {i}: {len(dg)} nodes, {len(dg.edges())} edges")    # Check if the first graph is equal to the original graph
+        print(
+            f"Graph {i}: {len(dg)} nodes, {len(dg.edges())} edges")  # Check if the first graph is equal to the original graph
     assert nx.is_tree
-
-
-                

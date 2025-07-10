@@ -3,6 +3,10 @@ import torch
 from .segformer import Segformer
 from .unet import UNet
 
+from utils.misc import set_seed, SEED
+
+set_seed(SEED)  # Ensure reproducibility
+
 MODEL_FACTORIES = {
     "unet": UNet,
     "segformer": Segformer,

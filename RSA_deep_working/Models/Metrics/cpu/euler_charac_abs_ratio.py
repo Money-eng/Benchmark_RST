@@ -11,7 +11,7 @@ class EulerCharaJaccardsRatio(BaseMetric):
 
     def __init__(self):
         super().__init__()
-        
+
     def is_better(self, old_score: float, new_score: float) -> bool:
         """
         Jaccard Ratio of Euler Characteristic (JREC) :
@@ -35,7 +35,7 @@ class EulerCharaJaccardsRatio(BaseMetric):
         for i in range(batch_size):
             pred_img = pred_np[i]
             mask_img = mask_np[i]
-            e_pred = euler_number(pred_img, connectivity=1) # number of connected components - number of holes
+            e_pred = euler_number(pred_img, connectivity=1)  # number of connected components - number of holes
             e_mask = euler_number(mask_img, connectivity=1)
             jaccard_ratio = (min(abs(e_pred), abs(e_mask)) / (max(abs(e_pred), abs(e_mask)) + 1e-8))
             scores.append(jaccard_ratio)

@@ -1,5 +1,6 @@
 from torch.nn import BCEWithLogitsLoss
 
+
 class BCEDiceLoss(BCEWithLogitsLoss):
     def __init__(self, **kwargs):
         """

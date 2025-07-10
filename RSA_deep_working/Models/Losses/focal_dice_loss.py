@@ -1,5 +1,6 @@
 from monai.losses import DiceFocalLoss
 
+
 class DiceFocal(DiceFocalLoss):
     def __init__(self, **kwargs):
         super().__init__(kwargs)

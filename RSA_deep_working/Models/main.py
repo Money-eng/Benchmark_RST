@@ -1,19 +1,6 @@
-import os, random, numpy as np
-SEED = 42
-os.environ['PYTHONHASHSEED'] = str(SEED)            # fixe PYTHONHASHSEED
-os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':16:8'     # pour cuBLAS déterministe
-random.seed(SEED)                                   # seed du module random
-np.random.seed(SEED)                                # seed NumPy
-import torch
-torch.manual_seed(SEED)                             # seed CPU
-torch.cuda.manual_seed_all(SEED)                    # seed GPU
-torch.backends.cudnn.deterministic = True           # désactive les algos non-déterministes
-torch.backends.cudnn.benchmark = False              # fixe les algos cuDNN
-torch.use_deterministic_algorithms(True)
-
 import yaml
-from DataLoaders.transforms import get_train_img_transform_1, get_train_img_transform_2, get_train_img_transform_3, get__val_test_img_transform, get_train_serie_transform
-
+from DataLoaders.transforms import get_train_img_transform_1, get_train_img_transform_2, get_train_img_transform_3, \
+    get__val_test_img_transform, get_train_serie_transform
 from DataLoaders.dataloaders import create_dataloader
 from Losses import get_loss
 from Metrics import get_metrics
@@ -23,9 +10,16 @@ from Training.trainer import Trainer
 from utils.logger import get_logger, TensorboardLogger
 from utils.misc import get_device
 from torch.nn import DataParallel
+import os
+import torch
+
+from utils.misc import set_seed, SEED
+set_seed(SEED)
 
 if __name__ == "__main__":
-    
+    g = torch.Generator()
+    g.manual_seed(SEED)
+
     ##### Path to the config file #####
     # get current file directory
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -38,19 +32,23 @@ if __name__ == "__main__":
     train_loader, val_loader, test_loader = create_dataloader(
         base_directory=config["data"]["base_dir"],
         img_transforms=[
-            get_train_img_transform_1(patch_size=config["data"]["patch_size"]), 
-            get_train_img_transform_2(patch_size=config["data"]["patch_size"]), 
+            get_train_img_transform_1(patch_size=config["data"]["patch_size"]),
+            get_train_img_transform_2(patch_size=config["data"]["patch_size"]),
             get_train_img_transform_3(patch_size=config["data"]["patch_size"]),
             get__val_test_img_transform()
-            ],
-        batch_size=int(config["data"].get("batch_size", 32))
+        ],
+        batch_size=int(config["data"].get("batch_size", 32)),
+        generator=g
     )
-    
+
     # print unique mtg value for every dataset - reminder "return img, mask.clone(), time, mtg"
-    print("Unique mtg values in train dataset:", set([str(train_loader.dataset[i][-1]).split("/")[-2] for i in range(len(train_loader.dataset))]))
-    print("Unique mtg values in val_loader dataset:", set([val_loader.dataset[i][-1].split("/")[-2] for i in range(len(val_loader.dataset))]))
-    print("Unique mtg values in test_loader dataset:", set([test_loader.dataset[i][-1].split("/")[-2] for i in range(len(test_loader.dataset))]))
-    
+    print("Unique mtg values in train dataset:",
+          set([str(train_loader.dataset[i][-1]).split("/")[-2] for i in range(len(train_loader.dataset))]))
+    print("Unique mtg values in val_loader dataset:",
+          set([val_loader.dataset[i][-1].split("/")[-2] for i in range(len(val_loader.dataset))]))
+    print("Unique mtg values in test_loader dataset:",
+          set([test_loader.dataset[i][-1].split("/")[-2] for i in range(len(test_loader.dataset))]))
+
     ##### Initialize model, loss, optimizer, metrics, logger, and evaluator #####
     n_gpus = torch.cuda.device_count()
     print(f"{n_gpus} GPU(s) detected")
@@ -70,7 +68,7 @@ if __name__ == "__main__":
     optimizer_name = config["optimizer"]["name"]
     lr = float(config["optimizer"]["learning_rate"])
     weight_decay = float(config["optimizer"].get("weight_decay", 0))
-    
+
     match optimizer_name.lower():
         case "adam":
             optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -84,7 +82,7 @@ if __name__ == "__main__":
 
     # Factory design pattern to get metrics from str name in config.yaml
     metrics_dict = get_metrics(config["metrics"])
-    
+
     # Logs
     log_dir = config["training"]["log_dir"]
     os.makedirs(log_dir, exist_ok=True)
@@ -98,9 +96,8 @@ if __name__ == "__main__":
     tb_log_dir = os.path.join(log_model_path, "tensorboard_logs")
     os.makedirs(tb_log_dir, exist_ok=True)
     tb_logger = TensorboardLogger(log_dir=tb_log_dir)
-    
-    checkpoint_dir = config["training"]["checkpoint_dir"] + "/" + config["model"]["name"] + "_" + config["loss"]["name"]
 
+    checkpoint_dir = config["training"]["checkpoint_dir"] + "/" + config["model"]["name"] + "_" + config["loss"]["name"]
 
     # log all configurations in the logger
     logger.info("Starting training with the following configurations:")
@@ -109,13 +106,12 @@ if __name__ == "__main__":
     logger.info(f"Optimizer: {config['optimizer']}")
     logger.info(f"Metrics: {config['metrics']}")
     logger.info(f"Training configurations: {config['training']}")
-    
 
-    #from torch_lr_finder import LRFinder
-    #lr_finder = LRFinder(model, optimizer, criterion, device="cuda")
-    #lr_finder.range_test(train_loader, end_lr=1, num_iter=200)
-    #lr_finder.plot() # to inspect the loss-learning rate graph
-    #lr_finder.reset() # to reset the model and optimizer to their initial state
+    # from torch_lr_finder import LRFinder
+    # lr_finder = LRFinder(model, optimizer, criterion, device="cuda")
+    # lr_finder.range_test(train_loader, end_lr=1, num_iter=200)
+    # lr_finder.plot() # to inspect the loss-learning rate graph
+    # lr_finder.reset() # to reset the model and optimizer to their initial state
 
     #### Evaluator and Trainer #####
     evaluator = Evaluator(
@@ -133,7 +129,7 @@ if __name__ == "__main__":
         log_metric_path=log_model_path,
     )
 
-    #evaluator.evaluate()  # Initial evaluation before training
+    # evaluator.evaluate()  # Initial evaluation before training
 
     trainer = Trainer(
         model=model,
@@ -147,6 +143,6 @@ if __name__ == "__main__":
         checkpoint_dir=checkpoint_dir,
         device=device,
     )
-    
+
     # Start training
     trainer.train()

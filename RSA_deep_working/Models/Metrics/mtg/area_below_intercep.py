@@ -1,10 +1,11 @@
 # Metrics/cpu/ari_index.py
 from openalea.mtg import MTG
 import numpy as np
-#from utils.intercept import intercept_curve_at_all_time
+# from utils.intercept import intercept_curve_at_all_time
 from scipy.optimize import linear_sum_assignment
 from openalea.mtg import MTG
 from ..base import BaseMetric
+
 
 def mtg_at_time_t(mtg: MTG, temps_max: float) -> MTG:
     """
@@ -43,6 +44,7 @@ def mtg_at_time_t(mtg: MTG, temps_max: float) -> MTG:
 
     return new_g
 
+
 def intercept_curve_at_all_time(mtg: MTG, plant_id=1, nlengths=2500, step=1e-3):
     """
     Calcule la courbe intercepto pour une plante d'un mtg, éventuellement à un temps donné.
@@ -64,6 +66,7 @@ def intercept_curve_at_all_time(mtg: MTG, plant_id=1, nlengths=2500, step=1e-3):
         intercepto_all.append(intercepto)
     intercepto_all = np.array(intercepto_all)
     return lengths, intercepto_all
+
 
 class AreaBetweenIntercepts(BaseMetric):
     type = "cpu"
@@ -94,15 +97,15 @@ class AreaBetweenIntercepts(BaseMetric):
 
     def __call__(self, mtg_pred: MTG, mtg_gt: MTG) -> float:
         plant_scale = 1
-        verts_gt   = list(mtg_gt.vertices(scale=plant_scale))
+        verts_gt = list(mtg_gt.vertices(scale=plant_scale))
         verts_pred = list(mtg_pred.vertices(scale=plant_scale))
 
         # préparer les sous-arbres
-        sub_gt   = {v: mtg_gt.sub_mtg(v)   for v in verts_gt}
+        sub_gt = {v: mtg_gt.sub_mtg(v) for v in verts_gt}
         sub_pred = {v: mtg_pred.sub_mtg(v) for v in verts_pred}
 
         # calculer toutes les courbes (x, Y) pour chaque sous-arbre
-        curves_gt = {v: intercept_curve_at_all_time(sub_gt[v],   0)
+        curves_gt = {v: intercept_curve_at_all_time(sub_gt[v], 0)
                      for v in verts_gt}
         curves_pred = {v: intercept_curve_at_all_time(sub_pred[v], 0)
                        for v in verts_pred}
@@ -131,18 +134,17 @@ class AreaBetweenIntercepts(BaseMetric):
                 total += self._area_between_surfaces(x_gt, Y_gt, x_gt, np.zeros_like(Y_gt))
 
         return float(total)
-    
+
+
 # test
 if __name__ == "__main__":
     from rsml import rsml2mtg
+
     mtg_gt = rsml2mtg("/home/loai/Images/DataTest/UC1_data/Train/230629PN011/61_graph.rsml")
     mtg_pred = rsml2mtg("/home/loai/Images/DataTest/UC1_data/Train/230629PN011/61_graph.rsml")
     # remove 1 index from mtg_pred (max scale)
     mtg_pred.remove_vertex(mtg_pred.vertices(scale=mtg_pred.max_scale())[-1])  # remove
-    
+
     metric = AreaBetweenIntercepts()
     score = metric(mtg_pred, mtg_gt)
     print(f"Area between intercepts: {score}")
-    
-    
-   

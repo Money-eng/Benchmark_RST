@@ -94,6 +94,7 @@ def densify_mtg(mtg: MTG, step=1.0):
             node.time_hours = new_time_hours
     return new_mtg
 
+
 def mtg_at_time_t(mtg: MTG, temps_max: float) -> MTG:
     """
     Create a new MTG with only the vertices that are present at a given time.

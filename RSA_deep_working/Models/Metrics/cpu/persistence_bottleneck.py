@@ -7,10 +7,10 @@ class PeristenceBottleneck():
     type = "cpu"
 
     def __init__(
-        self,
-        homology_dimensions=(0, 1),
-        complex_builder=None,
-        filter_fn=None,
+            self,
+            homology_dimensions=(0, 1),
+            complex_builder=None,
+            filter_fn=None,
     ):
         """
         - homology_dimensions : tuple des dimensions d'homologie à considérer (ex. (0,1)).
@@ -44,21 +44,21 @@ class PeristenceBottleneck():
         complex_ = self.complex_builder(data)
         complex_.compute_persistence()
         return complex_.persistence()
-    
+
     def __call__(self, prediction: np.ndarray, mask: np.ndarray):
         # B, C, H, W -> treating each image independently
         distances = []
-        #pred = prediction.squeeze(1)
-        #msk = mask.squeeze(1) # remove channel dimension if present
+        # pred = prediction.squeeze(1)
+        # msk = mask.squeeze(1) # remove channel dimension if present
         for i in range(prediction.shape[0]):
             # calcule diagrammes
             diag_pred = self._compute_diagram(prediction[i])
-            diag_msk  = self._compute_diagram(mask[i])
+            diag_msk = self._compute_diagram(mask[i])
             distance_per_dim = {}
             # Bottleneck par dimension
             for dim in self.homology_dimensions:
                 dgm_pred = [(b, d) for dgm_dim, (b, d) in diag_pred if dgm_dim == dim]
-                dgm_msk  = [(b, d) for dgm_dim, (b, d) in diag_msk  if dgm_dim == dim]
+                dgm_msk = [(b, d) for dgm_dim, (b, d) in diag_msk if dgm_dim == dim]
                 distance_per_dim[dim] = gd.bottleneck_distance(
                     dgm_pred, dgm_msk
                 )

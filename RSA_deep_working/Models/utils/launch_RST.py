@@ -51,7 +51,10 @@ def preprocess_RST_pipeline(
     # Pour le moment, on retourne None et l'appelant doit le remplir après chargement GT
     return pred_datemap, input_dir, output_dir, None
 
+
 from pyvirtualdisplay import Display
+
+
 def generate_graph_with_java(
         input_path: str,
         output_dir: str,

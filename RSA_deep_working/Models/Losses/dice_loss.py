@@ -1,5 +1,6 @@
 from monai.losses import DiceLoss
 
+
 class DiceLoss(DiceLoss):
     def __init__(self, **kwargs):
         """
@@ -20,7 +21,6 @@ class DiceLoss(DiceLoss):
 
     def forward(self, inputs, targets):
         return super().forward(inputs, targets)
-
 
 
 """OLD

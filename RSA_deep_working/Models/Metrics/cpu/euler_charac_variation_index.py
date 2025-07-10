@@ -11,7 +11,7 @@ class EulerCharacVariationIndex(BaseMetric):
 
     def __init__(self):
         super().__init__()
-        
+
     def is_better(self, old_score: float, new_score: float) -> bool:
         """
         Variation of Euler Characteristic (VEC):
@@ -38,7 +38,7 @@ class EulerCharacVariationIndex(BaseMetric):
         for i in range(batch_size):
             pred_img = pred_np[i]
             mask_img = mask_np[i]
-            e_pred = euler_number(pred_img, connectivity=1) # number of connected components - number of holes
+            e_pred = euler_number(pred_img, connectivity=1)  # number of connected components - number of holes
             e_mask = euler_number(mask_img, connectivity=1)
             ratio = (e_pred - e_mask) / (e_mask + e_pred) if e_mask > 0 else (1 if e_pred == 0 else 0)
             scores.append(ratio)

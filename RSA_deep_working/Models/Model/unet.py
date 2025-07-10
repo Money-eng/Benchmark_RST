@@ -14,13 +14,13 @@ class UNet(nn.Module):
     """
 
     def __init__(
-        self,
-        in_channels: int = 1,
-        out_channels: int = 1,
-        encoder_name: str = "resnet34",
-        encoder_weights: str = None,
-        decoder_attention_type: str = None,
-        return_logits: bool = False,
+            self,
+            in_channels: int = 1,
+            out_channels: int = 1,
+            encoder_name: str = "resnet34",
+            encoder_weights: str = None,
+            decoder_attention_type: str = None,
+            return_logits: bool = False,
     ):
         super().__init__()
         # If return_logits=True, activation=None gives raw logits.

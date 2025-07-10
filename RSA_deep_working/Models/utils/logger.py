@@ -22,7 +22,7 @@ def get_logger(log_file=None) -> logging.Logger:
 
 class TensorboardLogger:
     def __init__(self, log_dir: str, flush_secs: int = 30):
-        self.writer = SummaryWriter(log_dir=log_dir, flush_secs = flush_secs)
+        self.writer = SummaryWriter(log_dir=log_dir, flush_secs=flush_secs)
 
     def log_scalar(self, tag: str, value: float, step: int):
         self.writer.add_scalar(tag, value, step)

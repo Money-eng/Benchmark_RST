@@ -1,8 +1,10 @@
 # Metrics/cpu/dtw_between_intercepts.py
 import numpy as np
 from openalea.mtg import MTG
-#from utils.intercept import intercept_curve_at_all_time
-#from ..base import BaseMetric
+
+
+# from utils.intercept import intercept_curve_at_all_time
+# from ..base import BaseMetric
 
 
 def mtg_at_time_t(mtg: MTG, temps_max: float) -> MTG:
@@ -42,6 +44,7 @@ def mtg_at_time_t(mtg: MTG, temps_max: float) -> MTG:
 
     return new_g
 
+
 def intercept_curve_at_all_time(mtg: MTG, plant_id=1, nlengths=2500, step=1e-3):
     """
     Calcule la courbe intercepto pour une plante d'un mtg, éventuellement à un temps donné.
@@ -64,14 +67,15 @@ def intercept_curve_at_all_time(mtg: MTG, plant_id=1, nlengths=2500, step=1e-3):
     intercepto_all = np.array(intercepto_all)
     return lengths, intercepto_all
 
+
 class EuclidianDistancebtwIntercepts():
     type = "cpu"
     need = "serie"
 
     def __init__(self):
         super().__init__()
-        
-    def is_better(self, old_score: float, new_score: float) -> bool:    
+
+    def is_better(self, old_score: float, new_score: float) -> bool:
         """
         Dynamic Time Warping (DTW) between intercepts. On considère que `old_score` et `new_score`
         sont des scores de type float.
@@ -83,16 +87,16 @@ class EuclidianDistancebtwIntercepts():
         from scipy.spatial.distance import euclidean
 
         plant_scale = 1
-        verts_gt   = list(mtg_gt.vertices(scale=plant_scale))
+        verts_gt = list(mtg_gt.vertices(scale=plant_scale))
         verts_pred = list(mtg_pred.vertices(scale=plant_scale))
-        
+
         # Construire les sous-MTG pour chaque racine
-        map_subtree_gt   = {v: mtg_gt.sub_mtg(v)   for v in verts_gt}
+        map_subtree_gt = {v: mtg_gt.sub_mtg(v) for v in verts_gt}
         map_subtree_pred = {v: mtg_pred.sub_mtg(v) for v in verts_pred}
 
         # Calcul des courbes d’interception pour chaque sous-arbre
-        map_curve_gt   = {v: intercept_curve_at_all_time(map_subtree_gt[v],   0)
-                          for v in verts_gt}
+        map_curve_gt = {v: intercept_curve_at_all_time(map_subtree_gt[v], 0)
+                        for v in verts_gt}
         map_curve_pred = {v: intercept_curve_at_all_time(map_subtree_pred[v], 0)
                           for v in verts_pred}
 
@@ -131,16 +135,16 @@ class EuclidianDistancebtwIntercepts():
 
         # Retourner la distance moyenne sur tous les sous-arbres
         return float(np.mean(distances))
-        
 
 
 if __name__ == "__main__":
     from rsml import rsml2mtg
+
     mtg_gt = rsml2mtg("/home/loai/Images/DataTest/UC1_data/Train/230629PN011/61_graph.rsml")
     mtg_pred = rsml2mtg("/home/loai/Images/DataTest/UC1_data/Train/230629PN011/61_graph.rsml")
     # remove 1 index from mtg_pred (max scale)
     mtg_pred.remove_vertex(mtg_pred.vertices(scale=mtg_pred.max_scale())[-1])  # remove
-    
+
     metric = EuclidianDistancebtwIntercepts()
     score = metric(mtg_pred, mtg_gt)
     print(f"L2-distance between intercepts: {score}")

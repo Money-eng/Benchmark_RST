@@ -11,7 +11,7 @@ class PixelAccuracy(BaseMetric):
 
     def __init__(self):
         super().__init__()
-        
+
     def is_better(self, old_score: float, new_score: float) -> bool:
         """
         Pixel accuracy (binaire). On considère que `old_score` et `new_score`

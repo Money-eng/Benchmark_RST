@@ -10,6 +10,10 @@ from gc import collect
 
 from .evaluator import Evaluator
 
+from utils.misc import set_seed, SEED
+
+set_seed(SEED)
+
 
 class Trainer:
     def __init__(
@@ -96,7 +100,7 @@ class Trainer:
         - It also handles logging and saving checkpoints.
         - It calls the Evaluator to evaluate the model on validation data every `epochs_btw_eval` epochs and saves the best model based on evaluation metrics.
         """
-    
+
         if self.logger:
             self.logger.info(f"[Trainer] Démarrage de l'entraînement pour {self.epochs} epochs")
         else:
@@ -152,19 +156,15 @@ class Trainer:
             ### EVALUATION ###
             if epoch % self.epochs_btw_eval == 0:
                 self.evaluator.epoch = epoch
-                val_results, _ = self.evaluator.evaluate(
-                    on_test=False)
+                val_results = self.evaluator.evaluate(on_test=False)
                 # free memory after evaluation
                 collect()
                 torch.cuda.synchronize()
                 torch.cuda.empty_cache()
-                
-                val_str = ", ".join(f"{k}: {v:.4f}" for k,
-                                    v in val_results.items())
+
+                val_str = ", ".join(f"{k}: {v:.4f}" for k, v in val_results.items())
                 if self.logger:
-                    self.logger.info(
-                        f"[EVALUATOR] Epoch {epoch}/{self.epochs} | Values : {val_str}"
-                    )
+                    self.logger.info(f"[EVALUATOR] Epoch {epoch}/{self.epochs} | Values : {val_str}")
                 else:
                     print(f"[EVALUATOR] Epoch {epoch}/{self.epochs} | Values : {val_str}")
 

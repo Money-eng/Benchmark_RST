@@ -5,12 +5,13 @@ from monai.metrics.surface_dice import SurfaceDiceMetric as MonaiSurfaceDiceMetr
 
 from ..base import BaseMetric
 
+
 class Surface_dice(BaseMetric):
     type = "gpu"
 
     def __init__(self):
         super().__init__()
-        
+
     def is_better(self, old_score: float, new_score: float) -> bool:
         """
         Normalized Surface Dice (NSD). On considère que `old_score` et `new_score`
@@ -38,14 +39,13 @@ class Surface_dice(BaseMetric):
         #   τ        = tolerance threshold (in pixels or physical units)
         """
         pred = (prediction > 0.5).float()
-        msk = (mask > 0.5).float() # torch.Size([16, 1, 512, 512])
-        
+        msk = (mask > 0.5).float()  # torch.Size([16, 1, 512, 512])
+
         class_thresholds: list[float] = [0.5]  # Threshold for binarization, should be ajusted ?
-        
+
         # Compute surface distance using MONAI's SurfaceDiceMetric
-        metric = MonaiSurfaceDiceMetric(include_background=False, distance_metric="euclidean", class_thresholds=class_thresholds)
+        metric = MonaiSurfaceDiceMetric(include_background=False, distance_metric="euclidean",
+                                        class_thresholds=class_thresholds)
         metric(pred, msk)
         surface_distance = metric.aggregate().item()
         return surface_distance
-            
-        
