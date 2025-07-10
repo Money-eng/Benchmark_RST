@@ -1,6 +1,7 @@
-import torch
 import os
 from random import Random
+
+import torch
 from torch.utils.data import DataLoader, Subset, Sampler
 from utils.logger import log_dataset_stats
 from utils.misc import set_seed, SEED, worker_init_fn
@@ -83,11 +84,11 @@ def create_dataloader(
         pin_memory=True,
         generator=g,
     )
-    
-    #img, mask, time, mtg = next(iter(train_loader))
-    #print(f"Image shape: {img.shape}, Mask shape: {mask.shape}, Time: {time}, MTG: {mtg}")
-    #print(f"Image dtype: {img.dtype}, Mask dtype: {mask.dtype}, Time dtype: {type(time)}, MTG type: {type(mtg)}")
-    #print(f"Image min: {img.min()}, max: {img.max()}, Mask min: {mask.min()}, max: {mask.max()}")
+
+    # img, mask, time, mtg = next(iter(train_loader))
+    # print(f"Image shape: {img.shape}, Mask shape: {mask.shape}, Time: {time}, MTG: {mtg}")
+    # print(f"Image dtype: {img.dtype}, Mask dtype: {mask.dtype}, Time dtype: {type(time)}, MTG type: {type(mtg)}")
+    # print(f"Image min: {img.min()}, max: {img.max()}, Mask min: {mask.min()}, max: {mask.max()}")
 
     #### Important - 1 batch = 1 serie of images ####
     global DEFAULT_BATCH_SIZE

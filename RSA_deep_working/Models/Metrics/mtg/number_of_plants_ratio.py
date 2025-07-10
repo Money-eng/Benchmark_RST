@@ -1,5 +1,6 @@
 # Metrics/cpu/ari_index.py
 from openalea.mtg import MTG
+
 from ..base import BaseMetric
 
 

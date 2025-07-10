@@ -1,7 +1,7 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
 from scipy.ndimage import distance_transform_edt
 from skimage.morphology import skeletonize_3d
 

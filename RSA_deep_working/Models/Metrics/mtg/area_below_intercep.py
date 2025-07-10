@@ -1,9 +1,10 @@
 # Metrics/cpu/ari_index.py
-from openalea.mtg import MTG
 import numpy as np
+from openalea.mtg import MTG
+from openalea.mtg import MTG
 # from utils.intercept import intercept_curve_at_all_time
 from scipy.optimize import linear_sum_assignment
-from openalea.mtg import MTG
+
 from ..base import BaseMetric
 
 

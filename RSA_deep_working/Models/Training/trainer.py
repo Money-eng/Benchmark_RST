@@ -1,16 +1,16 @@
 # Training/trainer.py
 
 import os
-import torch
+from gc import collect
 from logging import Logger
+
+import torch
 from tqdm import tqdm
 from utils.logger import TensorboardLogger
 from utils.misc import get_device
-from gc import collect
+from utils.misc import set_seed, SEED
 
 from .evaluator import Evaluator
-
-from utils.misc import set_seed, SEED
 
 set_seed(SEED)
 

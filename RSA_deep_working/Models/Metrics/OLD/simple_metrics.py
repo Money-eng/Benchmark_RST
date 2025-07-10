@@ -1,4 +1,5 @@
 import functools
+
 import numpy as np
 import torchmetrics.functional as FMF
 import torchmetrics.functional.segmentation as FMS

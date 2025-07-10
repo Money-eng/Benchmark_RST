@@ -1,9 +1,10 @@
 # DANGER 
 ## We are using a random seed to split the dataset into train, val and test sets. 
 ## AND we make sure to have full time series in the train, val and test sets respectively. -> Dangerous
-import numpy as np
 import os
 import random
+
+import numpy as np
 import rsml
 import torch
 from torch.utils.data import DataLoader, Subset, Sampler

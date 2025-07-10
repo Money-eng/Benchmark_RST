@@ -1,12 +1,13 @@
-import numpy as np
 import os
+
+import numpy as np
 import tifffile
 import torch
 from PIL import Image
 from torch.utils.data import Dataset
+from utils.misc import set_seed, SEED
 
 from .tiff_reader import TiffReader
-from utils.misc import set_seed, SEED
 
 set_seed(SEED)
 
@@ -134,12 +135,13 @@ class RSADataset(Dataset):
             augmented = self.img_transform(image=img_np_aug, mask=mask_np)
             img = augmented['image']  # tensor [C,H,W]
             mask = augmented['mask']
-            
+            mask = mask.unsqueeze(0)
+
             # print(f'type of img: {type(img)}, shape: {img.shape}, type of mask: {type(mask)}, shape: {mask.shape}')
-            # import matplotlib.pyplot as plt
+            #  import matplotlib.pyplot as plt
             # print("Transform recap: ", self.img_transform)
-            # plt.imshow(img.numpy().transpose(1, 2, 0))
-            #plt.imshow(mask.numpy(), alpha=0.5, cmap='jet')
+            #  plt.imshow(img.numpy().transpose(1, 2, 0))
+            # plt.imshow(mask.numpy(), alpha=0.5, cmap='jet')
             # plt.title(f"Image and Mask at index {idx} (time={time})")
             # plt.axis('off')
             # plt.show()

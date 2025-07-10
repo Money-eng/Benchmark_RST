@@ -1,5 +1,7 @@
 # Metrics/__init__.py
 
+from utils.misc import set_seed, SEED
+
 from .base import BaseMetric
 from .cpu.betti0_ratio import Betti0JaccardRatio
 from .cpu.betti0_relative_error import Betti0RelativeError
@@ -7,31 +9,27 @@ from .cpu.betti0_variation_index import Betti0VariationIndex
 from .cpu.euler_charac_abs_ratio import EulerCharaJaccardsRatio
 from .cpu.euler_charac_relative_error import EulerCharacRelativeError
 from .cpu.euler_charac_variation_index import EulerCharacVariationIndex
-from .cpu.variation_of_information import VI
 from .cpu.persistence_bottleneck import PeristenceBottleneck
 from .cpu.persistence_wasserstein import PeristenceWasserstein
-
+from .cpu.variation_of_information import VI
 from .gpu.ari_index import ARIScore
 from .gpu.dice import Dice
 from .gpu.f1_score import F1Score
+from .gpu.generalized_dice import GeneralizedDice
+from .gpu.haussdorff import HausdorffDistance
 from .gpu.iou import MeanIoU
+from .gpu.mutual_information import NormalizedMutualInformation
 from .gpu.pixel_accuracy import PixelAccuracy
 from .gpu.precision import Precision
 from .gpu.recall import Recall
 from .gpu.specificity import Specificity
-from .gpu.surface_difference import Surface_distance
 from .gpu.surface_dice import Surface_dice
-from .gpu.haussdorff import HausdorffDistance
-from .gpu.generalized_dice import GeneralizedDice
-from .gpu.mutual_information import NormalizedMutualInformation
-
+from .gpu.surface_difference import Surface_distance
 from .mtg.area_below_intercep import AreaBetweenIntercepts
 # from .mtg.dtw_below_intercep import DTWBetweenIntercepts
 from .mtg.euclidian_btw_intercepts import EuclidianDistancebtwIntercepts
 from .mtg.number_of_organs_ratio import NumberOfOrgansRatio
 from .mtg.number_of_plants_ratio import NumberOfPlantsRatio
-
-from utils.misc import set_seed, SEED
 
 set_seed(SEED)  # Ensure reproducibility
 

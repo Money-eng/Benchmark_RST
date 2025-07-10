@@ -1,5 +1,5 @@
-import numpy as np
 import gudhi as gd
+import numpy as np
 from scipy.ndimage import distance_transform_edt
 
 

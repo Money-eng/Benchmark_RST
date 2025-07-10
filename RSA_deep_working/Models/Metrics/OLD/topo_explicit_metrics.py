@@ -1,4 +1,5 @@
 import functools
+
 import numpy as np
 import torch
 from skimage.measure import label, euler_number

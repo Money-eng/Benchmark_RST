@@ -1,12 +1,12 @@
 import torch
-from .bce_loss import BCEDiceLoss
+from utils.misc import set_seed, SEED
+
 from .bce_dice_loss import BCEDiceLoss
-from .dice_loss import DiceLoss
-from .generalized_dice_loss import GeneralizedDiceLoss
+from .bce_loss import BCEDiceLoss
 from .cldice import CLDice
 from .cldice_dice import CLDice_Dice
-
-from utils.misc import set_seed, SEED
+from .dice_loss import DiceLoss
+from .generalized_dice_loss import GeneralizedDiceLoss
 
 set_seed(SEED)  # Ensure reproducibility
 

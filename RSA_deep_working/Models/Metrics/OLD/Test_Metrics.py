@@ -1,8 +1,8 @@
+import importlib
+import os
 import sys
 
-import importlib
 import numpy as np
-import os
 
 # Remontée de deux niveaux pour accéder à Data_loader
 current_dir = os.getcwd()

@@ -1,18 +1,18 @@
 # Training/evaluator.py
 
+import gc
 import os
+from collections import defaultdict
+from logging import Logger
+
 import numpy as np
 import torch
-from logging import Logger
+from dask import delayed, compute
+from dask.distributed import Client, LocalCluster
+from monai.inferers import SlidingWindowInfererAdapt
 from tqdm import tqdm
 from utils.launch_RST import process_date_map
 from utils.logger import TensorboardLogger
-from monai.inferers import SlidingWindowInfererAdapt
-from dask.distributed import Client, LocalCluster
-from dask import delayed, compute
-from collections import defaultdict
-import gc
-
 from utils.misc import set_seed, SEED
 
 set_seed(SEED)  # Ensure reproducibility

@@ -72,8 +72,8 @@ metrics:
     - { name: "euler_charac_variation_index" }
     - { name: "persistence_bottleneck" }
     #- { name: "persistence_wasserstein" }
-  #mtg:
-   # - { name: "area_below_intercep" }
+    #mtg:
+    # - { name: "area_below_intercep" }
     #- { name: "dtw_below_intercep" }
     #- { name: "number_of_organs_ratio" }
     #- { name: "number_of_plants_ratio" }

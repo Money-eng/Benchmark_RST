@@ -1,9 +1,7 @@
-import rsml
-
-from openalea.mtg import traversal, algo
-
 import networkx as nx
 import numpy as np
+import rsml
+from openalea.mtg import traversal, algo
 
 
 def distance_polyline(p1, p2):

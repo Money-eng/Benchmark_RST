@@ -1,7 +1,12 @@
+import os
+
+import torch
 import yaml
-from DataLoaders.transforms import get_train_img_transform_1, get_train_img_transform_2, get_train_img_transform_3, \
-    get__val_test_img_transform, get_train_serie_transform
+from torch.nn import DataParallel
+
 from DataLoaders.dataloaders import create_dataloader
+from DataLoaders.transforms import get_train_img_transform_1, get_train_img_transform_2, get_train_img_transform_3, \
+    get__val_test_img_transform
 from Losses import get_loss
 from Metrics import get_metrics
 from Model import get_model
@@ -9,11 +14,8 @@ from Training.evaluator import Evaluator
 from Training.trainer import Trainer
 from utils.logger import get_logger, TensorboardLogger
 from utils.misc import get_device
-from torch.nn import DataParallel
-import os
-import torch
-
 from utils.misc import set_seed, SEED
+
 set_seed(SEED)
 
 if __name__ == "__main__":

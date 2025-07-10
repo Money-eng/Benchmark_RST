@@ -1,6 +1,6 @@
-from sklearn.metrics import mutual_info_score
-from scipy.stats import entropy
 import numpy as np
+from scipy.stats import entropy
+from sklearn.metrics import mutual_info_score
 
 from ..base import BaseMetric
 

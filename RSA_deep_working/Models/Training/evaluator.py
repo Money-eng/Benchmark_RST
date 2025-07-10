@@ -1,18 +1,19 @@
 # Training/evaluator.py
 
+import gc
 import os
-import numpy as np
-import torch
+from collections import defaultdict
 from logging import Logger
+
+import numpy as np
+import pandas as pd
+import torch
+from dask import delayed, compute
+from dask.distributed import Client, LocalCluster
+from monai.inferers import SlidingWindowInfererAdapt
 from tqdm import tqdm
 from utils.launch_RST import process_date_map
 from utils.logger import TensorboardLogger
-from monai.inferers import SlidingWindowInfererAdapt
-from dask.distributed import Client, LocalCluster
-from dask import delayed, compute
-from collections import defaultdict
-import gc
-
 from utils.misc import set_seed, SEED
 
 set_seed(SEED)  # Ensure reproducibility
@@ -120,8 +121,8 @@ class Evaluator:
                         preds_logits_sigmoidee = self.sw_inferer(
                             inputs=imgs, network=self.model)
                     # SIGMOID + BINARY THRESHOLDING NEEDED IN METRICS
-                    preds = (preds_logits_sigmoidee >
-                             self.threshold).float()
+                    preds = (preds_logits_sigmoidee > self.threshold).float()
+
                     ##### GPU METRICS #####
                     for metric in self.gpu_metrics:
                         name = metric.__class__.__name__
@@ -136,8 +137,7 @@ class Evaluator:
 
                     # Log first prediction and mask
                     if save_first_pred and self.tb_logger:
-                        img_to_log = imgs * 255
-                        self.tb_logger.log_image("Image", img_to_log, global_step=self.epoch)
+                        self.tb_logger.log_image("Image", imgs * 255.0, global_step=self.epoch)
                         self.tb_logger.log_image("Mask", masks * 255, global_step=self.epoch)
                         self.tb_logger.log_image("Prediction", preds * 255, global_step=self.epoch)
                         save_first_pred = False
@@ -145,54 +145,67 @@ class Evaluator:
                     del preds, preds_logits_sigmoidee
                     torch.cuda.empty_cache()
 
+                ##### CPU METRICS computation #####
                 if self.cpu_metrics_evaluation:
-                    preds_future = self.client.scatter(
-                        all_preds, broadcast=True)
-                    masks_future = self.client.scatter(
-                        all_masks, broadcast=True)
-
-                    tasks = []  # list of delayed calls
-                    names = []  # parallel list of metric names
+                    # reset pbar to show CPU metrics processing
+                    pbar.reset()
+                    pbar.set_description("Processing CPU metrics")
+                    pbar.refresh()
+                    # Process all_preds and all_masks with Dask
                     for metric in self.cpu_metrics:
+                        # Use delayed to create a Dask task for each metric
                         name = metric.__class__.__name__
-                        for pred_fut, mask_fut in zip(preds_future, masks_future):
-                            task = delayed(metric)(pred_fut, mask_fut)
-                            tasks.append(task)
-                            names.append(name)
+                        pbar.set_postfix_str(f"Metric: {name}")
+                        futures = self.client.map(metric, all_preds, all_masks)
+                        # returns a list of results
+                        results_compute = self.client.gather(futures)
+                        # aggregate back into results
+                        agg = defaultdict(list)
+                        for val in results_compute:
+                            match type(val):
+                                case float() | int():
+                                    agg[name].append(val)
+                                case list():
+                                    agg[name].append(np.mean(val))
+                                case np.ndarray():
+                                    agg[name].append(np.mean(val))
+                                case dict():
+                                    for k, v in val.items():
+                                        agg[name + "_" + str(k)].append(v)
+                                case _:
+                                    print(f"Warning: Unhandled type {type(val)} in metric results. Continuing.")
+                                    continue
 
-                    # returns a list of results
-                    results_compute = compute(*tasks, scheduler=self.client)
+                        for name, values in agg.items():
+                            if name not in results_raw:
+                                results_raw[name] = []
+                            results_raw[name].extend(values)
 
-                    # aggregate back into results
-                    agg = defaultdict(list)
-                    for name, val in zip(names, results_compute):
-                        if isinstance(val, int):
-                            agg[name].append(val)
-                        elif isinstance(val, float):
-                            agg[name].append(val)
-                        elif isinstance(val, list):
-                            agg[name].append(np.mean(val))
-                        elif isinstance(val, np.ndarray):
-                            agg[name].append(np.mean(val))
-                        elif isinstance(val, dict):
-                            for k, v in val.items():
-                                agg[name + "_" + str(k)].append(v)
-                        else:
-                            print
-                            continue
+                        # increment pbar
+                        pbar.update(1.0 / len(self.cpu_metrics))
 
-                    for name, values in agg.items():
-                        if name not in results_raw:
-                            results_raw[name] = []
-                        results_raw[name].extend(values)
-
-        # empty cache to free memory
         torch.cuda.empty_cache()
-        # free cpu memory
         gc.collect()
 
         mean_results = {name: np.mean(
             values) if values else 0.0 for name, values in results_raw.items()}
+        self.logger.info(f"[Evaluator] Epoch {self.epoch} - Results: \n{results_raw}")
+
+        records = []
+        for name, vals in results_raw.items():
+            for v in vals:
+                records.append({
+                    "epoch": self.epoch,
+                    "metric": name,
+                    "value": float(v)
+                })
+        df = pd.DataFrame.from_records(records)
+
+        if os.path.exists(self.metrics_file):
+            old = pd.read_parquet(self.metrics_file)
+            df = pd.concat([old, df], ignore_index=True)
+        df.to_parquet(self.metrics_file, index=False, engine="pyarrow", compression="snappy")
+
         return mean_results
 
     def done_evaluating(self):

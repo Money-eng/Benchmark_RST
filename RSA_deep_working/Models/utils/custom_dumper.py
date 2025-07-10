@@ -23,10 +23,11 @@ Visualisation:
 
 import xml.etree.ElementTree as xml
 from ast import literal_eval
+from xml.dom import minidom
+
 # from openalea.core.graph.property_graph import PropertyGraph
 from openalea.mtg import MTG, fat_mtg
 from rsml import metadata
-from xml.dom import minidom
 
 
 class Parser(object):

@@ -1,8 +1,8 @@
 # Metrics/cpu/dtw_between_intercepts.py
 import numpy as np
-from openalea.mtg import MTG
 # from utils.intercept import intercept_curve_at_all_time
 from fastdtw import fastdtw
+from openalea.mtg import MTG
 from scipy.optimize import linear_sum_assignment
 
 

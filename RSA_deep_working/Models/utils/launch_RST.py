@@ -1,8 +1,9 @@
-import numpy as np
 import os
 import shutil
 import subprocess
 import tempfile
+
+import numpy as np
 import tifffile as tiff
 import torch
 from rsml import rsml2mtg

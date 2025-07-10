@@ -1,9 +1,8 @@
 import torch
+from utils.misc import set_seed, SEED
 
 from .segformer import Segformer
 from .unet import UNet
-
-from utils.misc import set_seed, SEED
 
 set_seed(SEED)  # Ensure reproducibility
 
