@@ -38,12 +38,12 @@ class Surface_dice(BaseMetric):
         #   |·|      = cardinality of a set
         #   τ        = tolerance threshold (in pixels or physical units)
         """
-        pred = (prediction > 0.5).float()
-        msk = (mask > 0.5).float()  # torch.Size([16, 1, 512, 512])
+
+        pred = prediction.float()
+        msk = mask.float()
 
         class_thresholds: list[float] = [0.5]  # Threshold for binarization, should be ajusted ?
 
-        # Compute surface distance using MONAI's SurfaceDiceMetric
         metric = MonaiSurfaceDiceMetric(include_background=False, distance_metric="euclidean",
                                         class_thresholds=class_thresholds)
         metric(pred, msk)

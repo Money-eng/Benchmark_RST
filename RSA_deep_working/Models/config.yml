@@ -47,21 +47,20 @@ loss:
     pos_weight: null
 
 metrics:
-  threshold: 0.5
+  threshold_4_binarize: 0.5 # to change manually in the code of each metric
   gpu:
-    - { name: "ari_score" }
     - { name: "dice" }
-    - { name: "generalized_dice" }
     - { name: "f1_score" }
+    - { name: "generalized_dice" }
+    - { name: "hausdorff_distance" }
     - { name: "mean_iou" }
+    - { name: "normalized_mutual_information" }
     - { name: "pixel_accuracy" }
     - { name: "precision" }
     - { name: "recall" }
     - { name: "specificity" }
-    - { name: "surface_distance" }
     - { name: "surface_dice" }
-    #- { name: "hausdorff_distance" }
-    - { name: "normalized_mutual_information" }
+    - { name: "surface_distance" }
   cpu:
     - { name: "variation_of_information" }
     - { name: "betti0_jaccard_ratio" }

@@ -29,13 +29,7 @@ class MeanIoU(BaseMetric):
         pred = prediction.float()
         msk = mask.float()
 
-        # Binarize: anything ≥0.5 → 1, anything <0.5 → 0
-        pred_bin = (pred >= 0.5).long()  # TODO : check if this is the right way to binarize
-        msk_bin = (msk >= 0.5).long()
-
         # Compute binary Jaccard (IoU)
-        score = FMF.mean_iou(
-            pred_bin, msk_bin, num_classes=2
-        )
+        score = FMF.mean_iou(pred, msk, num_classes=2)
         # `score` is a tensor, we take the mean and convert to float
         return score.mean().item() if isinstance(score, torch.Tensor) else float(score)

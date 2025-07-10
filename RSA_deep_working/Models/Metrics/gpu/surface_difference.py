@@ -45,8 +45,8 @@ class Surface_distance(BaseMetric):
         #   ASD[b, c] = ASD( M_c^(b), G_c^(b) )
         #     avec éventuellement exclusion de la classe de fond c = 0
         """
-        pred = (prediction > 0.5).float()
-        msk = (mask > 0.5).float()
+        pred = prediction.float()
+        msk = mask.float()
 
         metric = MonaiSurfaceDistanceMetric(include_background=False, distance_metric="euclidean")  # define the metric
         metric(pred, msk)  # compute the metric on the prediction and mask tensors

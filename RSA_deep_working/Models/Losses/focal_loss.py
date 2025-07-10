@@ -1,8 +1,7 @@
-# cl dice loss
-from monai.losses import SoftclDiceLoss
+from monai.losses import FocalLoss
 
 
-class CLDice(SoftclDiceLoss):
+class DiceFocal(FocalLoss):
     def __init__(self, **kwargs):
         super().__init__(kwargs)
 

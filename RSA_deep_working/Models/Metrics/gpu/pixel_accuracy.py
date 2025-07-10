@@ -26,8 +26,5 @@ class PixelAccuracy(BaseMetric):
         pred = prediction.float()
         msk = mask.float()
 
-        pred_bin = (pred >= 0.5).long()  # TODO : check if this is the right way to binarize
-        msk_bin = (msk >= 0.5).long()
-
-        score = FMF.accuracy(pred_bin, msk_bin, task="binary")
+        score = FMF.accuracy(pred, msk, task="binary")
         return score.mean().item()

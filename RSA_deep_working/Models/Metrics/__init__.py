@@ -12,7 +12,6 @@ from .cpu.euler_charac_variation_index import EulerCharacVariationIndex
 from .cpu.persistence_bottleneck import PeristenceBottleneck
 from .cpu.persistence_wasserstein import PeristenceWasserstein
 from .cpu.variation_of_information import VI
-from .gpu.ari_index import ARIScore
 from .gpu.dice import Dice
 from .gpu.f1_score import F1Score
 from .gpu.generalized_dice import GeneralizedDice
@@ -25,18 +24,18 @@ from .gpu.recall import Recall
 from .gpu.specificity import Specificity
 from .gpu.surface_dice import Surface_dice
 from .gpu.surface_difference import Surface_distance
-from .mtg.area_below_intercep import AreaBetweenIntercepts
+
+# from .mtg.area_below_intercep import AreaBetweenIntercepts
 # from .mtg.dtw_below_intercep import DTWBetweenIntercepts
-from .mtg.euclidian_btw_intercepts import EuclidianDistancebtwIntercepts
-from .mtg.number_of_organs_ratio import NumberOfOrgansRatio
-from .mtg.number_of_plants_ratio import NumberOfPlantsRatio
+# from .mtg.euclidian_btw_intercepts import EuclidianDistancebtwIntercepts
+# from .mtg.number_of_organs_ratio import NumberOfOrgansRatio
+# from .mtg.number_of_plants_ratio import NumberOfPlantsRatio
 
 set_seed(SEED)  # Ensure reproducibility
 
 # Global dictionnary to map metric names to their corresponding classes
 METRIC_FACTORIES = {
     # GPU
-    "ari_score": ARIScore,
     "dice": Dice,
     "generalized_dice": GeneralizedDice,
     "f1_score": F1Score,
@@ -59,13 +58,7 @@ METRIC_FACTORIES = {
     "euler_charac_relative_error": EulerCharacRelativeError,
     "euler_charac_variation_index": EulerCharacVariationIndex,
     "persistence_bottleneck": PeristenceBottleneck,
-    "persistence_wasserstein": PeristenceWasserstein,
-    # CPU / MTG
-    "area_below_intercep": AreaBetweenIntercepts,
-    # "dtw_below_intercep": DTWBetweenIntercepts,
-    "euclidian_btw_intercepts": EuclidianDistancebtwIntercepts,
-    "number_of_organs_ratio": NumberOfOrgansRatio,
-    "number_of_plants_ratio": NumberOfPlantsRatio,
+    "persistence_wasserstein": PeristenceWasserstein
 }
 
 

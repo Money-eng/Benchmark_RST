@@ -23,8 +23,8 @@ class Precision(BaseMetric):
         """
         Precision binaire : TP / (TP + FP).
         """
-        pred_bin = (prediction > 0.5).float()
-        msk_bin = (mask > 0.5).float()
+        pred = prediction.float()
+        msk = mask.float()
 
-        score = FMF.precision(pred_bin, msk_bin, task="binary")
+        score = FMF.precision(pred, msk, task="binary")
         return score.mean().item()

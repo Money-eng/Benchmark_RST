@@ -24,8 +24,8 @@ class Recall(BaseMetric):
         Recall binaire : TP / (TP + FN).
         """
 
-        pred_bin = (prediction > 0.5).float()
-        msk_bin = (mask > 0.5).float()
+        preds = prediction.float()
+        masks = mask.float()
 
-        score = FMF.recall(pred_bin, msk_bin, task="binary")
+        score = FMF.recall(preds, masks, task="binary")
         return score.mean().item()
