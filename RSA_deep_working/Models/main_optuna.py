@@ -1,8 +1,9 @@
-import os
-import yaml
 import copy
-import torch
+import os
+
 import optuna
+import torch
+import yaml
 from torch.nn import DataParallel
 
 from DataLoaders.dataloaders import create_dataloader
@@ -58,11 +59,12 @@ TB_LOGGER = TensorboardLogger(os.path.join(LOG_DIR, "tensorboard_logs"))
 SEARCH_SPACE = {
     "learning_rate": (1e-6, 1e-1),  # log scale
     "weight_decay": (1e-8, 1e-1),  # log scale
-    "optimizer":     ["adamw", "adam", "sgd"],
+    "optimizer": ["adamw", "adam", "sgd"],
 }
 
 # 5) Number of epochs for search and final training --------------------------
 EPOCHS_SEARCH = CONFIG_BASE["training"].get("optuna_epochs", 10)
+
 
 # --------------------------------------------------------------------------------------
 #  Objective Optuna --------------------------------------------------------------------
@@ -77,7 +79,7 @@ def objective(trial: optuna.Trial) -> float:
     lr = trial.suggest_float(
         "learning_rate", *SEARCH_SPACE["learning_rate"], log=True)
     wd = trial.suggest_float(
-        "weight_decay",  *SEARCH_SPACE["weight_decay"],  log=True)
+        "weight_decay", *SEARCH_SPACE["weight_decay"], log=True)
     opt_name = trial.suggest_categorical(
         "optimizer", SEARCH_SPACE["optimizer"])
 

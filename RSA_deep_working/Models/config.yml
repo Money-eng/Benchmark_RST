@@ -44,13 +44,14 @@ loss:
   params:
     weight: null
     reduction: mean
-    
+
 metrics:
   threshold_4_binarize: 0.5 # to change manually in the code of each metric
   gpu:
     - { name: "dice" }
+    - { name: "cldice" }
+    - { name: "focal_loss" }
     - { name: "f1_score" }
-    - { name: "generalized_dice" }
     - { name: "hausdorff_distance" }
     - { name: "mean_iou" }
     - { name: "normalized_mutual_information" }
@@ -65,16 +66,13 @@ metrics:
     - { name: "betti0_jaccard_ratio" }
     - { name: "betti0_relative_error" }
     - { name: "betti0_variation_index" }
+    - { name: "betti1_jaccard_ratio" }
+    - { name: "betti1_relative_error" }
+    - { name: "betti1_variation_index" }
     - { name: "euler_charac_jaccard_ratio" }
     - { name: "euler_charac_relative_error" }
     - { name: "euler_charac_variation_index" }
     - { name: "persistence_bottleneck" }
-    #- { name: "persistence_wasserstein" }
-    #mtg:
-    # - { name: "area_below_intercep" }
-    #- { name: "dtw_below_intercep" }
-    #- { name: "number_of_organs_ratio" }
-    #- { name: "number_of_plants_ratio" }
-
+    - { name: "persistence_wasserstein" }
 rst:
   jar_path: RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar

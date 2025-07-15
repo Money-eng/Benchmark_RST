@@ -100,15 +100,15 @@ if __name__ == "__main__":
     tb_logger = TensorboardLogger(log_dir=tb_log_dir)
 
     checkpoint_dir = config["training"]["checkpoint_dir"] + "/" + config["model"]["name"] + "_" + config["loss"]["name"]
-    
+
     from torch_lr_finder import LRFinder
+
     lr_finder = LRFinder(model, optimizer, criterion, device="cuda")
     lr_finder.range_test(train_loader=train_loader, end_lr=1, num_iter=200)
-    lr_finder.reset() # to reset the model and optimizer to their initial state
-    
+    lr_finder.reset()  # to reset the model and optimizer to their initial state
+
     # empty memory
     torch.cuda.empty_cache()
-    
 
     # log all configurations in the logger
     logger.info("Starting training with the following configurations:")

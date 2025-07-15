@@ -31,5 +31,5 @@ class MeanIoU(BaseMetric):
 
         # Compute binary Jaccard (IoU)
         score = FMF.mean_iou(pred, msk, num_classes=2)
-        
+
         return score.mean().item() if isinstance(score, torch.Tensor) else float(score)

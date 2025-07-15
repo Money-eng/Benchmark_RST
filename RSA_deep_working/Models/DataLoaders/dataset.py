@@ -3,7 +3,6 @@ import os
 import numpy as np
 import tifffile
 import torch
-from PIL import Image
 from torch.utils.data import Dataset
 from utils.misc import set_seed, SEED
 

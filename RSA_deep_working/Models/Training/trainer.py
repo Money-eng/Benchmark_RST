@@ -5,9 +5,9 @@ comments are now in English.
 """
 from __future__ import annotations
 
+import logging
 import os
 from gc import collect
-import logging
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -17,7 +17,6 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, _LRScheduler
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-
 from utils.logger import TensorboardLogger
 from utils.misc import SEED, get_device, set_seed
 
@@ -28,6 +27,7 @@ from .evaluator import Evaluator
 # -----------------------------------------------------------------------------
 set_seed(SEED)  # sets python, numpy and torch seeds
 
+
 # -----------------------------------------------------------------------------
 # Main Trainer
 # -----------------------------------------------------------------------------
@@ -35,22 +35,22 @@ set_seed(SEED)  # sets python, numpy and torch seeds
 
 class Trainer:
     def __init__(
-        self,
-        model: nn.Module,
-        train_loader: DataLoader,
-        epochs: int,
-        epochs_btw_eval: int,
-        criterion: nn.Module,
-        optimizer: Optimizer,
-        config: dict,
-        evaluator: Evaluator,
-        logger: Optional[logging.Logger] = None,
-        tb_logger: Optional[TensorboardLogger] = None,
-        checkpoint_dir: str | os.PathLike | None = "checkpoint_dir",
-        device: Optional[torch.device] = None,
-        *,
-        save_each_epoch: bool = True,
-        do_evaluation: bool = True,
+            self,
+            model: nn.Module,
+            train_loader: DataLoader,
+            epochs: int,
+            epochs_btw_eval: int,
+            criterion: nn.Module,
+            optimizer: Optimizer,
+            config: dict,
+            evaluator: Evaluator,
+            logger: Optional[logging.Logger] = None,
+            tb_logger: Optional[TensorboardLogger] = None,
+            checkpoint_dir: str | os.PathLike | None = "checkpoint_dir",
+            device: Optional[torch.device] = None,
+            *,
+            save_each_epoch: bool = True,
+            do_evaluation: bool = True,
     ) -> None:
 
         # ------------------------------------------------------------------

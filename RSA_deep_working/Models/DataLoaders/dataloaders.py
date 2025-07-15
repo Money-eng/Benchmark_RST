@@ -1,8 +1,5 @@
-import os
-from random import Random
-
 import torch
-from torch.utils.data import DataLoader, Subset, Sampler
+from torch.utils.data import DataLoader
 from utils.logger import log_dataset_stats
 from utils.misc import set_seed, SEED, worker_init_fn
 
@@ -93,7 +90,7 @@ def create_dataloader(
     global DEFAULT_BATCH_SIZE
     val_loader = DataLoader(
         val_dataset,
-        batch_size=batch_size, # DEFAULT_BATCH_SIZE,
+        batch_size=batch_size,  # DEFAULT_BATCH_SIZE,
         shuffle=False,
         num_workers=num_workers,
         worker_init_fn=worker_init_fn,
@@ -103,7 +100,7 @@ def create_dataloader(
 
     test_loader = DataLoader(
         test_dataset,
-        batch_size=batch_size, # DEFAULT_BATCH_SIZE,
+        batch_size=batch_size,  # DEFAULT_BATCH_SIZE,
         shuffle=False,
         num_workers=num_workers,
         worker_init_fn=worker_init_fn,

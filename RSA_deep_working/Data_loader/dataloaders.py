@@ -5,7 +5,6 @@ import os
 import random
 
 import numpy as np
-import rsml
 import torch
 from torch.utils.data import DataLoader, Subset, Sampler
 from torchvision import transforms

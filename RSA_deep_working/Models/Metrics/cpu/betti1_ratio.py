@@ -34,10 +34,10 @@ class Betti1JaccardRatio(BaseMetric):
         for i in range(pred_np.shape[0]):
             pred_img = pred_np[i]
             mask_img = mask_np[i]
-            n_pred = label(~pred_img.astype(bool)).max() 
-            n_mask = label(~mask_img.astype(bool)).max()  
+            n_pred = label(~pred_img.astype(bool)).max()
+            n_mask = label(~mask_img.astype(bool)).max()
             b1_pred = max(0, n_pred - 1)  # Betti-1 = number of holes = cc_inverted - 1
-            b1_mask = max(0, n_mask - 1) 
+            b1_mask = max(0, n_mask - 1)
             jaccard_ratio = (min(b1_pred, b1_mask) / (max(b1_pred, b1_mask) + 1e-8))
             scores.append(jaccard_ratio)
         return float(np.mean(scores))

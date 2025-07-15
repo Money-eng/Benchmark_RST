@@ -1,22 +1,20 @@
 from __future__ import annotations
 
 import gc
-import os
 import logging
+import os
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence
 
 import numpy as np
 import pandas as pd
 import torch
-from dask import delayed
-from dask.distributed import Client, LocalCluster
+from dask.distributed import Client, LocalCluster, Future
 from monai.inferers import SlidingWindowInfererAdapt
 from torch.nn import Module
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-
 from utils.logger import TensorboardLogger
 from utils.misc import SEED, set_seed
 
@@ -30,57 +28,23 @@ set_seed(SEED)
 # Evaluator class
 # -----------------------------------------------------------------------------
 class Evaluator:
-    """Runs validation / test loops and gathers metrics.
-
-    Parameters
-    ----------
-    model : torch.nn.Module
-        Neural network in *eval* mode.  It **must** already live on *device*.
-    criterion : torch.nn.Module | None
-        Loss function used to compute *val_loss* (optional).
-    val_dataloader, test_dataloader : torch.utils.data.DataLoader
-        Iterators returning tuples ``(images, masks, *extras)``.  *Extras* are
-        ignored here.
-    metrics : dict[str, Sequence[Callable]]
-        The same nested mapping as before: keys **gpu**, **cpu**, **mtg**.
-    device : torch.device
-        Device on which *model* (and criterion) reside.
-    logger, tb_logger : logging.Logger | TensorboardLogger | None
-        Standard / tensorboard loggers.
-    log_metric_path : str | os.PathLike | None, default=None
-        Folder in which to store *metrics_results.parquet*.
-    jar_path : str | None
-        Kept for backward-compatibility (forwarded to metrics that need it).
-    threshold : float, default=0.5
-        Binarisation threshold applied to *sigmoid* output of the network.
-    epoch : int, default=0
-        Epoch counter propagated by the caller (used for logging).
-    patch_size : int | None
-        Enable sliding-window inference if given.
-    compute_cpu_metrics : bool, default=True
-        Whether to compute expensive CPU metrics at all.
-    use_dask : bool, default=True
-        If *True*, evaluate CPU/MTG metrics in parallel with **Dask**; otherwise
-        fall back to a simple for-loop.
-    """
-
     def __init__(
-        self,
-        model: Module,
-        criterion: Optional[Module],
-        val_dataloader: DataLoader,
-        test_dataloader: DataLoader,
-        metrics: Dict[str, Sequence[Module]],
-        device: torch.device,
-        logger: Optional[logging.Logger] = None,
-        tb_logger: Optional[TensorboardLogger] = None,
-        log_metric_path: str | os.PathLike | None = None,
-        threshold: float = 0.5,
-        epoch: int = 0,
-        patch_size: Optional[int] = None,
-        *,
-        compute_cpu_metrics: bool = True,
-        use_dask: bool = True,
+            self,
+            model: Module,
+            criterion: Optional[Module],
+            val_dataloader: DataLoader,
+            test_dataloader: DataLoader,
+            metrics: Dict[str, Sequence[Module]],
+            device: torch.device,
+            logger: Optional[logging.Logger] = None,
+            tb_logger: Optional[TensorboardLogger] = None,
+            log_metric_path: str | os.PathLike | None = None,
+            threshold: float = 0.5,
+            epoch: int = 0,
+            patch_size: Optional[int] = None,
+            *,
+            compute_cpu_metrics: bool = True,
+            use_dask: bool = True,
     ) -> None:
 
         # --------------------------- Public fields ----------------------
@@ -235,29 +199,43 @@ class Evaluator:
 
     # ------------------------------------------------------------------
     def _compute_cpu_metrics(
-        self,
-        preds: List[np.ndarray],
-        masks: List[np.ndarray],
-        raw: Dict[str, List[float]],
+            self,
+            preds: List[np.ndarray],
+            masks: List[np.ndarray],
+            raw: Dict[str, List[float]],
     ) -> None:
-        """Evaluate CPU & MTG metrics, potentially in parallel."""
-        all_cpu_metrics: Sequence[Module] = self.cpu_metrics
-        if not all_cpu_metrics:
+        """Compute CPU & MTG metrics, potentially in parallel across all metrics."""
+        metrics = self.cpu_metrics + self.mtg_metrics
+        if not metrics:
             return
 
-        pbar = tqdm(all_cpu_metrics, desc="CPU metrics",
-                    leave=False, dynamic_ncols=True)
-        for metric in pbar:
-            name = metric.__class__.__name__
-            pbar.set_postfix(metric=name)
+        # If Dask is enabled, schedule all metrics at once
+        if self.use_dask and self.client:
+            # Map each metric to its list of futures
+            tasks: Dict[str, List[Future]] = {
+                metric.__class__.__name__: self.client.map(metric, preds, masks)
+                for metric in metrics
+            }
 
-            if self.use_dask and self.client is not None:
-                futures = self.client.map(metric, preds, masks)
-                results = self.client.gather(futures)
-            else:
-                results = [metric(p, m) for p, m in zip(preds, masks)]
+            # Show progress over metric‐names
+            pbar = tqdm(tasks.keys(), desc="CPU metrics", leave=False, dynamic_ncols=True)
 
-            _aggregate_metric_results(name, results, raw)
+            # Gather all results in one go; returns a dict name→List[values]
+            results: Dict[str, List[float]] = self.client.gather(tasks)
+
+            # Aggregate per‐metric
+            for name in pbar:
+                pbar.set_postfix(metric=name)
+                _aggregate_metric_results(name, results[name], raw)
+
+        else:
+            # Fallback: compute each metric sequentially
+            pbar = tqdm(metrics, desc="CPU metrics", leave=False, dynamic_ncols=True)
+            for metric in pbar:
+                name = metric.__class__.__name__
+                pbar.set_postfix(metric=name)
+                values = [metric(p, m) for p, m in zip(preds, masks)]
+                _aggregate_metric_results(name, values, raw)
 
     # ------------------------------------------------------------------
     def _persist_raw_metrics(self, raw: Dict[str, List[float]]) -> None:
