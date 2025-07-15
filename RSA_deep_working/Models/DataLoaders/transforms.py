@@ -44,14 +44,14 @@ def get_train_img_transform_2(patch_size=512):
     if patch_size is None:
         return A.Compose([
             A.PadIfNeeded(min_height=ajusted_width, min_width=ajusted_height, border_mode=0, position='top_left'),
-            A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=30, p=0.5),
+            A.Affine(scale=0.9, translate_percent=(0.1, 0.1), rotate=30, p=0.5),
             A.Normalize(mean=(0,), std=(1,), max_pixel_value=255.0),
             ToTensorV2(),
         ])
     else:
         return A.Compose([
             A.RandomCrop(patch_size, patch_size),
-            A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=30, p=0.5),
+            A.Affine(scale=0.9, translate_percent=(0.1, 0.1), rotate=30, p=0.5),
             A.Normalize(mean=(0,), std=(1,), max_pixel_value=255.0),
             ToTensorV2(),
         ])
@@ -62,7 +62,7 @@ def get_train_img_transform_3(patch_size=512):
     if patch_size is None:
         return A.Compose([
             A.PadIfNeeded(min_height=ajusted_width, min_width=ajusted_height, border_mode=0, position='top_left'),
-            A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=30, p=0.5),
+            A.Affine(scale=0.9, translate_percent=(0.1, 0.1), rotate=30, p=0.5),
             A.HorizontalFlip(p=0.3),
             A.VerticalFlip(p=0.3),
             # A.RandomRotate90(p=0.5),
@@ -73,7 +73,7 @@ def get_train_img_transform_3(patch_size=512):
     else:
         return A.Compose([
             A.RandomCrop(patch_size, patch_size),
-            A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=30, p=0.5),
+            A.Affine(scale=0.9, translate_percent=(0.1, 0.1), rotate=30, p=0.5),
             A.HorizontalFlip(p=0.3),
             A.VerticalFlip(p=0.3),
             A.RandomRotate90(p=0.3),

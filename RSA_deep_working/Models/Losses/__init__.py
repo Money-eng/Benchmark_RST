@@ -2,7 +2,7 @@ import torch
 from utils.misc import set_seed, SEED
 
 from .bce_dice_loss import BCEDiceLoss
-from .bce_loss import BCEDiceLoss
+from .bce_loss import BCE
 from .cldice import CLDice
 from .cldice_dice import CLDice_Dice
 from .dice_loss import DiceLoss

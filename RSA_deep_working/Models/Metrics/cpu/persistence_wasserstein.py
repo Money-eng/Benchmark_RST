@@ -48,12 +48,12 @@ class PeristenceWasserstein():
     def __call__(self, prediction: np.ndarray, mask: np.ndarray):
         # B, C, H, W -> treating each image independently
         distances = []
-        pred = prediction.squeeze(1)
-        msk = mask.squeeze(1)
-        for i in range(pred.shape[0]):
+        # pred = prediction.squeeze(1)
+        # msk = mask.squeeze(1) # remove channel dimension if present
+        for i in range(prediction.shape[0]):
             # calcule diagrammes
-            diag_pred = self._compute_diagram(pred[i])
-            diag_msk = self._compute_diagram(msk[i])
+            diag_pred = self._compute_diagram(prediction[i])
+            diag_msk = self._compute_diagram(mask[i])
             distance_per_dim = {}
             # Bottleneck par dimension
             for dim in self.homology_dimensions:

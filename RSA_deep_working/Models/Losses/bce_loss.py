@@ -1,7 +1,7 @@
-from torch.nn import BCEWithLogitsLoss
+from torch.nn import BCELoss
 
 
-class BCEDiceLoss(BCEWithLogitsLoss):
+class BCE(BCELoss):
     def __init__(self, **kwargs):
         """
         Initialize the BCE-Dice loss with parameters.

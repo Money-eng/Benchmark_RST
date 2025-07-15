@@ -26,10 +26,10 @@ class MeanIoU(BaseMetric):
         only sees exact 0/1 values.
         """
         # Ensure float
-        pred = prediction.float()
-        msk = mask.float()
+        pred = prediction.int()
+        msk = mask.int()
 
         # Compute binary Jaccard (IoU)
         score = FMF.mean_iou(pred, msk, num_classes=2)
-        # `score` is a tensor, we take the mean and convert to float
+        
         return score.mean().item() if isinstance(score, torch.Tensor) else float(score)

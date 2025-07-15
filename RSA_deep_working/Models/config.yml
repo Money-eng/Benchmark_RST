@@ -1,10 +1,10 @@
 data:
   base_dir: RSA_deep_working/Data
-  patch_size: null
-  batch_size: 1
+  patch_size: 512
+  batch_size: 64
 
 training:
-  epochs: 500
+  epochs: 300
   epochs_btw_eval: 1
   device: cuda
   save_best_only: true
@@ -19,6 +19,8 @@ training:
     patience: 5
   checkpoint_dir: RSA_deep_working/Models/Checkpoints
   log_dir: RSA_deep_working/Models/Logs
+  optuna_trials: 10
+  optuna_epochs: 5
 
 
 model:
@@ -41,11 +43,8 @@ loss:
   name: bce
   params:
     weight: null
-    size_average: null
-    reduce: null
     reduction: mean
-    pos_weight: null
-
+    
 metrics:
   threshold_4_binarize: 0.5 # to change manually in the code of each metric
   gpu:

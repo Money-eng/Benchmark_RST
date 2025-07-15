@@ -1,78 +1,114 @@
-# Training/evaluator.py
+from __future__ import annotations
 
 import gc
 import os
+import logging
 from collections import defaultdict
-from logging import Logger
+from pathlib import Path
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
 import torch
-from dask import delayed, compute
+from dask import delayed
 from dask.distributed import Client, LocalCluster
 from monai.inferers import SlidingWindowInfererAdapt
+from torch.nn import Module
+from torch.utils.data import DataLoader
 from tqdm import tqdm
-from utils.launch_RST import process_date_map
+
 from utils.logger import TensorboardLogger
-from utils.misc import set_seed, SEED
+from utils.misc import SEED, set_seed
 
-set_seed(SEED)  # Ensure reproducibility
+# -----------------------------------------------------------------------------
+# Reproducibility
+# -----------------------------------------------------------------------------
+set_seed(SEED)
 
 
+# -----------------------------------------------------------------------------
+# Evaluator class
+# -----------------------------------------------------------------------------
 class Evaluator:
+    """Runs validation / test loops and gathers metrics.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Neural network in *eval* mode.  It **must** already live on *device*.
+    criterion : torch.nn.Module | None
+        Loss function used to compute *val_loss* (optional).
+    val_dataloader, test_dataloader : torch.utils.data.DataLoader
+        Iterators returning tuples ``(images, masks, *extras)``.  *Extras* are
+        ignored here.
+    metrics : dict[str, Sequence[Callable]]
+        The same nested mapping as before: keys **gpu**, **cpu**, **mtg**.
+    device : torch.device
+        Device on which *model* (and criterion) reside.
+    logger, tb_logger : logging.Logger | TensorboardLogger | None
+        Standard / tensorboard loggers.
+    log_metric_path : str | os.PathLike | None, default=None
+        Folder in which to store *metrics_results.parquet*.
+    jar_path : str | None
+        Kept for backward-compatibility (forwarded to metrics that need it).
+    threshold : float, default=0.5
+        Binarisation threshold applied to *sigmoid* output of the network.
+    epoch : int, default=0
+        Epoch counter propagated by the caller (used for logging).
+    patch_size : int | None
+        Enable sliding-window inference if given.
+    compute_cpu_metrics : bool, default=True
+        Whether to compute expensive CPU metrics at all.
+    use_dask : bool, default=True
+        If *True*, evaluate CPU/MTG metrics in parallel with **Dask**; otherwise
+        fall back to a simple for-loop.
+    """
+
     def __init__(
-            self,
-            model: torch.nn.Module,
-            val_dataloader: torch.utils.data.DataLoader,
-            test_dataloader: torch.utils.data.DataLoader,
-            # {"gpu": [Dice(), ...], "cpu": [Connectivity(), ..., "mtg": [AreaBetweenIntercepts(), ...]}
-            metrics: dict,
-            device: torch.device,
-            logger: Logger = None,
-            tb_logger: TensorboardLogger = None,
-            log_metric_path: str = None,
-            jar_path: str = None,
-            threshold: float = 0.5,
-            epoch: int = 0,
-            patch_size: int = None,
-    ):
-        """
-        - model : réseau PyTorch (déjà instancié et .to(device))
-        - val_dataloader, test_dataloader, etc.
-        - metrics : dict avec deux listes : "gpu" et "cpu"
-        - device : torch.device("cuda") ou ("cpu")
-        - logger / tb_logger : pour journaliser si besoin
-        """
-        self.model = model.to(device)
+        self,
+        model: Module,
+        criterion: Optional[Module],
+        val_dataloader: DataLoader,
+        test_dataloader: DataLoader,
+        metrics: Dict[str, Sequence[Module]],
+        device: torch.device,
+        logger: Optional[logging.Logger] = None,
+        tb_logger: Optional[TensorboardLogger] = None,
+        log_metric_path: str | os.PathLike | None = None,
+        threshold: float = 0.5,
+        epoch: int = 0,
+        patch_size: Optional[int] = None,
+        *,
+        compute_cpu_metrics: bool = True,
+        use_dask: bool = True,
+    ) -> None:
+
+        # --------------------------- Public fields ----------------------
+        self.model = model.to(device).eval()  # ensure eval mode
+        self.criterion = criterion.to(device) if criterion else None
+        self.val_loader = val_dataloader
+        self.test_loader = test_dataloader
+
+        # Metric groups ---------------------------------------------------
+        self.gpu_metrics: List[Module] = list(metrics.get("gpu", []))
+        self.cpu_metrics: List[Module] = list(metrics.get("cpu", []))
+
+        # Misc. -----------------------------------------------------------
         self.device = device
-
-        self.val_dataloader = val_dataloader
-        self.test_dataloader = test_dataloader
-
-        self.gpu_metrics = metrics.get("gpu", [])
-        self.cpu_metrics = metrics.get("cpu", [])
-        self.mtg_metrics = metrics.get("mtg", [])
-
-        self.jar_path = jar_path
-
-        self.logger = logger
+        self.logger = logger or logging.getLogger(__name__)
         self.tb_logger = tb_logger
         self.epoch = epoch
         self.threshold = threshold
+        self.compute_cpu_metrics = compute_cpu_metrics
+        self.use_dask = use_dask
 
-        self.metrics_dir = log_metric_path or "metrics"
-        os.makedirs(self.metrics_dir, exist_ok=True)
-        self.metrics_file = os.path.join(
-            self.metrics_dir, "metrics_results.parquet")
+        # Output path for long‑term metric storage ------------------------
+        self.metrics_dir = Path(log_metric_path or "metrics")
+        self.metrics_dir.mkdir(parents=True, exist_ok=True)
+        self.metrics_file = os.path.join(self.metrics_dir, "metrics_results.parquet")
 
-        self.do_not_reconstruct = False
-        self.cpu_metrics_evaluation = True
-
-        if self.logger:
-            self.logger.info("[Evaluator] Initialisation terminée.")
-        else:
-            print("[Evaluator] Initialisation terminée.")
-
+        # Sliding‑window inference ---------------------------------------
+        self.sw_inferer: Optional[SlidingWindowInfererAdapt] = None
         if patch_size is not None:
             self.sw_inferer = SlidingWindowInfererAdapt(
                 roi_size=(int(patch_size), int(patch_size)),
@@ -80,141 +116,184 @@ class Evaluator:
                 overlap=0.25,
                 mode="constant",
             )
-        else:
-            self.sw_inferer = None
 
-        self.cluster = LocalCluster(
-            # min(len(self.cpu_metrics) + len(self.mtg_metrics), os.cpu_count()),  # limit workers
-            n_workers=int(0.8 * os.cpu_count()),
-            threads_per_worker=1,
-            processes=True,
-            memory_limit="8GB",
-        )
-        self.client = Client(self.cluster)
+        # Dask cluster for parallel CPU‑metric evaluation -----------------
+        self.cluster: Optional[LocalCluster] = None
+        self.client: Optional[Client] = None
 
-        self.logger.info(
-            '[Evaluator] Initialisation de l\'Evaluator terminée avec Dask Client.')
+        if self.compute_cpu_metrics and self.use_dask:
+            self.cluster = LocalCluster(
+                n_workers=max(1, int(0.8 * os.cpu_count())),
+                threads_per_worker=1,
+                processes=True,
+                memory_limit="8GB",
+            )
+            self.client = Client(self.cluster)
 
-    def evaluate(self, on_test: bool = False) -> dict:
-        """
-        Evaluate the model on validation or test data.
-        - on_test : bool, if True, evaluate on test data, else on validation data
-        - Returns a dictionary with metric names as keys and their mean values as values.
-        """
+        self._log(logging.INFO, "Evaluator initialised (epoch %d).", self.epoch)
+
+    # =====================================================================
+    # API
+    # =====================================================================
+    def evaluate(self, on_test: bool = False) -> Dict[str, float]:
+        """Run a forward pass on *val* or *test* set and compute metrics."""
         self.model.eval()
-        dataloader = self.test_dataloader if on_test else self.val_dataloader
+        loader = self.test_loader if on_test else self.val_loader
 
-        results_raw = defaultdict(list)
-        for metric in self.gpu_metrics + self.cpu_metrics:
-            name = metric.__class__.__name__
-            results_raw[name] = []
-        save_first_pred = True
+        # Containers ------------------------------------------------------
+        raw: Dict[str, List[float]] = defaultdict(list)
+        for m in self.gpu_metrics + self.cpu_metrics:
+            raw[m.__class__.__name__] = []
+        if self.criterion is not None:
+            raw[f"val_loss_{self.criterion.__class__.__name__}"] = []
+
+        # ----------------------------------------------------------------
+        save_first_pred = True  # one‑off TB image logging flag
+        preds_cpu: List[np.ndarray] = []
+        masks_cpu: List[np.ndarray] = []
+
         with torch.no_grad():
-            with tqdm(dataloader, desc="Evaluating batch per batch", leave=False, dynamic_ncols=True) as pbar:
-                all_preds, all_masks = [], []
-                for imgs, masks, _, _ in pbar:
-                    imgs = imgs.to(self.device)
-                    masks = masks.to(self.device)
-                    if self.sw_inferer is None:
-                        preds_logits_sigmoidee = self.model(imgs)
-                    else:
-                        preds_logits_sigmoidee = self.sw_inferer(
-                            inputs=imgs, network=self.model)
-                    # SIGMOID + BINARY THRESHOLDING NEEDED IN METRICS
-                    preds = (preds_logits_sigmoidee > self.threshold).float()
+            pbar = tqdm(loader, desc="Evaluating", leave=False, dynamic_ncols=True)
+            for imgs, masks, *_ in pbar:
+                imgs = imgs.to(self.device)
+                masks = masks.to(self.device).float()
 
-                    ##### GPU METRICS #####
-                    for metric in self.gpu_metrics:
-                        name = metric.__class__.__name__
-                        pbar.set_postfix_str(f"Metric: {name}")
-                        results_raw[name].append(metric(preds, masks))
+                # (B, C, H, W) - already sigmoid
+                predictions = self._infer(imgs)
+                preds = (predictions > self.threshold).float()
 
-                    ##### CPU METRICS #####
-                    if self.cpu_metrics_evaluation:
-                        # [B, C, H, W] -> X x [C, H, W]
-                        all_preds.extend(preds.detach().cpu().numpy())
-                        all_masks.extend(masks.detach().cpu().numpy())
+                # -------------------------- Loss -----------------------
+                if self.criterion is not None:
+                    loss_val = self.criterion(predictions, masks).item()
+                    raw[f"val_loss_{self.criterion.__class__.__name__}"].append(
+                        loss_val)
+                    pbar.set_postfix(loss=f"{loss_val:.4f}")
 
-                    # Log first prediction and mask
-                    if save_first_pred and self.tb_logger:
-                        self.tb_logger.log_image("Image", imgs * 255.0, global_step=self.epoch)
-                        self.tb_logger.log_image("Mask", masks * 255, global_step=self.epoch)
-                        self.tb_logger.log_image("Prediction", preds * 255, global_step=self.epoch)
-                        save_first_pred = False
+                # ---------------------- GPU metrics --------------------
+                for metric in self.gpu_metrics:
+                    name = metric.__class__.__name__
+                    raw[name].append(metric(preds, masks))
 
-                    del preds, preds_logits_sigmoidee
-                    torch.cuda.empty_cache()
+                # ---------------------- CPU metrics -----------------------
+                if self.compute_cpu_metrics:
+                    preds_cpu.extend(preds.detach().cpu().numpy())
+                    masks_cpu.extend(masks.detach().cpu().numpy())
 
-                ##### CPU METRICS computation #####
-                if self.cpu_metrics_evaluation:
-                    # reset pbar to show CPU metrics processing
-                    pbar.reset()
-                    pbar.set_description("Processing CPU metrics")
-                    pbar.refresh()
-                    # Process all_preds and all_masks with Dask
-                    for metric in self.cpu_metrics:
-                        # Use delayed to create a Dask task for each metric
-                        name = metric.__class__.__name__
-                        pbar.set_postfix_str(f"Metric: {name}")
-                        futures = self.client.map(metric, all_preds, all_masks)
-                        # returns a list of results
-                        results_compute = self.client.gather(futures)
-                        # aggregate back into results
-                        agg = defaultdict(list)
-                        for val in results_compute:
-                            match type(val):
-                                case float() | int():
-                                    agg[name].append(val)
-                                case list():
-                                    agg[name].append(np.mean(val))
-                                case np.ndarray():
-                                    agg[name].append(np.mean(val))
-                                case dict():
-                                    for k, v in val.items():
-                                        agg[name + "_" + str(k)].append(v)
-                                case _:
-                                    print(f"Warning: Unhandled type {type(val)} in metric results. Continuing.")
-                                    continue
+                # ---------------- TensorBoard images -------------------
+                if save_first_pred and self.tb_logger is not None:
+                    image_gray_scale_8bit = imgs.detach().cpu().numpy() * 255.0
+                    image_gray_scale_8bit = image_gray_scale_8bit.astype(
+                        np.uint8)
+                    image_gray_scale_8bit = image_gray_scale_8bit[0, 0, :, :]
+                    self.tb_logger.log_image(
+                        "Image", image_gray_scale_8bit, global_step=self.epoch)
+                    self.tb_logger.log_image(
+                        "Mask", masks * 255.0, global_step=self.epoch)
+                    self.tb_logger.log_image(
+                        "Prediction", preds * 255.0, global_step=self.epoch)
+                    save_first_pred = False
 
-                        for name, values in agg.items():
-                            if name not in results_raw:
-                                results_raw[name] = []
-                            results_raw[name].extend(values)
+                # Manual clean‑up --------------------------------------
+                del preds, predictions
+                torch.cuda.empty_cache()
 
-                        # increment pbar
-                        pbar.update(1.0 / len(self.cpu_metrics))
+        # ----------------------------------------------------------------
+        if self.compute_cpu_metrics:
+            self._compute_cpu_metrics(preds_cpu, masks_cpu, raw)
 
+        # ----------------------------------------------------------------
         torch.cuda.empty_cache()
         gc.collect()
 
-        mean_results = {name: np.mean(
-            values) if values else 0.0 for name, values in results_raw.items()}
-        self.logger.info(f"[Evaluator] Epoch {self.epoch} - Results: \n{results_raw}")
+        # Aggregate means -------------------------------------------------
+        mean_results = {
+            k: float(np.mean(v)) if v else 0.0 for k, v in raw.items()}
+        self._log(logging.INFO, "Epoch %d - Results: %s",
+                  self.epoch, mean_results)
 
-        records = []
-        for name, vals in results_raw.items():
-            for v in vals:
-                records.append({
-                    "epoch": self.epoch,
-                    "metric": name,
-                    "value": float(v)
-                })
-        df = pd.DataFrame.from_records(records)
-
-        if os.path.exists(self.metrics_file):
-            old = pd.read_parquet(self.metrics_file)
-            df = pd.concat([old, df], ignore_index=True)
-        df.to_parquet(self.metrics_file, index=False, engine="pyarrow", compression="snappy")
-
+        self._persist_raw_metrics(raw)
         return mean_results
 
-    def done_evaluating(self):
-        """
-        Clean up Dask resources.
-        """
-        self.client.close()
-        self.cluster.close()
-        if self.logger:
-            self.logger.info("[Evaluator] Dask resources cleaned up.")
+    # ---------------------------------------------------------------------
+    def done_evaluating(self) -> None:
+        """Release Dask resources explicitly."""
+        if self.client is not None:
+            self.client.close()
+        if self.cluster is not None:
+            self.cluster.close()
+        self._log(logging.INFO, "Dask resources cleaned up.")
+
+    # =====================================================================
+    # Internal helpers
+    # =====================================================================
+
+    def _infer(self, imgs: torch.Tensor) -> torch.Tensor:
+        """Forward pass with optional sliding-window inference."""
+        if self.sw_inferer is None:
+            return self.model(imgs)
+        return self.sw_inferer(inputs=imgs, network=self.model)
+
+    # ------------------------------------------------------------------
+    def _compute_cpu_metrics(
+        self,
+        preds: List[np.ndarray],
+        masks: List[np.ndarray],
+        raw: Dict[str, List[float]],
+    ) -> None:
+        """Evaluate CPU & MTG metrics, potentially in parallel."""
+        all_cpu_metrics: Sequence[Module] = self.cpu_metrics
+        if not all_cpu_metrics:
+            return
+
+        pbar = tqdm(all_cpu_metrics, desc="CPU metrics",
+                    leave=False, dynamic_ncols=True)
+        for metric in pbar:
+            name = metric.__class__.__name__
+            pbar.set_postfix(metric=name)
+
+            if self.use_dask and self.client is not None:
+                futures = self.client.map(metric, preds, masks)
+                results = self.client.gather(futures)
+            else:
+                results = [metric(p, m) for p, m in zip(preds, masks)]
+
+            _aggregate_metric_results(name, results, raw)
+
+    # ------------------------------------------------------------------
+    def _persist_raw_metrics(self, raw: Dict[str, List[float]]) -> None:
+        records = [{"epoch": self.epoch, "metric": k, "value": float(
+            v)} for k, vals in raw.items() for v in vals]
+        df = pd.DataFrame.from_records(records)
+
+        if self.metrics_file.exists():
+            df_old = pd.read_parquet(self.metrics_file)
+            df = pd.concat([df_old, df], ignore_index=True)
+        df.to_parquet(self.metrics_file, index=False,
+                      engine="pyarrow", compression="snappy")
+
+    # ------------------------------------------------------------------
+    def _log(self, lvl: int, msg: str, *args, **kwargs) -> None:
+        if self.logger is not None:
+            self.logger.log(lvl, msg, *args, **kwargs)
         else:
-            print("[Evaluator] Dask resources cleaned up.")
+            print(msg % args)
+
+
+# -----------------------------------------------------------------------------
+# Stand‑alone helper functions
+# -----------------------------------------------------------------------------
+def _aggregate_metric_results(name: str, results: Sequence, raw: Dict[str, List[float]]) -> None:
+    """Normalise heterogeneous *results* into flat, numeric lists inside *raw*."""
+    for r in results:
+        if isinstance(r, (float, int, np.floating)):
+            raw[name].append(float(r))
+        elif isinstance(r, list):
+            raw[name].append(float(np.mean(r)))
+        elif isinstance(r, np.ndarray):
+            raw[name].append(float(np.mean(r)))
+        elif isinstance(r, dict):
+            for k, v in r.items():
+                raw[f"{name}_{k}"].append(float(v))
+        else:
+            print(
+                f"[Evaluator] Warning: unhandled type {type(r)} for metric {name} - skipped.")

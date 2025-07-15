@@ -90,11 +90,10 @@ def create_dataloader(
     # print(f"Image dtype: {img.dtype}, Mask dtype: {mask.dtype}, Time dtype: {type(time)}, MTG type: {type(mtg)}")
     # print(f"Image min: {img.min()}, max: {img.max()}, Mask min: {mask.min()}, max: {mask.max()}")
 
-    #### Important - 1 batch = 1 serie of images ####
     global DEFAULT_BATCH_SIZE
     val_loader = DataLoader(
         val_dataset,
-        batch_size=DEFAULT_BATCH_SIZE,
+        batch_size=batch_size, # DEFAULT_BATCH_SIZE,
         shuffle=False,
         num_workers=num_workers,
         worker_init_fn=worker_init_fn,
@@ -104,7 +103,7 @@ def create_dataloader(
 
     test_loader = DataLoader(
         test_dataset,
-        batch_size=DEFAULT_BATCH_SIZE,
+        batch_size=batch_size, # DEFAULT_BATCH_SIZE,
         shuffle=False,
         num_workers=num_workers,
         worker_init_fn=worker_init_fn,

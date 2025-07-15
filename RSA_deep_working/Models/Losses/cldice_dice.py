@@ -1,8 +1,7 @@
 # cl dice loss
-from monai.losses import SoftDiceclDiceLoss
+from .clDice.cldice_loss.pytorch.cldice import soft_dice_cldice
 
-
-class CLDice_Dice(SoftDiceclDiceLoss):
+class CLDice_Dice(soft_dice_cldice):
     def __init__(self, **kwargs):
         super().__init__(kwargs)
 
