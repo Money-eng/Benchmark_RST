@@ -47,7 +47,7 @@ metrics:
   threshold_4_binarize: 0.5 # to change manually in the code of each metric
   gpu:
     - { name: "dice" }
-    - { name: "cldice" }
+    #- { name: "cldice" }
     - { name: "focal_loss" }
     - { name: "f1_score" }
     - { name: "hausdorff_distance" }

@@ -19,12 +19,14 @@ set_seed(SEED)  # Ensure reproducibility
 
 # Global dictionnary to map metric names to their corresponding classes
 METRIC_FACTORIES = {
-    # MTG 
+    # Per box
+    "number_of_organs_ratio": NumberOfOrgansRatio,
+    "number_of_plants_ratio": NumberOfPlantsRatio,
+
+    # Per plant
     "area_below_intercept": AreaBetweenIntercepts,
     "dtw_below_intercept": DTWBetweenIntercepts,
     "euclidian_btw_intercepts": EuclidianDistancebtwIntercepts,
-    "number_of_organs_ratio": NumberOfOrgansRatio,
-    "number_of_plants_ratio": NumberOfPlantsRatio,
 }
 
 

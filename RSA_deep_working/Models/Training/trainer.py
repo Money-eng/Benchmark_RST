@@ -269,8 +269,7 @@ class Trainer:
 
         filename = f"{self.model.__class__.__name__}_{metric}_epoch{epoch:03d}.pth"
         torch.save(self.model.state_dict(), self.checkpoint_dir / filename)
-        self._log(logging.INFO,
-                  "[Trainer] Best-checkpoint saved: %s", filename)
+        self._log(logging.INFO,"[Trainer] Best-checkpoint saved: %s", filename)
 
     # ------------------------------------------------------------------
     def _save_checkpoint_at_epoch(self, epoch: int) -> None:
@@ -282,7 +281,7 @@ class Trainer:
         filename = f"{self.model.__class__.__name__}_epoch{epoch:03d}.pth"
         torch.save(self.model.state_dict(), epoch_dir / filename)
         self._log(logging.INFO,
-                  "[Trainer] Epoch‑checkpoint saved: %s", filename)
+                  "[Trainer] Epoch-checkpoint saved: %s", filename)
 
     # ------------------------------------------------------------------
     # Misc.

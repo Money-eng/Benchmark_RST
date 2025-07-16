@@ -37,9 +37,9 @@ DEFAULT_CFG: Path = Path(__file__).with_name("config.yml")
 
 # Optuna search space
 SEARCH_SPACE: dict[str, tuple | list] = {
-    "learning_rate": (1e-6, 1e-1),  # logarithmic scale
-    "weight_decay": (1e-8, 1e-1),   # logarithmic scale
-    "optimizer": ["adamw", "adam", "sgd"],
+    "learning_rate": (1e-3, 1e-1),  # logarithmic scale
+    "weight_decay": (1e-7, 1e-4),   # logarithmic scale
+    "optimizer": ["adamw", "adam"],
 }
 
 
@@ -186,9 +186,9 @@ def main() -> None:
 
     # 1) I/O setup, device, loggers
     device = get_device(preferred=cfg["training"].get("device", "cuda"))
-    log_dir = Path(cfg["training"]["log_dir"]) / f"optuna_{cfg['model']['name']}_{cfg['loss']['name']}"
+    log_dir = Path(cfg["training"]["log_dir"]) / f"{cfg['model']['name']}_{cfg['loss']['name']}"
     log_dir.mkdir(parents=True, exist_ok=True)
-    logger = get_logger(log_dir / "optuna.log")
+    logger = get_logger(log_dir / f"{cfg['model']['name']}_{cfg['loss']['name']}.log")
     tb_logger = TensorboardLogger(log_dir / "tensorboard_logs")
 
     # 2) DataLoaders
@@ -213,6 +213,9 @@ def main() -> None:
     logger.info("  value (val_loss): %s", study.best_value)
     logger.info("  params: %s", study.best_params)
     logger.info("≡ Optuna study saved at %s\n", study_path)
+    
+    metric_logger_path = os.path.join(log_dir, "metrics")
+    os.makedirs(metric_logger_path, exist_ok=True)
 
     # 4) Best hyper‑parameter configuration
     best_cfg = copy.deepcopy(cfg)
@@ -252,7 +255,7 @@ def main() -> None:
         threshold=best_cfg["metrics"].get("threshold_4_binarize", 0.5),
         tb_logger=tb_logger,
         patch_size=best_cfg["data"].get("patch_size", 512),
-        log_metric_path=log_dir / f"{best_cfg['model']['name']}_{best_cfg['loss']['name']}",
+        log_metric_path= metric_logger_path,
     )
 
     trainer = Trainer(
@@ -264,10 +267,10 @@ def main() -> None:
         evaluator=evaluator,
         logger=logger,
         tb_logger=tb_logger,
-        checkpoint_dir=log_dir / "checkpoints",
+        checkpoint_dir= best_cfg["training"].get("checkpoint_dir", log_dir / "checkpoints"),
         device=device,
-        epochs=best_cfg["training"].get("epochs", 100),
-        epochs_btw_eval=best_cfg["training"].get("epochs_btw_eval", 10),
+        epochs=best_cfg["training"].get("epochs", 150),
+        epochs_btw_eval=best_cfg["training"].get("epochs_btw_eval", 5),
     )
 
     evaluator.evaluate()  # baseline before training
