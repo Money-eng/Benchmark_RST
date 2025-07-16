@@ -28,6 +28,7 @@ class Reconstructor:
             threshold: float = 0.5,
             patch_size: Optional[int] = None,
             jar_path: Optional[str] = None,
+            save_path: Optional[str] = None
     ) -> None:
 
         # --------------------------- Public fields ----------------------
@@ -49,6 +50,7 @@ class Reconstructor:
 
         # jar path for Root System Tracker (RST) ----------------------
         self.jar_path = jar_path
+        self.save_path = save_path
 
     # =====================================================================
     # API
@@ -63,10 +65,14 @@ class Reconstructor:
             pbar = tqdm(self.val_loader, desc="Evaluating",
                         leave=False, dynamic_ncols=True)
             for imgs, masks, _, mtg_list in pbar:
+                # get box name of mtg path (before last slash)
+                mtg_path = mtg_list[0]
+                mtg_box_name = mtg_path.split("/")[-2]
                 # Process MTG
-                pred_mtg = self.reconstruct(imgs, masks, mtg_list)
+                import os
+                pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(self.save_path, "val", mtg_box_name))
                 val_or_test_str = "val"
-                predicted_mtgs[val_or_test_str][mtg_list[0].path] = pred_mtg
+                predicted_mtgs[val_or_test_str][mtg_list[0]] = pred_mtg
             pbar.close()
             # Clear memory
             gc.collect()
@@ -75,17 +81,23 @@ class Reconstructor:
             pbar = tqdm(self.test_loader, desc="Evaluating",
                         leave=False, dynamic_ncols=True)
             for imgs, masks, _, mtg_list in pbar:
+                # get box name of mtg path (before last slash)
+                mtg_path = mtg_list[0]
+                mtg_box_name = mtg_path.split("/")[-2]
                 # Process MTG
-                pred_mtg = self.reconstruct(imgs, masks, mtg_list)
+                import os
+                pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(self.save_path, "test", mtg_box_name))
                 val_or_test_str = "test"
-                predicted_mtgs[val_or_test_str][mtg_list[0].path] = pred_mtg
+                predicted_mtgs[val_or_test_str][mtg_list[0]] = pred_mtg
             pbar.close()
             # Clear memory
             gc.collect()
             torch.cuda.empty_cache()
+        
+
         return predicted_mtgs
 
-    def reconstruct(self, imgs: torch.Tensor, masks: torch.Tensor, mtgs: list) -> MTG:
+    def reconstruct(self, imgs: torch.Tensor, masks: torch.Tensor, mtgs: list, save_path:str) -> MTG:
         # a batch is composed (for UC1 of 29 images) -> direct call to process_date_map
         imgs = imgs.to(self.device)
         masks = masks.to(self.device).float()
@@ -99,7 +111,10 @@ class Reconstructor:
         preds = preds[:, :, :TARGET_SIZE[1], :TARGET_SIZE[0]]
         masks = masks[:, :, :TARGET_SIZE[1], :TARGET_SIZE[0]]
 
-        _, mtg_pred = process_date_map(mtgs, masks, jar_path=self.jar_path)
+        _, mtg_pred = process_date_map(mtgs, 
+                                       preds, 
+                                       save_path= save_path,
+                                       jar_path=self.jar_path)
 
         del preds, predictions
         torch.cuda.empty_cache()

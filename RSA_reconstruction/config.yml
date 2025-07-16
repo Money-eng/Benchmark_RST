@@ -2,6 +2,7 @@ data:
   base_dir: RSA_deep_working/Data
   patch_size: 512
   batch_size: 64
+  rsml_save_path: RSA_reconstruction/Logs/Prediction
 
 val_data:
   - RSA_deep_working/Data/Val/230629PN006

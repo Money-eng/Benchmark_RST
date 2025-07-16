@@ -109,6 +109,7 @@ def main() -> None:
         threshold=cfg.get("threshold_4_binarize", 0.5),
         patch_size=cfg.get("data", {}).get("patch_size", 512),
         jar_path=cfg.get("rst", {}).get("jar_path", None),
+        save_path=cfg.get("data", {}).get("rsml_save_path", "RSA_reconstruction/Logs/Prediction")
     )
     
     preds = reconstructor.reconstruct_all()

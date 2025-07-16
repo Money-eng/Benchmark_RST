@@ -108,6 +108,7 @@ def generate_graph_with_java(
 def process_date_map(
         mtg_paths: list,
         predictions: torch.Tensor,
+        save_path: str,
         jar_path: str = "/home/loai/Documents/code/RSMLExtraction/RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar"
 ):
     """
@@ -162,7 +163,7 @@ def process_date_map(
         acq_times=acq_str,
         jar_path=jar_path,
         expected_filename="61_graph.rsml",
-        timeout=120
+        timeout=500
     )
     if generated_rsml is None:
         raise RuntimeError(f"Échec génération RSML prédiction pour {input_dir}")
@@ -170,6 +171,10 @@ def process_date_map(
     # 2.4) Charger MTG prédit en passant directement pred_datemap pour éviter rechargement
     rsystem_pred = RootSystem(folder_path=output_dir, date_map=pred_datemap)
     mtg_pred = rsystem_pred.mtg
+    
+    # save predicted mtg in the save_path
+    os.makedirs(save_path, exist_ok=True)
+    rsystem_pred.save2folder(save_path, save_date_map=True)
 
     # free up resources
     shutil.rmtree(input_dir, ignore_errors=True)

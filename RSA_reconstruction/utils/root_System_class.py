@@ -35,11 +35,11 @@ class RootSystem:
         # Chargement du RSML (expertisé ou non)
         #expertized_rsml = os.path.join(self.folder_path, "61_graph_expertized.rsml")
         #default_rsml = os.path.join(self.folder_path, "61_graph.rsml")
-        before_expertized_rsml = os.path.join(self.folder_path, "61_graph_copy_before_expertize.rsml")
+        before_expertized_rsml = os.path.join(self.folder_path, "61_graph.rsml") # "61_graph_copy_before_expertize.rsml")
         if os.path.exists(before_expertized_rsml):
             self.mtg = rsml2mtg(before_expertized_rsml)
-        #elif os.path.exists(default_rsml):
-         #   self.mtg = rsml2mtg(default_rsml)
+        elif os.path.exists(before_expertized_rsml):
+            self.mtg = rsml2mtg(before_expertized_rsml)
         else:
             raise FileNotFoundError(f"Aucun fichier RSML (61_graph*.rsml) dans {self.folder_path}")
 
@@ -86,7 +86,7 @@ class RootSystem:
 
         os.makedirs(destination_folder, exist_ok=True)
         # Sauvegarde du RSML depuis le MTG
-        rsml_path = os.path.join(destination_folder, "61_before_expertized_graph.rsml")
+        rsml_path = os.path.join(destination_folder, "61_prediction_before_expertized_graph.rsml")
         mtg2rsml(self.mtg, rsml_path)
         print(f"RSML sauvegardé dans : {rsml_path}")
 

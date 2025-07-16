@@ -40,6 +40,6 @@ class EulerCharacVariationIndex(BaseMetric):
             mask_img = mask_np[i]
             e_pred = euler_number(pred_img, connectivity=1)  # number of connected components - number of holes
             e_mask = euler_number(mask_img, connectivity=1)
-            ratio = (e_pred - e_mask) / (e_mask + e_pred) if e_mask > 0 else (1 if e_pred == 0 else 0)
+            ratio = abs(e_pred - e_mask) / (e_mask + e_pred) if e_mask > 0 else (1 if e_pred == 0 else 0)
             scores.append(ratio)
         return float(np.mean(scores))
