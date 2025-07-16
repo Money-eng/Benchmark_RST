@@ -3,7 +3,7 @@ import shutil
 
 import numpy as np
 import tifffile as tiff
-import utils.custom_dumper as CD
+import custom_dumper as CD
 from rsml import hirros, rsml2mtg
 
 
@@ -33,12 +33,13 @@ class RootSystem:
                 raise FileNotFoundError(f"Date map introuvable dans {self.folder_path}")
 
         # Chargement du RSML (expertisé ou non)
-        expertized_rsml = os.path.join(self.folder_path, "61_graph_expertized.rsml")
-        default_rsml = os.path.join(self.folder_path, "61_graph.rsml")
-        if os.path.exists(expertized_rsml):
-            self.mtg = rsml2mtg(expertized_rsml)
-        elif os.path.exists(default_rsml):
-            self.mtg = rsml2mtg(default_rsml)
+        #expertized_rsml = os.path.join(self.folder_path, "61_graph_expertized.rsml")
+        #default_rsml = os.path.join(self.folder_path, "61_graph.rsml")
+        before_expertized_rsml = os.path.join(self.folder_path, "61_graph_copy_before_expertize.rsml")
+        if os.path.exists(before_expertized_rsml):
+            self.mtg = rsml2mtg(before_expertized_rsml)
+        #elif os.path.exists(default_rsml):
+         #   self.mtg = rsml2mtg(default_rsml)
         else:
             raise FileNotFoundError(f"Aucun fichier RSML (61_graph*.rsml) dans {self.folder_path}")
 
@@ -85,7 +86,7 @@ class RootSystem:
 
         os.makedirs(destination_folder, exist_ok=True)
         # Sauvegarde du RSML depuis le MTG
-        rsml_path = os.path.join(destination_folder, "61_graph.rsml")
+        rsml_path = os.path.join(destination_folder, "61_before_expertized_graph.rsml")
         mtg2rsml(self.mtg, rsml_path)
         print(f"RSML sauvegardé dans : {rsml_path}")
 
@@ -201,3 +202,12 @@ def project_root_system_on_diameter_map(root_system: RootSystem, threshold=0):
         diameter_4_root_system[vertex] = diameter_list
 
     return diameter_4_root_system
+
+def main() -> None: 
+    # load a rsml file and save it to a folder
+    root_system = RootSystem(folder_path="/home/loai/Images/DataTest/UC1/230629PN031")
+    root_system.save2folder(destination_folder="/home/loai/Images/DataTest/UC1_data/Val/truc", save_date_map=False)
+    return
+
+if __name__ == "__main__2":
+    main()

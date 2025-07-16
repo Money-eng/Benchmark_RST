@@ -24,7 +24,7 @@ training:
 
 
 model:
-  name: Unet
+  name: Segformer
   pretrained: false
   params:
     in_channels: 1
@@ -40,7 +40,7 @@ optimizer:
   weight_decay: 1e-5
 
 loss:
-  name: bce
+  name: bce_dice
   params:
     weight: null
     reduction: mean
@@ -74,3 +74,5 @@ metrics:
     - { name: "euler_charac_variation_index" }
     - { name: "persistence_bottleneck" }
     #- { name: "persistence_wasserstein" }
+rst:
+  jar_path: RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar

@@ -1,0 +1,23 @@
+val_data:
+  - /home/loai/Images/DataTest/UC1_data/Val/230629PN006
+  - /home/loai/Images/DataTest/UC1_data/Val/230629PN012
+  - /home/loai/Images/DataTest/UC1_data/Val/230629PN014
+  - /home/loai/Images/DataTest/UC1_data/Val/230629PN019
+  - /home/loai/Images/DataTest/UC1_data/Val/230629PN031
+
+test_data:
+  - /home/loai/Images/DataTest/UC1_data/Test/230629PN008
+  - /home/loai/Images/DataTest/UC1_data/Test/230629PN010
+  - /home/loai/Images/DataTest/UC1_data/Test/230629PN018
+  - /home/loai/Images/DataTest/UC1_data/Test/230629PN024
+  - /home/loai/Images/DataTest/UC1_data/Test/230629PN027
+
+metrics:
+  threshold_4_binarize: 0.5 
+  per_plant:
+    - { name: "area_below_intercept" }
+  per_box:
+    - { name: "area_below_intercept" }
+
+rst:
+  jar_path: RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar
