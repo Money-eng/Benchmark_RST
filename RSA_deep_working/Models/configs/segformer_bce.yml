@@ -24,7 +24,7 @@ training:
 
 
 model:
-  name: Unet
+  name: Segformer
   pretrained: false
   params:
     in_channels: 1

@@ -1,11 +1,18 @@
+from __future__ import annotations
+
+# --- Standard library imports ------------------------------------------------
+import argparse
 import copy
 import os
+from pathlib import Path
 
+# --- Third‑party imports -----------------------------------------------------
 import optuna
 import torch
 import yaml
 from torch.nn import DataParallel
 
+# --- Local package imports ---------------------------------------------------
 from DataLoaders.dataloaders import create_dataloader
 from DataLoaders.transforms import (
     get_train_img_transform_1,
@@ -19,148 +26,254 @@ from Model import get_model
 from Training.evaluator import Evaluator
 from Training.trainer import Trainer
 from utils.logger import get_logger, TensorboardLogger
-from utils.misc import get_device, set_seed, SEED
+from utils.misc import SEED, get_device, set_seed
 
+# --------------------------------------------------------------------------- #
+#                               GLOBAL SETTINGS                               #
+# --------------------------------------------------------------------------- #
 set_seed(SEED)
+N_GPUS: int = torch.cuda.device_count()
+DEFAULT_CFG: Path = Path(__file__).with_name("config.yml")
 
-# 1) Configuration file ------------------------------------------------
-current_dir = os.path.dirname(os.path.abspath(__file__))
-cfg_path = os.path.join(current_dir, "config.yml")
-assert os.path.exists(
-    cfg_path), f"Le fichier de config n'existe pas : {cfg_path}"
-with open(cfg_path, "r") as f:
-    CONFIG_BASE = yaml.safe_load(f)
-
-# DataLoaders --------------------------------------------------------
-train_loader, val_loader, test_loader = create_dataloader(
-    base_directory=CONFIG_BASE["data"]["base_dir"],
-    img_transforms=[
-        get_train_img_transform_1(
-            patch_size=CONFIG_BASE["data"]["patch_size"]),
-        get_train_img_transform_2(
-            patch_size=CONFIG_BASE["data"]["patch_size"]),
-        get_train_img_transform_3(
-            patch_size=CONFIG_BASE["data"]["patch_size"]),
-        get__val_test_img_transform(),
-    ],
-    batch_size=int(CONFIG_BASE["data"].get("batch_size", 32)),
-    generator=torch.Generator().manual_seed(SEED),
-)
-
-# 3) Devices & loggers ----------------------------------------------------------
-N_GPUS = torch.cuda.device_count()
-DEVICE = get_device(preferred=CONFIG_BASE["training"].get("device", "cuda"))
-LOG_DIR = os.path.join(CONFIG_BASE["training"]["log_dir"], "optuna")
-os.makedirs(LOG_DIR, exist_ok=True)
-LOGGER = get_logger(os.path.join(LOG_DIR, "optuna.log"))
-TB_LOGGER = TensorboardLogger(os.path.join(LOG_DIR, "tensorboard_logs"))
-
-# 4) Hyper‑parameters -----------------------------------------------------------
-SEARCH_SPACE = {
-    "learning_rate": (1e-6, 1e-1),  # log scale
-    "weight_decay": (1e-8, 1e-1),  # log scale
+# Optuna search space
+SEARCH_SPACE: dict[str, tuple | list] = {
+    "learning_rate": (1e-6, 1e-1),  # logarithmic scale
+    "weight_decay": (1e-8, 1e-1),   # logarithmic scale
     "optimizer": ["adamw", "adam", "sgd"],
 }
 
-# 5) Number of epochs for search and final training --------------------------
-EPOCHS_SEARCH = CONFIG_BASE["training"].get("optuna_epochs", 10)
+
+# --------------------------------------------------------------------------- #
+#                             UTILITY FUNCTIONS                               #
+# --------------------------------------------------------------------------- #
+def load_config(cfg_path: Path | str) -> dict:
+    """Load and return the YAML configuration dictionary."""
+    cfg_path = Path(cfg_path)
+    if not cfg_path.exists():
+        raise FileNotFoundError(f"Config file not found: {cfg_path}")
+    with cfg_path.open("r") as f:
+        return yaml.safe_load(f)
 
 
-# --------------------------------------------------------------------------------------
-#  Objective Optuna --------------------------------------------------------------------
-# --------------------------------------------------------------------------------------
+def build_dataloaders(cfg: dict) -> tuple:
+    """Build and return (train_loader, val_loader, test_loader)."""
+    patch_size: int = cfg["data"]["patch_size"]
+    transforms = [
+        get_train_img_transform_1(patch_size=patch_size),
+        get_train_img_transform_2(patch_size=patch_size),
+        get_train_img_transform_3(patch_size=patch_size),
+        get__val_test_img_transform(),
+    ]
+    return create_dataloader(
+        base_directory=cfg["data"]["base_dir"],
+        img_transforms=transforms,
+        batch_size=int(cfg["data"].get("batch_size", 32))
+    )
 
 
-def objective(trial: optuna.Trial) -> float:
-    """Un essai Optuna: renvoie la loss de validation (à minimiser)."""
-    config = copy.deepcopy(CONFIG_BASE)
+def build_optimizer(
+    name: str, params, lr: float, wd: float
+) -> torch.optim.Optimizer:
+    """Create and return an optimizer according to its name."""
+    name = name.lower()
+    if name == "adamw":
+        return torch.optim.AdamW(params, lr=lr, weight_decay=wd)
+    if name == "sgd":
+        return torch.optim.SGD(params, lr=lr, weight_decay=wd)
+    # Default: Adam
+    return torch.optim.Adam(params, lr=lr, weight_decay=wd)
 
-    # 1. Échantillonnage des hyper‑params  ------------------------------------------------
-    lr = trial.suggest_float(
-        "learning_rate", *SEARCH_SPACE["learning_rate"], log=True)
-    wd = trial.suggest_float(
-        "weight_decay", *SEARCH_SPACE["weight_decay"], log=True)
-    opt_name = trial.suggest_categorical(
-        "optimizer", SEARCH_SPACE["optimizer"])
 
-    config["optimizer"]["learning_rate"] = lr
-    config["optimizer"]["weight_decay"] = wd
-    config["optimizer"]["name"] = opt_name
+# --------------------------------------------------------------------------- #
+#                        OPTUNA OBJECTIVE FUNCTION                            #
+# --------------------------------------------------------------------------- #
+def make_objective(
+    base_cfg: dict,
+    train_loader,
+    val_loader,
+    device,
+    logger,
+) -> callable:
+    """Return the parameterised `objective` function for Optuna."""
+    epochs_search = base_cfg["training"].get("optuna_epochs", 10)
 
-    # 2. Création du modèle / loss / optimiseur -----------------------------------------
-    model = get_model(config["model"])
+    def objective(trial: optuna.Trial) -> float:
+        """One Optuna trial → returns the validation loss (to minimise)."""
+        cfg = copy.deepcopy(base_cfg)
+
+        # 1) Hyper‑parameter sampling
+        lr = trial.suggest_float("learning_rate", *SEARCH_SPACE["learning_rate"], log=True)
+        wd = trial.suggest_float("weight_decay", *SEARCH_SPACE["weight_decay"], log=True)
+        opt_name = trial.suggest_categorical("optimizer", SEARCH_SPACE["optimizer"])
+
+        cfg["optimizer"].update({"learning_rate": lr, "weight_decay": wd, "name": opt_name})
+
+        # 2) Model, loss, optimizer
+        model = get_model(cfg["model"])
+        if N_GPUS > 1:
+            model = DataParallel(model)
+        model = model.to(device)
+
+        criterion = get_loss(cfg["loss"]).to(device)
+        optimizer = build_optimizer(opt_name, model.parameters(), lr, wd)
+
+        # 3) Evaluator (validation only)
+        evaluator = Evaluator(
+            model=model,
+            val_dataloader=val_loader,
+            criterion=criterion,
+            test_dataloader=None,
+            metrics=get_metrics(cfg["metrics"]),
+            device=device,
+            logger=logger,
+            threshold=cfg["metrics"].get("threshold_4_binarize", 0.5),
+            tb_logger=None,
+            patch_size=cfg["data"].get("patch_size", 512),
+            log_metric_path=None,
+            compute_cpu_metrics=False,
+        )
+
+        # 4) Quick training run
+        Trainer(
+            model=model,
+            train_loader=train_loader,
+            criterion=criterion,
+            optimizer=optimizer,
+            config=cfg,
+            evaluator=evaluator,
+            logger=logger,
+            tb_logger=None,
+            checkpoint_dir=None,
+            device=device,
+            epochs=epochs_search,
+            epochs_btw_eval=50,
+            do_evaluation=False,
+        ).train()
+
+        # 5) Validation
+        val_loss = evaluator.evaluate().get(
+            f"val_loss_{criterion.__class__.__name__}", float("inf")
+        )
+
+        # — Free VRAM —
+        del model, optimizer, criterion
+        torch.cuda.empty_cache()
+        return val_loss
+
+    return objective
+
+
+# --------------------------------------------------------------------------- #
+#                             MAIN EXECUTION BLOCK                            #
+# --------------------------------------------------------------------------- #
+def main() -> None:
+    """Script entry point: parse args, run Optuna, then final training."""
+    parser = argparse.ArgumentParser(
+        description="Train/Test a model for root system segmentation in 2D grayscale images."
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help=(
+            "Path to the YAML configuration file. "
+            "If omitted, 'config.yml' is searched in the same directory as this script."
+        ),
+    )
+    args = parser.parse_args()
+    cfg_path = Path(args.config) if args.config else DEFAULT_CFG
+    cfg = load_config(cfg_path)
+
+    # 1) I/O setup, device, loggers
+    device = get_device(preferred=cfg["training"].get("device", "cuda"))
+    log_dir = Path(cfg["training"]["log_dir"]) / f"optuna_{cfg['model']['name']}_{cfg['loss']['name']}"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    logger = get_logger(log_dir / "optuna.log")
+    tb_logger = TensorboardLogger(log_dir / "tensorboard_logs")
+
+    # 2) DataLoaders
+    train_loader, val_loader, test_loader = build_dataloaders(cfg)
+
+    # 3) Optuna search
+    study_path = log_dir / "study.pkl"
+    storage = optuna.storages.RDBStorage(
+        url=f"sqlite:///{study_path}"
+    )
+    study = optuna.create_study(
+        study_name=f"Optuna_{cfg['model']['name']}_{cfg['loss']['name']}",
+        storage=storage,
+        direction="minimize",
+    )
+    study.optimize(
+        make_objective(cfg, train_loader, val_loader, device, logger),
+        n_trials=cfg["training"].get("optuna_trials", 30),
+    )
+
+    logger.info("\n=== BEST TRIAL ===")
+    logger.info("  value (val_loss): %s", study.best_value)
+    logger.info("  params: %s", study.best_params)
+    logger.info("≡ Optuna study saved at %s\n", study_path)
+
+    # 4) Best hyper‑parameter configuration
+    best_cfg = copy.deepcopy(cfg)
+    best_cfg["optimizer"].update(
+        {
+            "learning_rate": study.best_params["learning_rate"],
+            "weight_decay": study.best_params["weight_decay"],
+            "name": study.best_params["optimizer"],
+        }
+    )
+
+    torch.cuda.empty_cache()  # free memory before the real run
+
+    # 5) Final model, loss, optimizer
+    model = get_model(best_cfg["model"])
     if N_GPUS > 1:
         model = DataParallel(model)
-    model = model.to(DEVICE)
+    model = model.to(device)
 
-    criterion = get_loss(config["loss"]).to(DEVICE)
+    criterion = get_loss(best_cfg["loss"]).to(device)
+    optimizer = build_optimizer(
+        name=best_cfg["optimizer"]["name"],
+        params=model.parameters(),
+        lr=float(best_cfg["optimizer"]["learning_rate"]),
+        wd=float(best_cfg["optimizer"]["weight_decay"]),
+    )
 
-    if opt_name == "adamw":
-        optimizer = torch.optim.AdamW(
-            model.parameters(), lr=lr, weight_decay=wd)
-    elif opt_name == "adam":
-        optimizer = torch.optim.Adam(
-            model.parameters(), lr=lr, weight_decay=wd)
-    else:  # SGD
-        optimizer = torch.optim.SGD(
-            model.parameters(), lr=lr, momentum=0.9, weight_decay=wd)
-
-    # 3. Initialisation des métriques / evaluator (utilise val_loader)
-    metrics_dict = get_metrics(config["metrics"])
+    # 6) Final Evaluator and Trainer
     evaluator = Evaluator(
         model=model,
         val_dataloader=val_loader,
+        test_dataloader=test_loader,
         criterion=criterion,
-        test_dataloader=None,
-        metrics=metrics_dict,
-        device=DEVICE,
-        logger=LOGGER,
-        threshold=config["metrics"].get("threshold_4_binarize", 0.5),
-        tb_logger=None,
-        patch_size=config["data"].get("patch_size", 512),
-        log_metric_path=None,
+        metrics=get_metrics(best_cfg["metrics"]),
+        device=device,
+        logger=logger,
+        threshold=best_cfg["metrics"].get("threshold_4_binarize", 0.5),
+        tb_logger=tb_logger,
+        patch_size=best_cfg["data"].get("patch_size", 512),
+        log_metric_path=log_dir / f"{best_cfg['model']['name']}_{best_cfg['loss']['name']}",
     )
 
-    # 4. Entraînement rapide -------------------------------------------------------------
     trainer = Trainer(
         model=model,
         train_loader=train_loader,
         criterion=criterion,
         optimizer=optimizer,
-        config=config,
+        config=best_cfg,
         evaluator=evaluator,
-        logger=LOGGER,
-        tb_logger=None,
-        checkpoint_dir=None,
-        device=DEVICE,
-        epochs=EPOCHS_SEARCH,
-        epochs_btw_eval=50,
-        do_evaluation=False
+        logger=logger,
+        tb_logger=tb_logger,
+        checkpoint_dir=log_dir / "checkpoints",
+        device=device,
+        epochs=best_cfg["training"].get("epochs", 100),
+        epochs_btw_eval=best_cfg["training"].get("epochs_btw_eval", 10),
     )
 
+    evaluator.evaluate()  # baseline before training
+    logger.info("Starting final training…")
     trainer.train()
-
-    # 5. Évaluation et retour de la métrique (on minimise) -------------------------------
-    eval_results = evaluator.evaluate()
-    val_loss = eval_results.get(f"val_loss_{criterion.__class__.__name__}", float("inf"))
-
-    # Libère VRAM entre les essais ------------------------------------------------------
-    del model, optimizer, criterion, trainer
-    torch.cuda.empty_cache()
-
-    return val_loss
 
 
 if __name__ == "__main__":
-    study = optuna.create_study(direction="minimize")
-    study.optimize(
-        objective, n_trials=CONFIG_BASE["training"].get("optuna_trials", 30))
-
-    print("\n=== BEST TRIAL ===")
-    print("  value (val_loss)", study.best_value)
-    print("  params", study.best_params)
-
-    # Sauvegarde dans un fichier pour reproductibilité ----------------------------------
-    study_path = os.path.join(LOG_DIR, "study.pkl")
-    optuna.study.study_pickle.dump(study, study_path)
-    print(f"Étude Optuna sauvegardée dans {study_path}\n")
+    main()

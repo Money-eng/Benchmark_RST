@@ -361,10 +361,10 @@ def _is_metric_better(name: str, new_val: float, best_val: Optional[float], eval
 
     if name in evaluator.cpu_metrics:
         return evaluator.cpu_metrics[name].is_better(best_val, new_val)
+    
     if name in evaluator.gpu_metrics:
         return evaluator.gpu_metrics[name].is_better(best_val, new_val)
-    if name in evaluator.mtg_metrics:
-        return evaluator.mtg_metrics[name].is_better(best_val, new_val)
+
 
     # Fallback: maximise the metric.
     return new_val > best_val

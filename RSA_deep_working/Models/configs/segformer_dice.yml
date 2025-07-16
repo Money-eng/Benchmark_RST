@@ -24,7 +24,7 @@ training:
 
 
 model:
-  name: Unet
+  name: Segformer
   pretrained: false
   params:
     in_channels: 1
@@ -40,7 +40,7 @@ optimizer:
   weight_decay: 1e-5
 
 loss:
-  name: bce
+  name: dice
   params:
     weight: null
     reduction: mean

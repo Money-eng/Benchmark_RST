@@ -24,7 +24,7 @@ training:
 
 
 model:
-  name: Unet
+  name: Segformer
   pretrained: false
   params:
     in_channels: 1
@@ -40,10 +40,8 @@ optimizer:
   weight_decay: 1e-5
 
 loss:
-  name: bce
+  name: cldice
   params:
-    weight: null
-    reduction: mean
 
 metrics:
   threshold_4_binarize: 0.5 # to change manually in the code of each metric

@@ -1,4 +1,5 @@
 import gudhi as gd
+from gudhi.wasserstein import wasserstein_distance
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 
@@ -59,7 +60,7 @@ class PeristenceWasserstein():
             for dim in self.homology_dimensions:
                 dgm_pred = [(b, d) for dgm_dim, (b, d) in diag_pred if dgm_dim == dim]
                 dgm_msk = [(b, d) for dgm_dim, (b, d) in diag_msk if dgm_dim == dim]
-                distance_per_dim[dim] = gd.wasserstein.wasserstein_distance(
+                distance_per_dim[dim] = wasserstein_distance(
                     dgm_pred, dgm_msk
                 )
             # ignore if NA 

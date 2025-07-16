@@ -14,8 +14,7 @@ def create_dataloader(
         base_directory: str,
         img_transforms: list,
         batch_size: int = 32,
-        num_workers: int = 4,
-        generator: torch.Generator = None,
+        num_workers: int = 4
 ):
     # Load datasets
     train_dir = base_directory + "/Train"
@@ -67,7 +66,8 @@ def create_dataloader(
     )
 
     # Create dataloaders
-    g = generator if generator is not None else torch.Generator()
+    g = torch.Generator()
+    g.manual_seed(SEED)
 
     train_dataset = torch.utils.data.ConcatDataset(
         [train_dataset_0, train_dataset_1, train_dataset_2]

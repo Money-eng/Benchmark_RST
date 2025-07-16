@@ -1,5 +1,6 @@
-import os
+import argparse
 
+import os
 import torch
 import yaml
 from torch.nn import DataParallel
@@ -23,9 +24,22 @@ if __name__ == "__main__":
     g.manual_seed(SEED)
 
     ##### Path to the config file #####
-    # get current file directory
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cfg_path = os.path.join(current_dir, "config.yml")
+    parser = argparse.ArgumentParser(
+        description="Train/Test a model for root system segmentation in 2D grayscale images."
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help="Path to the config file (YAML format). If not provided, it will look for 'config.yml' in the current directory."
+    )
+    args = parser.parse_args()
+
+    if args.config is not None:
+        cfg_path = args.config
+    else: 
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        cfg_path = os.path.join(current_dir, "config.yml")
     assert os.path.exists(cfg_path), f"Le fichier de config n'existe pas : {cfg_path}"
     with open(cfg_path, "r") as f:
         config = yaml.safe_load(f)

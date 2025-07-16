@@ -70,6 +70,7 @@ class Evaluator:
         self.metrics_dir = Path(log_metric_path or "metrics")
         self.metrics_dir.mkdir(parents=True, exist_ok=True)
         self.metrics_file = os.path.join(self.metrics_dir, "metrics_results.parquet")
+        self.metrics_file = Path(self.metrics_file)
 
         # Sliding‑window inference ---------------------------------------
         self.sw_inferer: Optional[SlidingWindowInfererAdapt] = None
@@ -145,12 +146,6 @@ class Evaluator:
 
                 # ---------------- TensorBoard images -------------------
                 if save_first_pred and self.tb_logger is not None:
-                    image_gray_scale_8bit = imgs.detach().cpu().numpy() * 255.0
-                    image_gray_scale_8bit = image_gray_scale_8bit.astype(
-                        np.uint8)
-                    image_gray_scale_8bit = image_gray_scale_8bit[0, 0, :, :]
-                    self.tb_logger.log_image(
-                        "Image", image_gray_scale_8bit, global_step=self.epoch)
                     self.tb_logger.log_image(
                         "Mask", masks * 255.0, global_step=self.epoch)
                     self.tb_logger.log_image(
@@ -205,7 +200,7 @@ class Evaluator:
             raw: Dict[str, List[float]],
     ) -> None:
         """Compute CPU & MTG metrics, potentially in parallel across all metrics."""
-        metrics = self.cpu_metrics + self.mtg_metrics
+        metrics = self.cpu_metrics # + self.mtg_metrics
         if not metrics:
             return
 
