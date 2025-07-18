@@ -267,7 +267,7 @@ def main() -> None:
         evaluator=evaluator,
         logger=logger,
         tb_logger=tb_logger,
-        checkpoint_dir= best_cfg["training"].get("checkpoint_dir", log_dir / "checkpoints"),
+        checkpoint_dir= os.path.join(best_cfg["training"].get("checkpoint_dir", os.path.join(log_dir, "checkpoints")), f"{best_cfg['model']['name']}_{best_cfg['loss']['name']}"),
         device=device,
         epochs=best_cfg["training"].get("epochs", 150),
         epochs_btw_eval=best_cfg["training"].get("epochs_btw_eval", 5),

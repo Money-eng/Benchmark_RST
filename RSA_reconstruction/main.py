@@ -9,6 +9,7 @@ from DataLoaders.transforms import (
 )
 import torch
 from reconstruction import Reconstructor
+from reconstruction_evaluator import ReconstructionEvaluator
 from rsml import rsml2mtg
 from utils.misc import SEED, set_seed, get_device
 from pathlib import Path
@@ -36,6 +37,7 @@ def build_dataloaders(cfg: dict) -> tuple:
         batch_size=int(cfg["data"].get("batch_size", 32))
     )
 
+
 def load_config(cfg_path: Path | str) -> dict:
     """Load and return the YAML configuration dictionary."""
     cfg_path = Path(cfg_path)
@@ -62,59 +64,52 @@ def main() -> None:
     cfg_path = Path(args.config) if args.config else DEFAULT_CFG
     cfg = load_config(cfg_path)
 
-    # Load test list of folders and val list of folders
-    test_list_folders = cfg.get("test_data", [])
-    val_list_folders = cfg.get("val_data", [])
-
-    # We assume that in every folder there is a "61_graph.rsml" file (the expertized RSML) and a "61_before_expertized_graph.rsml" file (the before expertized RSML)
-    dict_rsml = {
-        "test": {
-            folder: {
-                "expertized": rsml2mtg(os.path.join(folder, "61_graph.rsml")),
-                "before_expertized": rsml2mtg(os.path.join(folder, "61_before_expertized_graph.rsml"))
-            }
-            for folder in test_list_folders
-        },
-        "val": {
-            folder: {
-                "expertized": rsml2mtg(os.path.join(folder, "61_graph.rsml")),
-                "before_expertized": rsml2mtg(os.path.join(folder, "61_before_expertized_graph.rsml"))
-            }
-            for folder in val_list_folders
-        },
-    }
-
     # Build dataloaders
     _, val_loader, test_loader = build_dataloaders(cfg)
-    
-    # Model checkpoints folder path 
-    model_checkpoints_path = cfg.get("model_checkpoints", {}).get("folder_pretrained_path", "Models/Unet_bce")
-    # Contains : 
-    ## Model checkpoint that maximized a score over a certain metric
-    ## Model checkpoint folder ('by_epoch') which saved every epoch
+
+    # Model checkpoints folder path
+    model_checkpoints_path = cfg.get("model_checkpoints", {}).get(
+        "folder_pretrained_path", "Models/Unet_bce")
+    # Contains :
+    # Model checkpoint that maximized a score over a certain metric
+    # Model checkpoint folder ('by_epoch') which saved every epoch
     # Per default, we will take the model of the last epoch
-    
+
     device = get_device()
     model = get_model(cfg["model"])
+    model_checkpoints_name = cfg.get(
+        "model_checkpoints", {}).get("name", "Model_X")
     model = DataParallel(model)
-    state_dict = torch.load("/home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Models/Unet_bce/by_epochs/DataParallel_epoch102.pth", map_location=device)
+    state_dict = torch.load(
+        "/home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Models/Unet_bce/by_epochs/DataParallel_epoch102.pth", map_location=device)
     model.load_state_dict(state_dict)
     model = model.to(device)
-    
+
     reconstructor = Reconstructor(
         model=model,
         val_dataloader=val_loader,
         test_dataloader=test_loader,
         device=device,
+        model_name=model_checkpoints_name,
         threshold=cfg.get("threshold_4_binarize", 0.5),
         patch_size=cfg.get("data", {}).get("patch_size", 512),
         jar_path=cfg.get("rst", {}).get("jar_path", None),
-        save_path=cfg.get("data", {}).get("rsml_save_path", "RSA_reconstruction/Logs/Prediction")
+        save_path=cfg.get("data", {}).get("rsml_save_path",
+                                          "RSA_reconstruction/Logs/Prediction")
     )
-    
+
     preds = reconstructor.reconstruct_all()
-    
+
     print(preds)
+
+    test_list_folders = cfg.get("test_data", [])
+    val_list_folders = cfg.get("val_data", [])
+    
+    reconstructor_eval = ReconstructionEvaluator(
+        test_list_folders=test_list_folders,
+        val_list_folders=val_list_folders,
+        use_dask=cfg.get("use_dask", True),
+    )
 
 
 if __name__ == "__main__":

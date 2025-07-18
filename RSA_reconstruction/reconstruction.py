@@ -17,7 +17,9 @@ from utils.launch_RST import process_date_map
 
 set_seed(SEED)
 
-TARGET_SIZE = (1348, 1166) 
+TARGET_SIZE = (1348, 1166)
+
+
 class Reconstructor:
     def __init__(
             self,
@@ -25,6 +27,7 @@ class Reconstructor:
             val_dataloader: DataLoader,
             test_dataloader: DataLoader,
             device: torch.device,
+            model_name: str = "Model_X",
             threshold: float = 0.5,
             patch_size: Optional[int] = None,
             jar_path: Optional[str] = None,
@@ -37,6 +40,7 @@ class Reconstructor:
         self.val_loader = val_dataloader
         self.test_loader = test_dataloader
         self.threshold = threshold
+        self.model_name = model_name
 
         # Sliding‑window inference ---------------------------------------
         self.sw_inferer: Optional[SlidingWindowInfererAdapt] = None
@@ -70,7 +74,8 @@ class Reconstructor:
                 mtg_box_name = mtg_path.split("/")[-2]
                 # Process MTG
                 import os
-                pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(self.save_path, "val", mtg_box_name))
+                pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(
+                    self.save_path, self.model_name, "val", mtg_box_name))
                 val_or_test_str = "val"
                 predicted_mtgs[val_or_test_str][mtg_list[0]] = pred_mtg
             pbar.close()
@@ -86,18 +91,18 @@ class Reconstructor:
                 mtg_box_name = mtg_path.split("/")[-2]
                 # Process MTG
                 import os
-                pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(self.save_path, "test", mtg_box_name))
+                pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(
+                    self.save_path, self.model_name, "test", mtg_box_name))
                 val_or_test_str = "test"
                 predicted_mtgs[val_or_test_str][mtg_list[0]] = pred_mtg
             pbar.close()
             # Clear memory
             gc.collect()
             torch.cuda.empty_cache()
-        
 
         return predicted_mtgs
 
-    def reconstruct(self, imgs: torch.Tensor, masks: torch.Tensor, mtgs: list, save_path:str) -> MTG:
+    def reconstruct(self, imgs: torch.Tensor, masks: torch.Tensor, mtgs: list, save_path: str) -> MTG:
         # a batch is composed (for UC1 of 29 images) -> direct call to process_date_map
         imgs = imgs.to(self.device)
         masks = masks.to(self.device).float()
@@ -111,9 +116,9 @@ class Reconstructor:
         preds = preds[:, :, :TARGET_SIZE[1], :TARGET_SIZE[0]]
         masks = masks[:, :, :TARGET_SIZE[1], :TARGET_SIZE[0]]
 
-        _, mtg_pred = process_date_map(mtgs, 
-                                       preds, 
-                                       save_path= save_path,
+        _, mtg_pred = process_date_map(mtgs,
+                                       preds,
+                                       save_path=save_path,
                                        jar_path=self.jar_path)
 
         del preds, predictions

@@ -54,3 +54,9 @@ events.*
 Data/
 *.crt
 OLD/*
+*.tif 
+*.tiff 
+*.rsml 
+*.csv 
+*.pyc
+*.ser

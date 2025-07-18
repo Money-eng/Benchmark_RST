@@ -257,7 +257,7 @@ class RootSystem:
         if show_diameter_overlay:
             metadata = self.mtg.graph_properties().get('metadata', {})
             functions = metadata.get('functions', {})
-            diameter_dict = functions.get('diameter', None)
+            diameter_dict = None # functions.get('diameter', None)
             if diameter_dict is None:
                 print("Diamètre non disponible dans les metadata.")
             else:
@@ -506,7 +506,7 @@ def mtg2rsml(g, rsml_file):
 
 # Exemple d'utilisation principal
 if __name__ == "__main__":
-    folder = "/home/loai/Images/DataTest/UC1/230629PN026/"
+    folder = "/home/loai/Documents/code/RSMLExtraction/230629PN014"
     root_system = RootSystem(folder, load_date_map=True)
 
     print("Image stack shape:", root_system.image_stack.shape)
@@ -517,14 +517,7 @@ if __name__ == "__main__":
     print("Temps par vertex chargé:", root_system.time_hours is not None)
     # Lancement de la visualisation interactive (ici, on n'affiche que l'image et le MTG)
     root_system.visualize(show_date_map=True, show_diameter_overlay=True)
-    
-    # Sauvegarde des données dans un dossier (code non modifié)
-    dest_folder = "/home/loai/Images/DataTest/230629PN021_copy"
-    root_system.save2folder(dest_folder)
-    
-    new_dest_Folder = "/home/loai/Images/DataTest/230629PN021_copy/EW/"
-    root_system2 = RootSystem(dest_folder, load_date_map=False)
-    root_system2.save2folder(new_dest_Folder)
+
 
 if __name__ == "__main__0":
     # Chemin de base contenant tous les dossiers à traiter
