@@ -1,6 +1,5 @@
 import torch
 from torch.utils.data import DataLoader
-from utils.logger import log_dataset_stats
 from utils.misc import set_seed, SEED, worker_init_fn
 
 from .dataset import RSADataset

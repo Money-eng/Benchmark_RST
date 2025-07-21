@@ -16,7 +16,7 @@ from pathlib import Path
 import yaml
 from torch.nn import DataParallel
 from Models import get_model
-import os
+from Metrics import get_metrics
 
 set_seed(SEED)
 DEFAULT_CFG: Path = Path(__file__).with_name("config.yml")
@@ -102,12 +102,20 @@ def main() -> None:
 
     print(preds)
 
+    # GT
     test_list_folders = cfg.get("test_data", [])
     val_list_folders = cfg.get("val_data", [])
     
+    # Preds
+    # path to saved predictions + Test + boxname (last / of testlistfolder)
+    
+    preds_test_list_folders = cfg.get("data", {}).get("rsml_save_path", "RSA_reconstruction/Logs/Prediction") 
+
     reconstructor_eval = ReconstructionEvaluator(
         test_list_folders=test_list_folders,
         val_list_folders=val_list_folders,
+        predictions=preds,
+        metrics=get_metrics(cfg["metrics"]),
         use_dask=cfg.get("use_dask", True),
     )
 

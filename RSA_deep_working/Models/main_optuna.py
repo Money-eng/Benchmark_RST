@@ -206,7 +206,7 @@ def main() -> None:
     )
     study.optimize(
         make_objective(cfg, train_loader, val_loader, device, logger),
-        n_trials=cfg["training"].get("optuna_trials", 30),
+        n_trials=cfg["training"].get("optuna_trials", 10),
     )
 
     logger.info("\n=== BEST TRIAL ===")

@@ -47,7 +47,7 @@ class Evaluator:
             use_dask: bool = True,
     ) -> None:
 
-        # --------------------------- Public fields ----------------------
+        # --------------------------- Public fields ---------------------
         self.model = model.to(device).eval()  # ensure eval mode
         self.criterion = criterion.to(device) if criterion else None
         self.val_loader = val_dataloader

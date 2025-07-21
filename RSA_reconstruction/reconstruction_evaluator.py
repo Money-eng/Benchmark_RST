@@ -26,10 +26,14 @@ class ReconstructionEvaluator:
             self,
             test_list_folders: Sequence[str],
             val_list_folders: Sequence[str],
+            predictions: Dict[str, pd.DataFrame],
+            metrics: Optional[Dict[str, Module]] = None,
             use_dask: bool = True,
     ) -> None:
         # Misc. -----------------------------------------------------------
         self.use_dask = use_dask
+        self.predictions = predictions
+        self.metrics = metrics
 
         # Dask cluster for parallel CPU‑metric evaluation -----------------
         self.cluster: Optional[LocalCluster] = None
@@ -61,3 +65,8 @@ class ReconstructionEvaluator:
                 for folder in val_list_folders
             },
         }
+        
+        
+    def evaluate(self, ) -> Dict[str, Dict[str, pd.DataFrame]]:
+        
+        return

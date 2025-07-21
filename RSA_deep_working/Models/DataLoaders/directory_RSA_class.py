@@ -1,6 +1,5 @@
 import os
 
-import rsml
 import tifffile
 from utils.misc import set_seed, SEED
 
@@ -59,18 +58,6 @@ class LightRSAClass:
                 print(
                     f"Avertissement : date_map non trouvé dans {self.date_map_path}")
         return self._date_map
-
-    @property
-    def mtg(self):
-        if self._mtg is None:
-            if os.path.exists(self.rsml_expert_file):
-                self._mtg = rsml.rsml2mtg(self.rsml_expert_file)
-            elif os.path.exists(self.rsml_default_file):
-                self._mtg = rsml.rsml2mtg(self.rsml_default_file)
-            else:
-                raise FileNotFoundError(
-                    "Aucun fichier RSML trouvé dans " + self.folder_path)
-        return self._mtg
 
     def load_all(self):
         """
