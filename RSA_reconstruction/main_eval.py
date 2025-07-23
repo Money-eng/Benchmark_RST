@@ -74,7 +74,7 @@ def main() -> None:
     from Visualize.root_viewer import RootGraphViewer
     # Visualize the results for a specific folder (e.g., first validation folder)
     if gt_test_folders:
-        first_val_folder = gt_test_folders[1]
+        first_val_folder = gt_test_folders[0]
         print(f"Visualizing results for folder: {first_val_folder}")
         back_ground_image = os.path.join(PRED_TEST_FOLDERS, first_val_folder, "img.tif")
         gt_expertized = os.path.join(GT_TEST_FOLDERS, first_val_folder, "61_graph.rsml")
