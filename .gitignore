@@ -60,3 +60,6 @@ OLD/*
 *.csv 
 *.pyc
 *.ser
+*.parquet
+*.pth*
+*.pkl

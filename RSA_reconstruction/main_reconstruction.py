@@ -78,7 +78,7 @@ def main() -> None:
         "model_checkpoints", {}).get("name", "Model_X")
     model = DataParallel(model)
     state_dict = torch.load(
-        "/home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Models/Unet_bce/by_epochs/DataParallel_epoch102.pth", map_location=device)
+        "/home/loai/Documents/code/RSMLExtraction/Results/Checkpoints/Unet_bce/by_epochs/DataParallel_epoch133.pth", map_location=device)
     model.load_state_dict(state_dict)
     model = model.to(device)
 

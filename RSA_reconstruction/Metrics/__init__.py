@@ -51,24 +51,8 @@ def get_metric(metric_config: dict) -> BaseMetric:
 
 
 def get_metrics(metrics_config: dict) -> dict:
-    """
-    Instanciate all metrics based on the provided configuration.
-    The configuration should be a dictionary with two keys: "cpu" and "gpu",
-    each containing a list of metric configurations.    
-    Example:
-    {
-        "cpu": [
-            {"name": "connectivity", "params": {}},
-            {"name": "ari_index", "params": {}}
-        ],
-        "gpu": [
-            {"name": "dice", "params": {}},
-            {"name": "iou", "params": {}}
-        ]
-    }
-    """
-    result = {"cpu": [], "gpu": [], "mtg": []}
-    for t in ["cpu", "gpu", "mtg"]:
+    result = {"per_plant": [], "per_box": []}
+    for t in ["per_plant", "per_box"]:
         for cfg in metrics_config.get(t, []):
             metric = get_metric(cfg)
             result[t].append(metric)

@@ -5,7 +5,8 @@
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:2
-#SBATCH --cpus-per-task=36
+#SBATCH --cpus-per-task=64
+#SBATCH --exclusive
 #SBATCH --hint=nomultithread
 #SBATCH --time=8:30:00
 #SBATCH --output=/lustre/fswork/projects/rech/vey/unq35lq/out/run_segformer_bce.out
