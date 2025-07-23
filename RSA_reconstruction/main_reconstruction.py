@@ -66,7 +66,7 @@ def main() -> None:
 
     # Model checkpoints folder path
     model_checkpoints_path = cfg.get("model_checkpoints", {}).get(
-        "folder_pretrained_path", "Models/Unet_bce")
+        "folder_pretrained_path", "Models/Unet_cldice_dice")
     # Contains :
     # Model checkpoint that maximized a score over a certain metric
     # Model checkpoint folder ('by_epoch') which saved every epoch
@@ -78,7 +78,7 @@ def main() -> None:
         "model_checkpoints", {}).get("name", "Model_X")
     model = DataParallel(model)
     state_dict = torch.load(
-        "/home/loai/Documents/code/RSMLExtraction/Results/Checkpoints/Unet_bce/by_epochs/DataParallel_epoch133.pth", map_location=device)
+        "/home/loai/Documents/code/RSMLExtraction/Results/Checkpoints/Unet_cldice_dice/by_epochs/DataParallel_epoch128.pth", map_location=device)
     model.load_state_dict(state_dict)
     model = model.to(device)
 
