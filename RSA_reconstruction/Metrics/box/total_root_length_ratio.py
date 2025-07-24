@@ -21,9 +21,5 @@ class TotalRootLengthRatio(BaseMetric):
         
         total_root_length_gt = sum(dict_root_lenb_gt.values())
         total_root_length_pred = sum(dict_root_lenb_pred.values())
-        
-        from rsml.matching import match_plants
-        matched_plants = match_plants(mtg_gt, mtg_pred)
-        print(matched_plants)
 
         return total_root_length_pred / total_root_length_gt

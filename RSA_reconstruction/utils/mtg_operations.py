@@ -37,16 +37,8 @@ def extract_mtg_at_time_t(mtg: MTG, temps_max: float) -> MTG:
 
     return new_g
 
-def extract_plant_sub_mtg(mtg: MTG) -> dict:
+def extract_plant_sub_mtg(mtg: MTG, plant_vertex: int) -> dict:
     """
     Extract a sub-MTG for a specific plant.
     """
-    new_g = mtg.copy()
-    sub_mtgs = {}
-
-    for v in plant_vertices(new_g):
-        sub_mtg = new_g.sub_mtg(v, include_root=True)
-        if sub_mtg.num_vertices() > 0:
-            sub_mtgs[v] = sub_mtg
-
-    return sub_mtgs
+    return mtg.sub_mtg(plant_vertex).copy()
