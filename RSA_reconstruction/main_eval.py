@@ -70,22 +70,7 @@ def main() -> None:
             print(f"  {metric_name}:")
             print(result)
             print()
-            
-    from Visualize.root_viewer import RootGraphViewer
-    # Visualize the results for a specific folder (e.g., first validation folder)
-    if gt_test_folders:
-        first_val_folder = gt_test_folders[1]
-        print(f"Visualizing results for folder: {first_val_folder}")
-        back_ground_image = os.path.join(PRED_TEST_FOLDERS, first_val_folder, "img.tif")
-        pred_date_map = os.path.join(PRED_TEST_FOLDERS, first_val_folder, "40_date_map.tif")
-        # "/home/loai/Images/DataTest/UC1/40_date_map.tif"
-        gt_date_map = os.path.join(GT_TEST_FOLDERS, first_val_folder, "40_date_map.tif")
-        gt_expertized = os.path.join(GT_TEST_FOLDERS, first_val_folder, "61_graph.rsml")
-        gt_before = os.path.join(GT_TEST_FOLDERS, first_val_folder, "61_before_expertized_graph.rsml")
-        prediction = os.path.join(PRED_TEST_FOLDERS, first_val_folder, "61_prediction_before_expertized_graph.rsml")
 
-        viewer = RootGraphViewer.from_rsml(gt_expertized, gt_before, prediction, background=back_ground_image, pred_date_map=pred_date_map, gt_date_map=gt_date_map)
-        viewer.show()
 
 if __name__ == "__main__":
     main()

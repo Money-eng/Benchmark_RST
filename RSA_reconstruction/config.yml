@@ -24,9 +24,11 @@ maximized_score: null
 metrics:
   threshold_4_binarize: 0.5 
   per_plant:
-    - { name: "number_of_organs_ratio" }
+    - name: "number_of_organs_ratio"
   per_box:
-    - { name: "number_of_organs_ratio" }
+    - name: "number_of_organs_ratio"
+    - name: "number_of_plants_ratio"
+    - name: "total_root_length_distances"
 
 rst:
   jar_path: RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar
