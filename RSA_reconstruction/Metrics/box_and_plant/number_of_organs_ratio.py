@@ -1,5 +1,5 @@
 from openalea.mtg import MTG
-from rsml.misc import root_vertices
+from Measures.box_and_plant.number_of_organs import NumberOfOrgans
 
 from ..base import BaseMetric
 
@@ -15,10 +15,4 @@ class NumberOfOrgansRatio(BaseMetric):
         return abs(new_score - 1) <= abs(old_score - 1)
 
     def __call__(self, mtg_pred: MTG, mtg_gt: MTG) -> float:
-        verts_gt = root_vertices(mtg_gt)
-        verts_pred = root_vertices(mtg_pred)
-
-        num_root_gt = len(verts_gt)
-        num_root_pred = len(verts_pred)
-
-        return num_root_pred / num_root_gt if num_root_gt > 0 else 0.0
+        return NumberOfOrgans()(mtg_pred) / NumberOfOrgans()(mtg_gt) if NumberOfOrgans()(mtg_gt) > 0 else 0.0

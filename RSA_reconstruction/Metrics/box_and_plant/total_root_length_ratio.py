@@ -1,5 +1,5 @@
 from openalea.mtg import MTG
-from utils.mtg_operations import total_root_length
+from Measures.box_and_plant.total_root_length import TotalRootLength
 
 from ..base import BaseMetric
 
@@ -15,7 +15,4 @@ class TotalRootLengthRatio(BaseMetric):
         return abs(new_score - 1) <= abs(old_score - 1)
 
     def __call__(self, mtg_pred: MTG, mtg_gt: MTG) -> float:
-        total_root_length_gt = total_root_length(mtg_gt)
-        total_root_length_pred = total_root_length(mtg_pred)
-
-        return total_root_length_pred / total_root_length_gt
+        return TotalRootLength()(mtg_pred) / TotalRootLength()(mtg_gt) if TotalRootLength()(mtg_gt) > 0 else 0.0

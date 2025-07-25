@@ -141,7 +141,7 @@ class ReconstructionEvaluator:
                         for plant_element in tqdm(
                                 matched_plants_pred_exp,
                                 total=len(matched_plants_pred_exp),
-                                unit="plant",
+                                unit=" plant",
                                 desc="  Plants (exp)",
                                 leave=False
                         ):
@@ -156,7 +156,7 @@ class ReconstructionEvaluator:
                         for plant_element in tqdm(
                                 matched_plants_pred_bexp,
                                 total=len(matched_plants_pred_bexp),
-                                unit="plant",
+                                unit=" plant",
                                 desc="  Plants (bexp)",
                                 leave=False
                         ):

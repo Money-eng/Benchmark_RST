@@ -1,8 +1,7 @@
 import numpy as np
 from fastdtw import fastdtw
 from openalea.mtg import MTG
-from scipy.spatial.distance import euclidean
-from utils.mtg_operations import intercept_curve
+from Measures.box_and_plant.intercep import Intercept_curve
 
 from ..base import BaseMetric
 
@@ -19,8 +18,8 @@ class DTWBetweenIntercepts(BaseMetric):
         return new_score < old_score
 
     def __call__(self, mtg_pred: MTG, mtg_gt: MTG) -> float:
-        x_gt, y_gt = intercept_curve(mtg_gt)
-        x_pred, y_pred = intercept_curve(mtg_pred)
+        x_gt, y_gt = Intercept_curve()(mtg_gt)
+        x_pred, y_pred = Intercept_curve()(mtg_pred)
 
         if x_gt.shape != x_pred.shape:
             raise ValueError("Les courbes d'interception doivent avoir la même forme.")

@@ -1,7 +1,7 @@
 # Metrics/cpu/ari_index.py
 import numpy as np
 from openalea.mtg import MTG
-from utils.mtg_operations import intercept_curve
+from Measures.box_and_plant.intercep import Intercept_curve
 
 from ..base import BaseMetric
 
@@ -27,8 +27,8 @@ class AreaBetweenIntercepts(BaseMetric):
         return float(area)
 
     def __call__(self, mtg_pred: MTG, mtg_gt: MTG) -> float:
-        curve_gt = intercept_curve(mtg_gt)  # x = array([0, 0.1, 0.2, ...,]), y = array([0, 0, 1, 1, ...])
-        curve_pred = intercept_curve(mtg_pred)
+        curve_gt = Intercept_curve()(mtg_gt)  # x = array([0, 0.1, 0.2, ...,]), y = array([0, 0, 1, 1, ...])
+        curve_pred = Intercept_curve()(mtg_pred)
 
         if curve_gt[0].shape != curve_pred[0].shape:
             raise ValueError("Les courbes d'interception doivent avoir la même forme.")
