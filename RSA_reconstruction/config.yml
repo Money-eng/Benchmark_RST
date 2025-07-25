@@ -15,18 +15,21 @@ model:
     decoder_attention_type: null
     return_logits: False
 
-model_checkpoints: 
+model_checkpoints:
   name: Unet_dice_cldice
   folder_pretrained_path: /home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Models/Unet_bce
 
 maximized_score: null
 
 metrics:
-  threshold_4_binarize: 0.5 
+  threshold_4_binarize: 0.5
   per_plant:
     - name: "number_of_organs_ratio"
     - name: "total_root_length_distances"
     - name: "area_convex_hull"
+    - name: "area_below_intercept"
+    - name: "dtw_below_intercept"
+    - name: "euclidian_btw_intercepts"
   per_box:
     - name: "number_of_organs_ratio"
     - name: "number_of_plants_ratio"

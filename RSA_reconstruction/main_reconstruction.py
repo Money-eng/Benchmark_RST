@@ -1,5 +1,10 @@
-
 import argparse
+from pathlib import Path
+
+import torch
+import yaml
+from torch.nn import DataParallel
+
 from DataLoaders.dataloaders import create_dataloader
 from DataLoaders.transforms import (
     get_train_img_transform_1,
@@ -7,13 +12,9 @@ from DataLoaders.transforms import (
     get_train_img_transform_3,
     get__val_test_img_transform,
 )
-import torch
+from Models import get_model
 from reconstruction import Reconstructor
 from utils.misc import SEED, set_seed, get_device
-from pathlib import Path
-import yaml
-from torch.nn import DataParallel
-from Models import get_model
 
 set_seed(SEED)
 DEFAULT_CFG: Path = Path(__file__).with_name("config.yml")
@@ -78,7 +79,8 @@ def main() -> None:
         "model_checkpoints", {}).get("name", "Model_X")
     model = DataParallel(model)
     state_dict = torch.load(
-        "/home/loai/Documents/code/RSMLExtraction/Results/Checkpoints/Unet_cldice_dice/by_epochs/DataParallel_epoch128.pth", map_location=device)
+        "/home/loai/Documents/code/RSMLExtraction/Results/Checkpoints/Unet_cldice_dice/by_epochs/DataParallel_epoch128.pth",
+        map_location=device)
     model.load_state_dict(state_dict)
     model = model.to(device)
 
@@ -98,6 +100,7 @@ def main() -> None:
     preds = reconstructor.reconstruct_all()
 
     print(preds)
+
 
 if __name__ == "__main__":
     main()

@@ -1,20 +1,22 @@
 from __future__ import annotations
+
+from pathlib import Path
+from typing import Union, List, Dict, Optional, Sequence
+
+import napari  # pip install napari[all]
 import numpy as np
 import tifffile  # pip install tifffile
-import napari  # pip install napari[all]
-from matplotlib import pyplot as plt
 from magicgui import magicgui  # pip install magicgui
-from rsml import rsml2mtg
-from pathlib import Path
+from matplotlib import pyplot as plt
 from openalea.mtg import MTG
-from typing import Union, List, Dict, Optional, Sequence
+from rsml import rsml2mtg
 
 
 class RootGraphViewer:
     _DEFAULT_COLORS: Dict[str, str] = {
-        "gt_expertized": "#2ca02c",      # vert
+        "gt_expertized": "#2ca02c",  # vert
         "gt_before_expertized": "#ff7f0e",  # orange
-        "prediction": "#d62728",         # rouge
+        "prediction": "#d62728",  # rouge
     }
 
     _DEFAULT_OPACITY: Dict[str, float] = {
@@ -24,29 +26,29 @@ class RootGraphViewer:
     }
 
     def __init__(
-        self,
-        gt_expertized: Union[str, Path, MTG, Sequence[Union[str, Path, MTG]]],
-        gt_before:   Union[str, Path, MTG, Sequence[Union[str, Path, MTG]]],
-        prediction:  Union[str, Path, MTG, Sequence[Union[str, Path, MTG]]],
-        background:  Optional[Union[str, Path]] = None,
-        pred_date_map: Optional[Union[str, Path]] = None,
-        gt_date_map:   Optional[Union[str, Path]] = None,
-        colors:      Optional[Dict[str, str]] = None,
-        flip_axes:   bool = True,
-        with_time:   bool = True,
+            self,
+            gt_expertized: Union[str, Path, MTG, Sequence[Union[str, Path, MTG]]],
+            gt_before: Union[str, Path, MTG, Sequence[Union[str, Path, MTG]]],
+            prediction: Union[str, Path, MTG, Sequence[Union[str, Path, MTG]]],
+            background: Optional[Union[str, Path]] = None,
+            pred_date_map: Optional[Union[str, Path]] = None,
+            gt_date_map: Optional[Union[str, Path]] = None,
+            colors: Optional[Dict[str, str]] = None,
+            flip_axes: bool = True,
+            with_time: bool = True,
     ) -> None:
 
         self.mtg_dict: Dict[str, MTG] = {
-            "prediction":           self._to_mtg(prediction),
+            "prediction": self._to_mtg(prediction),
             "gt_before_expertized": self._to_mtg(gt_before),
-            "gt_expertized":        self._to_mtg(gt_expertized),
+            "gt_expertized": self._to_mtg(gt_expertized),
         }
 
-        self.background   = Path(background).expanduser() if background else None
+        self.background = Path(background).expanduser() if background else None
         self.pred_date_map = Path(pred_date_map).expanduser() if pred_date_map else None
-        self.gt_date_map   = Path(gt_date_map).expanduser()   if gt_date_map   else None
-        self.colors       = {**self._DEFAULT_COLORS, **(colors or {})}
-        self.flip_axes    = flip_axes
+        self.gt_date_map = Path(gt_date_map).expanduser() if gt_date_map else None
+        self.colors = {**self._DEFAULT_COLORS, **(colors or {})}
+        self.flip_axes = flip_axes
 
         self._temporal_shapes: Dict[str, List[List[np.ndarray]]] = {}
         self.with_time = with_time
@@ -84,36 +86,36 @@ class RootGraphViewer:
                 blending="additive",
                 contrast_limits=[0, 29],
             )
-            gt_layer.visible = False 
+            gt_layer.visible = False
 
-        # — préparer les LUTs —
+            # — préparer les LUTs —
         # turbo pour 1–29, 0 = noir
         base = plt.get_cmap("turbo", 29)
         turbo_lut = np.zeros((30, 4), dtype=float)
         turbo_lut[1:] = base(np.arange(29))
-        turbo_lut[0]  = [0, 0, 0, 1]
+        turbo_lut[0] = [0, 0, 0, 1]
 
         # rouge uni 1–29
-        red_lut   = np.zeros((30, 4), dtype=float)
+        red_lut = np.zeros((30, 4), dtype=float)
         red_lut[1:] = [1, 0, 0, 1]
-        red_lut[0]  = [0, 0, 0, 1]
+        red_lut[0] = [0, 0, 0, 1]
 
         # vert uni 1–29
         green_lut = np.zeros((30, 4), dtype=float)
         green_lut[1:] = [0, 1, 0, 1]
-        green_lut[0]  = [0, 0, 0, 1]
+        green_lut[0] = [0, 0, 0, 1]
 
         # — callback pour basculer les colormaps selon visibilité —
         def update_colormaps(event=None):
             both_on = getattr(pred_layer, "visible", False) and getattr(gt_layer, "visible", False)
             if both_on:
                 pred_layer.colormap = red_lut
-                gt_layer.colormap   = green_lut
+                gt_layer.colormap = green_lut
             else:
                 if getattr(pred_layer, "visible", False):
                     pred_layer.colormap = turbo_lut
                 if getattr(gt_layer, "visible", False):
-                    gt_layer.colormap   = turbo_lut
+                    gt_layer.colormap = turbo_lut
 
         # connecter aux événements .visible
         pred_layer.events.visible.connect(update_colormaps)
@@ -158,18 +160,18 @@ class RootGraphViewer:
 
         # échelle & axes
         viewer.scale_bar.visible = True
-        viewer.axes.visible     = True
+        viewer.axes.visible = True
 
         napari.run()
         return viewer
 
     @classmethod
     def from_rsml(
-        cls,
-        exp_path:   Union[str, Path, Sequence[Union[str, Path]]],
-        before_path: Union[str, Path, Sequence[Union[str, Path]]],
-        pred_path:  Union[str, Path, Sequence[Union[str, Path]]],
-        **kwargs,
+            cls,
+            exp_path: Union[str, Path, Sequence[Union[str, Path]]],
+            before_path: Union[str, Path, Sequence[Union[str, Path]]],
+            pred_path: Union[str, Path, Sequence[Union[str, Path]]],
+            **kwargs,
     ) -> "RootGraphViewer":
         return cls(exp_path, before_path, pred_path, **kwargs)
 
@@ -188,7 +190,7 @@ class RootGraphViewer:
                     arr = np.unique(arr, axis=0)
                 else:
                     times = np.array(mtg.property("time").get(key, []))
-                    arr = arr[times <= time+1]
+                    arr = arr[times <= time + 1]
                     arr = np.unique(arr, axis=0)
                     if arr.shape[0] == 0:
                         continue

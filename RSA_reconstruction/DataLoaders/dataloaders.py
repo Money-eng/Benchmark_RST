@@ -90,7 +90,7 @@ def create_dataloader(
     global DEFAULT_BATCH_SIZE
     val_loader = DataLoader(
         val_dataset,
-        batch_size=DEFAULT_BATCH_SIZE, # !!!!!! difference here !!!!!!
+        batch_size=DEFAULT_BATCH_SIZE,  #  !!!!!! difference here !!!!!!
         shuffle=False,
         num_workers=num_workers,
         worker_init_fn=worker_init_fn,
@@ -100,7 +100,7 @@ def create_dataloader(
 
     test_loader = DataLoader(
         test_dataset,
-        batch_size=DEFAULT_BATCH_SIZE,  # !!!!!! difference here !!!!!!
+        batch_size=DEFAULT_BATCH_SIZE,  #  !!!!!! difference here !!!!!!
         shuffle=False,
         num_workers=num_workers,
         worker_init_fn=worker_init_fn,

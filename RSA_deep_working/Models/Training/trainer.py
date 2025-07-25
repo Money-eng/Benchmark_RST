@@ -269,7 +269,7 @@ class Trainer:
 
         filename = f"{self.model.__class__.__name__}_{metric}_epoch{epoch:03d}.pth"
         torch.save(self.model.state_dict(), self.checkpoint_dir / filename)
-        self._log(logging.INFO,"[Trainer] Best-checkpoint saved: %s", filename)
+        self._log(logging.INFO, "[Trainer] Best-checkpoint saved: %s", filename)
 
     # ------------------------------------------------------------------
     def _save_checkpoint_at_epoch(self, epoch: int) -> None:
@@ -360,10 +360,9 @@ def _is_metric_better(name: str, new_val: float, best_val: Optional[float], eval
 
     if name in evaluator.cpu_metrics:
         return evaluator.cpu_metrics[name].is_better(best_val, new_val)
-    
+
     if name in evaluator.gpu_metrics:
         return evaluator.gpu_metrics[name].is_better(best_val, new_val)
-
 
     # Fallback: maximise the metric.
     return new_val > best_val

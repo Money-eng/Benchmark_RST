@@ -1,7 +1,6 @@
 from openalea.mtg import MTG
 from utils.mtg_operations import total_root_length
 
-
 from ..base import BaseMetric
 
 

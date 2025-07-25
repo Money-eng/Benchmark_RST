@@ -1,11 +1,12 @@
-
 import argparse
 import os
-from evaluator import ReconstructionEvaluator
-from Metrics import get_metrics
-from utils.misc import SEED, set_seed
 from pathlib import Path
+
 import yaml
+
+from Metrics import get_metrics
+from evaluator import ReconstructionEvaluator
+from utils.misc import SEED, set_seed
 
 set_seed(SEED)
 DEFAULT_CFG: Path = Path(__file__).with_name("config.yml")
@@ -36,24 +37,24 @@ def main() -> None:
     args = parser.parse_args()
     cfg_path = Path(args.config) if args.config else DEFAULT_CFG
     cfg = load_config(cfg_path)
-    
+
     model_name = cfg["model_checkpoints"]["name"]
 
     GT_VAL_FOLDERS = os.path.join(cfg["data"]["base_dir"], "Val")
     GT_TEST_FOLDERS = os.path.join(cfg["data"]["base_dir"], "Test")
-    
+
     PRED_VAL_FOLDERS = os.path.join(cfg["data"]["rsml_save_path"], model_name, "Val")
     PRED_TEST_FOLDERS = os.path.join(cfg["data"]["rsml_save_path"], model_name, "Test")
-    
+
     # list subfolder in all above directories and assert we can find the same number of folders in each
     gt_val_folders = sorted(os.listdir(GT_VAL_FOLDERS))
     gt_test_folders = sorted(os.listdir(GT_TEST_FOLDERS))
     pred_val_folders = sorted(os.listdir(PRED_VAL_FOLDERS))
     pred_test_folders = sorted(os.listdir(PRED_TEST_FOLDERS))
-    
+
     assert len(gt_val_folders) == len(pred_val_folders), "Mismatch in number of validation folders"
     assert len(gt_test_folders) == len(pred_test_folders), "Mismatch in number of test folders"
-    
+
     evaluator = ReconstructionEvaluator(
         gt_val_folders=[os.path.join(GT_VAL_FOLDERS, folder) for folder in gt_val_folders],
         gt_test_folders=[os.path.join(GT_TEST_FOLDERS, folder) for folder in gt_test_folders],
@@ -61,7 +62,7 @@ def main() -> None:
         pred_test_folders=[os.path.join(PRED_TEST_FOLDERS, folder) for folder in pred_test_folders],
         metrics=get_metrics(cfg["metrics"])
     )
-    
+
     evaluation_results = evaluator.evaluate()
     print("Evaluation Results:")
     for split, results in evaluation_results.items():

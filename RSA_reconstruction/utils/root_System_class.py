@@ -33,9 +33,10 @@ class RootSystem:
                 raise FileNotFoundError(f"Date map introuvable dans {self.folder_path}")
 
         # Chargement du RSML (expertisé ou non)
-        #expertized_rsml = os.path.join(self.folder_path, "61_graph_expertized.rsml")
-        #default_rsml = os.path.join(self.folder_path, "61_graph.rsml")
-        before_expertized_rsml = os.path.join(self.folder_path, "61_graph.rsml") # "61_graph_copy_before_expertize.rsml")
+        # expertized_rsml = os.path.join(self.folder_path, "61_graph_expertized.rsml")
+        # default_rsml = os.path.join(self.folder_path, "61_graph.rsml")
+        before_expertized_rsml = os.path.join(self.folder_path,
+                                              "61_graph.rsml")  # "61_graph_copy_before_expertize.rsml")
         if os.path.exists(before_expertized_rsml):
             self.mtg = rsml2mtg(before_expertized_rsml)
         elif os.path.exists(before_expertized_rsml):
@@ -203,11 +204,13 @@ def project_root_system_on_diameter_map(root_system: RootSystem, threshold=0):
 
     return diameter_4_root_system
 
-def main() -> None: 
+
+def main() -> None:
     # load a rsml file and save it to a folder
     root_system = RootSystem(folder_path="/home/loai/Images/DataTest/UC1/230629PN031")
     root_system.save2folder(destination_folder="/home/loai/Images/DataTest/UC1_data/Val/truc", save_date_map=False)
     return
+
 
 if __name__ == "__main__2":
     main()

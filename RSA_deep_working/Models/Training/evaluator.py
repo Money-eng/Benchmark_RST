@@ -200,7 +200,7 @@ class Evaluator:
             raw: Dict[str, List[float]],
     ) -> None:
         """Compute CPU & MTG metrics, potentially in parallel across all metrics."""
-        metrics = self.cpu_metrics # + self.mtg_metrics
+        metrics = self.cpu_metrics  # + self.mtg_metrics
         if not metrics:
             return
 

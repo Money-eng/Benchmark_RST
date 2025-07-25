@@ -15,7 +15,7 @@ class NumberOfLateralsRatio(BaseMetric):
         return abs(new_score - 1) <= abs(old_score - 1)
 
     def __call__(self, mtg_pred: MTG, mtg_gt: MTG) -> float:
-        root_scale = mtg_gt.max_scale()  # ASSUMING order 2 max for roots
+        root_scale = mtg_gt.max_scale()
         verts_gt = list(mtg_gt.vertices(scale=root_scale))
         verts_pred = list(mtg_pred.vertices(scale=root_scale))
 

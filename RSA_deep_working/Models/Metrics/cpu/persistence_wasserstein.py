@@ -1,6 +1,6 @@
 import gudhi as gd
-from gudhi.wasserstein import wasserstein_distance
 import numpy as np
+from gudhi.wasserstein import wasserstein_distance
 from scipy.ndimage import distance_transform_edt
 
 

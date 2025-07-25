@@ -171,7 +171,7 @@ def process_date_map(
     # 2.4) Charger MTG prédit en passant directement pred_datemap pour éviter rechargement
     rsystem_pred = RootSystem(folder_path=output_dir, date_map=pred_datemap)
     mtg_pred = rsystem_pred.mtg
-    
+
     # save predicted mtg in the save_path
     os.makedirs(save_path, exist_ok=True)
     rsystem_pred.save2folder(save_path, save_date_map=True)

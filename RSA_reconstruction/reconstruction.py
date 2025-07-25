@@ -7,14 +7,13 @@ from typing import Dict, Optional
 import tifffile
 import torch
 from monai.inferers import SlidingWindowInfererAdapt
+from openalea.mtg import MTG
 from torch.nn import Module
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from openalea.mtg import MTG
-
-from utils.misc import SEED, set_seed
 from utils.launch_RST import process_date_map
+from utils.misc import SEED, set_seed
 
 set_seed(SEED)
 
@@ -110,7 +109,7 @@ class Reconstructor:
 
         # (B, C, H, W) - already sigmoid
         predictions = self._infer(imgs)
-        
+
         # save probability heatmap in save_path
         if save_path:
             import os
@@ -118,7 +117,7 @@ class Reconstructor:
             for i in range(predictions.shape[0]):
                 pred_img = predictions[i].cpu().numpy()
                 tifffile.imwrite(os.path.join(save_path, f"pred_heatmap_{i}.tif"), pred_img)
-        
+
         preds = (predictions > self.threshold).float()
 
         # original image size is 1348 × 1166 but = 1376 × 1184 after padding operation : A.PadIfNeeded(min_height=ajusted_width, min_width=ajusted_height, border_mode=0, position='top_left'),

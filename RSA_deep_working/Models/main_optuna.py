@@ -38,7 +38,7 @@ DEFAULT_CFG: Path = Path(__file__).with_name("config.yml")
 # Optuna search space
 SEARCH_SPACE: dict[str, tuple | list] = {
     "learning_rate": (1e-3, 1e-1),  # logarithmic scale
-    "weight_decay": (1e-7, 1e-4),   # logarithmic scale
+    "weight_decay": (1e-7, 1e-4),  # logarithmic scale
     "optimizer": ["adamw", "adam"],
 }
 
@@ -72,7 +72,7 @@ def build_dataloaders(cfg: dict) -> tuple:
 
 
 def build_optimizer(
-    name: str, params, lr: float, wd: float
+        name: str, params, lr: float, wd: float
 ) -> torch.optim.Optimizer:
     """Create and return an optimizer according to its name."""
     name = name.lower()
@@ -88,11 +88,11 @@ def build_optimizer(
 #                        OPTUNA OBJECTIVE FUNCTION                            #
 # --------------------------------------------------------------------------- #
 def make_objective(
-    base_cfg: dict,
-    train_loader,
-    val_loader,
-    device,
-    logger,
+        base_cfg: dict,
+        train_loader,
+        val_loader,
+        device,
+        logger,
 ) -> callable:
     """Return the parameterised `objective` function for Optuna."""
     epochs_search = base_cfg["training"].get("optuna_epochs", 10)
@@ -213,7 +213,7 @@ def main() -> None:
     logger.info("  value (val_loss): %s", study.best_value)
     logger.info("  params: %s", study.best_params)
     logger.info("≡ Optuna study saved at %s\n", study_path)
-    
+
     metric_logger_path = os.path.join(log_dir, "metrics")
     os.makedirs(metric_logger_path, exist_ok=True)
 
@@ -255,7 +255,7 @@ def main() -> None:
         threshold=best_cfg["metrics"].get("threshold_4_binarize", 0.5),
         tb_logger=tb_logger,
         patch_size=best_cfg["data"].get("patch_size", 512),
-        log_metric_path= metric_logger_path,
+        log_metric_path=metric_logger_path,
     )
 
     trainer = Trainer(
@@ -267,7 +267,8 @@ def main() -> None:
         evaluator=evaluator,
         logger=logger,
         tb_logger=tb_logger,
-        checkpoint_dir= os.path.join(best_cfg["training"].get("checkpoint_dir", os.path.join(log_dir, "checkpoints")), f"{best_cfg['model']['name']}_{best_cfg['loss']['name']}"),
+        checkpoint_dir=os.path.join(best_cfg["training"].get("checkpoint_dir", os.path.join(log_dir, "checkpoints")),
+                                    f"{best_cfg['model']['name']}_{best_cfg['loss']['name']}"),
         device=device,
         epochs=best_cfg["training"].get("epochs", 150),
         epochs_btw_eval=best_cfg["training"].get("epochs_btw_eval", 5),

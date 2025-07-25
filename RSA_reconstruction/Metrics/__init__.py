@@ -3,21 +3,13 @@
 from utils.misc import set_seed, SEED
 
 from .base import BaseMetric
-from .box_and_plant.total_root_length_ratio import TotalRootLengthRatio
+from .box.number_of_plants_ratio import NumberOfPlantsRatio
 from .box_and_plant.area_below_intercep import AreaBetweenIntercepts
 from .box_and_plant.dtw_below_intercep import DTWBetweenIntercepts
 from .box_and_plant.euclidian_btw_intercepts import EuclidianDistancebtwIntercepts
 from .box_and_plant.number_of_organs_ratio import NumberOfOrgansRatio
-
-from .box.number_of_plants_ratio import NumberOfPlantsRatio
-
+from .box_and_plant.total_root_length_ratio import TotalRootLengthRatio
 from .plant.area_convex_hull import Area_convex_Hull
-
-# from .mtg.area_below_intercep import AreaBetweenIntercepts
-# from .mtg.dtw_below_intercep import DTWBetweenIntercepts
-# from .mtg.euclidian_btw_intercepts import EuclidianDistancebtwIntercepts
-# from .mtg.number_of_organs_ratio import NumberOfOrgansRatio
-# from .mtg.number_of_plants_ratio import NumberOfPlantsRatio
 
 set_seed(SEED)  # Ensure reproducibility
 
@@ -25,14 +17,16 @@ set_seed(SEED)  # Ensure reproducibility
 METRIC_FACTORIES = {
     # Per box
     "number_of_plants_ratio": NumberOfPlantsRatio,
+
     # Per plant
     "area_convex_hull": Area_convex_Hull,
-    # Both
-    "number_of_organs_ratio": NumberOfOrgansRatio,
-    "total_root_length_distances": TotalRootLengthRatio,
     "area_below_intercept": AreaBetweenIntercepts,
     "dtw_below_intercept": DTWBetweenIntercepts,
     "euclidian_btw_intercepts": EuclidianDistancebtwIntercepts,
+
+    # Both
+    "number_of_organs_ratio": NumberOfOrgansRatio,
+    "total_root_length_distances": TotalRootLengthRatio,
 }
 
 
