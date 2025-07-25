@@ -9,7 +9,7 @@ from torch.nn import Module
 from tqdm import tqdm
 from rsml import rsml2mtg
 from rsml.matching import match_plants
-from utils.mtg_operations import extract_plant_sub_mtg
+from utils.mtg_operations import extract_mtg_at_time_t, extract_plant_sub_mtg
 from utils.misc import SEED, set_seed
 
 set_seed(SEED)
@@ -62,56 +62,83 @@ class ReconstructionEvaluator:
 
 
     def evaluate(self) -> Dict[str, Dict[str, pd.DataFrame]]:
-        result_per_box: Dict[str, Dict[str, Dict[str, list]]] = defaultdict(
-            lambda: defaultdict(lambda: defaultdict(list))
-        )
-
-        result_per_plant : Dict[str, Dict[str, Dict[str, Dict[str, list]]]] = defaultdict(
-            lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-        )
-
+        result_per_box: Dict[str, Dict[str, Dict[str, Dict[int, list]]]] = {
+            "val": {
+                "expertized": defaultdict(lambda: defaultdict(list)),
+                "before_expertized": defaultdict(lambda: defaultdict(list))
+            },
+            "test": {
+                "expertized": defaultdict(lambda: defaultdict(list)),
+                "before_expertized": defaultdict(lambda: defaultdict(list))
+            }
+        }
+        result_per_plant: Dict[str, Dict[str, Dict[str, Dict[int, list]]]] = {
+            "val": {
+                "expertized": defaultdict(lambda: defaultdict(lambda: defaultdict(list))),
+                "before_expertized": defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+            },
+            "test": {
+                "expertized": defaultdict(lambda: defaultdict(lambda: defaultdict(list))),
+                "before_expertized": defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+            }
+        }
+        
         for split in ("val", "test"):
             for folder in tqdm(self.dict_gt[split].keys(), desc=f"Evaluating {split} folders"):
                 gt = self.dict_gt[split][folder]
-                pred = self.dict_pred[split][folder]
+                base_pred = self.dict_pred[split][folder]
+                base_gt_exp  = gt["expertized"]
+                base_gt_bexp = gt["before_expertized"]
 
-                for metric in self.metrics["per_box"]:
-                    name = getattr(metric, "__name__", str(metric)).split(".")[-1].split(" ")[0]
-                    gt_exp  = gt["expertized"]
-                    gt_bexp = gt["before_expertized"]
+                pred_times = base_pred.property("time") # {2 : [0.0, 1.0, 2.0], 3: [0.0, 1.0, 2.0]}
+                gt_exp_times = base_gt_exp.property("time")
+                gt_bexp_times = base_gt_bexp.property("time")
 
-                    val_exp  = metric(pred, gt_exp)   # expertisé vs. prédiction
-                    val_bexp = metric(pred, gt_bexp)   # brut  vs. prédiction
-
-                    result_per_box[split]["expertized"][name].append(val_exp)
-                    result_per_box[split]["before_expertized"][name].append(val_bexp)
-
-                for metric in self.metrics["per_plant"]:
-                    name = getattr(metric, "__name__", str(metric)).split(".")[-1].split(" ")[0]
-                    box_name = folder.split('/')[-1]
-                    gt_exp  = gt["expertized"]
-                    gt_bexp = gt["before_expertized"]
+                min_max_time = min(
+                    max(max(times) for times in pred_times.values()),
+                    max(max(times) for times in gt_exp_times.values()),
+                    max(max(times) for times in gt_bexp_times.values())
+                )
+                
+                for time in range(1, int(min_max_time) + 1):
                     
-                    matched_plants_pred_exp, _, _ = match_plants(pred, gt_exp)
-                    matched_plants_pred_bexp, _, _ = match_plants(pred, gt_bexp)
+                    pred = extract_mtg_at_time_t(base_pred, time)
+                    gt_exp = extract_mtg_at_time_t(base_gt_exp, time)
+                    gt_bexp = extract_mtg_at_time_t(base_gt_bexp, time)
 
-                    for plant_element in matched_plants_pred_exp:
+                    for metric in self.metrics["per_box"]:
+                        name = getattr(metric, "__name__", str(metric)).split(".")[-1].split(" ")[0]
+
+                        val_exp  = metric(pred, gt_exp)   # expertisé vs. prédiction
+                        val_bexp = metric(pred, gt_bexp)   # brut  vs. prédiction
+
+                        result_per_box[split]["expertized"][name][time].append(val_exp)
+                        result_per_box[split]["before_expertized"][name][time].append(val_bexp)
+
+                    for metric in self.metrics["per_plant"]:
+                        name = getattr(metric, "__name__", str(metric)).split(".")[-1].split(" ")[0]
+                        box_name = folder.split('/')[-1]
                         
-                        plant_id_pred = plant_element[0]
-                        plant_id_gt = plant_element[1]
-                        sub_mtg_pred = extract_plant_sub_mtg(pred, plant_id_pred)
-                        sub_mtg_gt = extract_plant_sub_mtg(gt_exp, plant_id_gt)
+                        matched_plants_pred_exp, _, _ = match_plants(pred, gt_exp)
+                        matched_plants_pred_bexp, _, _ = match_plants(pred, gt_bexp)
 
-                        val_exp = metric(sub_mtg_pred, sub_mtg_gt)
-                        result_per_plant[split]["expertized"][name][box_name].append(val_exp)
+                        for plant_element in matched_plants_pred_exp:
+                            
+                            plant_id_pred = plant_element[0]
+                            plant_id_gt = plant_element[1]
+                            sub_mtg_pred = extract_plant_sub_mtg(pred, plant_id_pred)
+                            sub_mtg_gt = extract_plant_sub_mtg(gt_exp, plant_id_gt)
 
-                    for plant_element in matched_plants_pred_bexp:
-                        plant_id_pred = plant_element[0]
-                        plant_id_gt = plant_element[1]
-                        sub_mtg_pred = extract_plant_sub_mtg(pred, plant_id_pred)
-                        sub_mtg_gt = extract_plant_sub_mtg(gt_bexp, plant_id_gt)
-                        val_bexp = metric(sub_mtg_pred, sub_mtg_gt)
-                        result_per_plant[split]["before_expertized"][name][box_name].append(val_bexp)
+                            val_exp = metric(sub_mtg_pred, sub_mtg_gt)
+                            result_per_plant[split]["expertized"][name][box_name][time].append(val_exp)
+
+                        for plant_element in matched_plants_pred_bexp:
+                            plant_id_pred = plant_element[0]
+                            plant_id_gt = plant_element[1]
+                            sub_mtg_pred = extract_plant_sub_mtg(pred, plant_id_pred)
+                            sub_mtg_gt = extract_plant_sub_mtg(gt_bexp, plant_id_gt)
+                            val_bexp = metric(sub_mtg_pred, sub_mtg_gt)
+                            result_per_plant[split]["before_expertized"][name][box_name][time].append(val_bexp)
 
         import pprint
         pprint.pprint(result_per_plant)

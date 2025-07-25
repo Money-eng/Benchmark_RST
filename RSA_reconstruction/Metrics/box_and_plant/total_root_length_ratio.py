@@ -1,5 +1,5 @@
 from openalea.mtg import MTG
-from rsml.measurements import root_length, RSML_Measurements
+from utils.mtg_operations import total_root_length
 
 
 from ..base import BaseMetric
@@ -16,10 +16,7 @@ class TotalRootLengthRatio(BaseMetric):
         return abs(new_score - 1) <= abs(old_score - 1)
 
     def __call__(self, mtg_pred: MTG, mtg_gt: MTG) -> float:
-        dict_root_lenb_gt = root_length(mtg_gt) # root_indx -> root_length
-        dict_root_lenb_pred = root_length(mtg_pred)
-        
-        total_root_length_gt = sum(dict_root_lenb_gt.values())
-        total_root_length_pred = sum(dict_root_lenb_pred.values())
+        total_root_length_gt = total_root_length(mtg_gt)
+        total_root_length_pred = total_root_length(mtg_pred)
 
         return total_root_length_pred / total_root_length_gt

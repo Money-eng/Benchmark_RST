@@ -25,6 +25,8 @@ metrics:
   threshold_4_binarize: 0.5 
   per_plant:
     - name: "number_of_organs_ratio"
+    - name: "total_root_length_distances"
+    - name: "area_convex_hull"
   per_box:
     - name: "number_of_organs_ratio"
     - name: "number_of_plants_ratio"

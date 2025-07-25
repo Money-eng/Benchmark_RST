@@ -1,44 +1,62 @@
 from openalea.mtg import MTG
-from rsml.misc import root_vertices, plant_vertices
+from rsml.misc import root_vertices
 
-def extract_mtg_at_time_t(mtg: MTG, temps_max: float) -> MTG:
-    """
-    Create a new MTG with only the vertices that are present before a given time.
-    """
-    new_g = mtg.copy()
+from typing import List, Dict
+from copy import deepcopy
+from openalea.mtg import MTG
+
+
+def _truncate_lists(prop: Dict[int, List], idx: int, v: int) -> None:
+    val = prop.get(v)
+    if isinstance(val, (list, tuple)) and len(val) > idx + 1:
+        prop[v] = val[: idx + 1]                      # garde 0…idx
+
+
+def extract_mtg_at_time_t(g: MTG, t: int) -> MTG:
+    g_new = deepcopy(g)
+
+    time_prop = g_new.property("time")
+    time_h_prop = g_new.property("time_hours")
+    diameter_prop = g_new.property("diameter")
+    geometry_prop = g_new.property("geometry")
+    
     to_remove = []
-
-    # scale=2, normalement, c’est chaque axe/racine
-    for v in root_vertices(new_g):
-        node = new_g.node(v)
-        if hasattr(node, "time"):
-            t = node.time
+    for v, serie in time_prop.items():
+        first_t = serie[0]
+        if first_t > t:
+            to_remove.append(v)
         else:
-            continue
+            idx = max(i for i, tau in enumerate(serie) if tau <= t)
 
-        first_t = min(t)
-        if first_t > temps_max:
-            to_remove.append(v)
-            continue
-
-        mask = [tt <= temps_max for tt in t]
-        if hasattr(node, "geometry"):
-            node.geometry = [p for p, m in zip(node.geometry, mask) if m]
-        if hasattr(node, "diameter"):
-            node.diameter = [d for d, m in zip(node.diameter, mask) if m]
-        node.time = [tt for tt, m in zip(t, mask) if m]
-        node.time_hours = [th for th, m in zip(node.time_hours, mask) if m]
-
-        if not node.geometry or len(node.geometry) < 2:
-            to_remove.append(v)
+            _truncate_lists(time_prop, idx, v)
+            _truncate_lists(time_h_prop, idx, v)
+            _truncate_lists(diameter_prop, idx, v)
+            _truncate_lists(geometry_prop, idx, v)
 
     for v in to_remove:
-        new_g.remove_vertex(v)
+        try:
+            g_new.remove_tree(v)
+        except Exception:
+            g_new.remove_vertex(v, reparent_child=False)
 
-    return new_g
+    return g_new
+
 
 def extract_plant_sub_mtg(mtg: MTG, plant_vertex: int) -> dict:
     """
     Extract a sub-MTG for a specific plant.
     """
     return mtg.sub_mtg(plant_vertex).copy()
+
+
+def total_root_length(mtg: MTG) -> float:
+    roots = root_vertices(mtg)
+    total_length = 0.0
+    for root in roots:
+        geometry = mtg.property("geometry")
+        polyline = geometry[root]
+        for i in range(len(polyline) - 1):
+            length = ((polyline[i][0] - polyline[i + 1][0]) ** 2 +
+                      (polyline[i][1] - polyline[i + 1][1]) ** 2) ** 0.5
+            total_length += length
+    return total_length
