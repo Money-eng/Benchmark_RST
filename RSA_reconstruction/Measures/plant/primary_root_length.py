@@ -7,6 +7,7 @@ def primary_root_length(mtg: MTG) -> float:
     root = roots[0]
     geometry = mtg.property("geometry")
     polyline = geometry[root]
+    total_length = 0.0
     for i in range(len(polyline) - 1):
         length = ((polyline[i][0] - polyline[i + 1][0]) ** 2 +
                     (polyline[i][1] - polyline[i + 1][1]) ** 2) ** 0.5

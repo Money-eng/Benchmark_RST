@@ -198,3 +198,19 @@ class RootGraphViewer:
                         arr = np.concatenate([arr, arr[-1:]])
             paths.append(arr)
         return paths
+
+
+if __name__ == "__main__":
+    gt_expertized = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN024/61_graph.rsml"
+    gt_before = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN024/61_before_expertized_graph.rsml"
+    prediction = "/home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Prediction/Unet_dice_cldice/Test/230629PN024/61_prediction_before_expertized_graph.rsml"
+    viewer = RootGraphViewer.from_rsml(
+        gt_expertized,
+        gt_before,
+        prediction,
+        background="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN024/22_registered_stack.tif",
+        pred_date_map="/home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Prediction/Unet_dice_cldice/Test/230629PN024/40_date_map.tif",
+        gt_date_map="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN024/40_date_map.tif",
+    )
+    
+    viewer.show()

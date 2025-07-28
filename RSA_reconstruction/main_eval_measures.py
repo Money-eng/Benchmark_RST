@@ -4,8 +4,8 @@ from pathlib import Path
 
 import yaml
 
-from Metrics import get_metrics
-from evaluator_para import ReconstructionEvaluator
+from Measures import get_measures
+from mesurator_para import ReconstructionMesurator
 from utils.misc import SEED, set_seed
 
 set_seed(SEED)
@@ -55,20 +55,13 @@ def main() -> None:
     assert len(gt_val_folders) == len(pred_val_folders), "Mismatch in number of validation folders"
     assert len(gt_test_folders) == len(pred_test_folders), "Mismatch in number of test folders"
 
-    evaluator = ReconstructionEvaluator(
+    evaluator = ReconstructionMesurator(
         pred_folder="/home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Prediction",
         gt_folder="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data",
-        metrics=get_metrics(cfg["metrics"])
+        measure=get_measures(cfg["measures"])
     )
 
     evaluation_results = evaluator.evaluate()
-    print("Evaluation Results:")
-    for split, results in evaluation_results.items():
-        print(f"{split.capitalize()} Results:")
-        for metric_name, result in results.items():
-            print(f"  {metric_name}:")
-            print(result)
-            print()
 
 
 if __name__ == "__main__":

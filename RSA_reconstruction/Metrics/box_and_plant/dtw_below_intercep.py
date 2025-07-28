@@ -25,7 +25,4 @@ class DTWBetweenIntercepts(BaseMetric):
             raise ValueError("Les courbes d'interception doivent avoir la même forme.")
 
         distance, _ = fastdtw(y_gt, y_pred)
-
-        if (float(distance) != 0):
-            print(f"DTW distance: {distance}")
         return float(distance)
