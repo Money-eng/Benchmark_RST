@@ -13,7 +13,7 @@ from DataLoaders.transforms import (
     get__val_test_img_transform,
 )
 from Models import get_model
-from reconstruction import Reconstructor
+from RSA_reconstruction.reconstructor import Reconstructor
 from utils.misc import SEED, set_seed, get_device
 
 set_seed(SEED)

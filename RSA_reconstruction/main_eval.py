@@ -56,8 +56,8 @@ def main() -> None:
     assert len(gt_test_folders) == len(pred_test_folders), "Mismatch in number of test folders"
 
     evaluator = ReconstructionEvaluator(
-        pred_folder="/home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Prediction",
-        gt_folder="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data",
+        pred_folder="RSA_reconstruction/Prediction",
+        gt_folder="RSA_deep_working/Data",
         metrics=get_metrics(cfg["metrics"])
     )
 

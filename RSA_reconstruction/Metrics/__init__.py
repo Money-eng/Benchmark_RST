@@ -9,9 +9,12 @@ from .box_and_plant.area_below_intercep import AreaBetweenIntercepts
 from .box_and_plant.dtw_below_intercep import DTWBetweenIntercepts
 from .box_and_plant.euclidian_btw_intercepts import EuclidianDistancebtwIntercepts
 from .box_and_plant.number_of_organs_ratio import NumberOfOrgansRatio
+from .box.number_of_organs_precision import NumberOfOrgansPrecision
+from .box.number_of_organs_recall import NumberOfOrgansRecall
+from .box.number_of_organs_f1 import NumberOfOrgansF1score
 from .box_and_plant.total_root_length_ratio import TotalRootLengthRatio
 
-from .plant.area_convex_hull import Area_convex_Hull
+from .plant.area_convex_hull_ratio import Area_convex_HullRatio
 
 set_seed(SEED)  # Ensure reproducibility
 
@@ -19,9 +22,12 @@ set_seed(SEED)  # Ensure reproducibility
 METRIC_FACTORIES = {
     # Per box
     "number_of_plants_ratio": NumberOfPlantsRatio,
+    "number_of_organs_precision": NumberOfOrgansPrecision,
+    "number_of_organs_recall": NumberOfOrgansRecall,
+    "number_of_organs_f1": NumberOfOrgansF1score,
 
     # Per plant
-    "area_convex_hull": Area_convex_Hull,
+    "area_convex_hull_ratio": Area_convex_HullRatio,
     "area_below_intercept": AreaBetweenIntercepts,
     "dtw_below_intercept": DTWBetweenIntercepts,
     "euclidian_btw_intercepts": EuclidianDistancebtwIntercepts,

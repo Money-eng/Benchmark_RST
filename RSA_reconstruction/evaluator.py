@@ -126,6 +126,7 @@ class ReconstructionEvaluator:
                         gt_exp = extract_mtg_at_time_t(base_gt_exp, time)
                         gt_bexp = extract_mtg_at_time_t(base_gt_bexp, time)
 
+                        print("---------------------------------- per box ----------------------------------")
                         for metric in tqdm(
                                 self.metrics["per_box"],
                                 desc=f"Per-box metrics t={time}",
@@ -144,6 +145,7 @@ class ReconstructionEvaluator:
                             result_per_box[model_name][split]["before_expertized"][name][folder][time].append(
                                 val_bexp)
 
+                        print("---------------------------------- per plant ----------------------------------")
                         for metric in tqdm(
                                 self.metrics["per_plant"],
                                 desc=f"Per-plant metrics t={time}",

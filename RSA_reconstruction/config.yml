@@ -1,8 +1,8 @@
 data:
-  base_dir: /home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data
+  base_dir: RSA_deep_working/Data
   patch_size: 512
   batch_size: 64
-  rsml_save_path: /home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Prediction
+  rsml_save_path: RSA_reconstruction/Prediction
 
 model:
   name: Unet
@@ -17,7 +17,7 @@ model:
 
 model_checkpoints:
   name: Unet_dice_cldice
-  folder_pretrained_path: /home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Models/Unet_bce
+  folder_pretrained_path: RSA_reconstruction/Models/Unet_bce
 
 maximized_score: null
 
@@ -26,12 +26,15 @@ metrics:
   per_plant:
     - name: "number_of_organs_ratio"
     - name: "total_root_length_distances"
-    - name: "area_convex_hull"
+    - name: "Area_convex_HullRatio"
     - name: "area_below_intercept"
     - name: "dtw_below_intercept"
     - name: "euclidian_btw_intercepts"
   per_box:
     - name: "number_of_organs_ratio"
+    - name: "number_of_organs_recall"
+    - name: "number_of_organs_precision"
+    - name: "number_of_organs_f1"
     - name: "number_of_plants_ratio"
     - name: "total_root_length_distances"
 

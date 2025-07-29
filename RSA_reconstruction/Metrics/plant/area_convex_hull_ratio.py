@@ -6,7 +6,7 @@ from ..base import BaseMetric
 
 
 
-class Area_convex_Hull(BaseMetric):
+class Area_convex_HullRatio(BaseMetric):
     type = "cpu"
     need = "serie"
 

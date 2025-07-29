@@ -33,6 +33,10 @@ def extract_mtg_at_time_t(g: MTG, t: int) -> MTG:
             _truncate_lists(time_h_prop, idx, v)
             _truncate_lists(diameter_prop, idx, v)
             _truncate_lists(geometry_prop, idx, v)
+            
+            # if list is empty has 1 or less elements, remove vertex
+            if len(geometry_prop[v]) <= 1:
+                to_remove.append(v)
 
     for v in to_remove:
         try:
