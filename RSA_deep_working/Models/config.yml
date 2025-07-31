@@ -1,7 +1,7 @@
 data:
   base_dir: RSA_deep_working/Data
   patch_size: 512
-  batch_size: 64
+  batch_size: 8
 
 training:
   epochs: 300

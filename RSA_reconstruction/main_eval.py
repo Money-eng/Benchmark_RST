@@ -61,15 +61,6 @@ def main() -> None:
         metrics=get_metrics(cfg["metrics"])
     )
 
-    evaluation_results = evaluator.evaluate()
-    print("Evaluation Results:")
-    for split, results in evaluation_results.items():
-        print(f"{split.capitalize()} Results:")
-        for metric_name, result in results.items():
-            print(f"  {metric_name}:")
-            print(result)
-            print()
-
 
 if __name__ == "__main__":
     main()

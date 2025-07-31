@@ -27,6 +27,7 @@ from Training.evaluator import Evaluator
 from Training.trainer import Trainer
 from utils.logger import get_logger, TensorboardLogger
 from utils.misc import SEED, get_device, set_seed
+from utils.mask_of_interest import roi_fnc
 
 # --------------------------------------------------------------------------- #
 #                               GLOBAL SETTINGS                               #
@@ -102,11 +103,15 @@ def make_objective(
         cfg = copy.deepcopy(base_cfg)
 
         # 1) Hyper‑parameter sampling
-        lr = trial.suggest_float("learning_rate", *SEARCH_SPACE["learning_rate"], log=True)
-        wd = trial.suggest_float("weight_decay", *SEARCH_SPACE["weight_decay"], log=True)
-        opt_name = trial.suggest_categorical("optimizer", SEARCH_SPACE["optimizer"])
+        lr = trial.suggest_float(
+            "learning_rate", *SEARCH_SPACE["learning_rate"], log=True)
+        wd = trial.suggest_float(
+            "weight_decay", *SEARCH_SPACE["weight_decay"], log=True)
+        opt_name = trial.suggest_categorical(
+            "optimizer", SEARCH_SPACE["optimizer"])
 
-        cfg["optimizer"].update({"learning_rate": lr, "weight_decay": wd, "name": opt_name})
+        cfg["optimizer"].update(
+            {"learning_rate": lr, "weight_decay": wd, "name": opt_name})
 
         # 2) Model, loss, optimizer
         model = get_model(cfg["model"])
@@ -130,8 +135,14 @@ def make_objective(
             tb_logger=None,
             patch_size=cfg["data"].get("patch_size", 512),
             log_metric_path=None,
+            roi_fnc=roi_fnc,
             compute_cpu_metrics=False,
         )
+
+        val_loss = evaluator.evaluate().get(
+            f"val_loss_{criterion.__class__.__name__}", float("inf")
+        )
+
 
         # 4) Quick training run
         Trainer(
@@ -186,9 +197,11 @@ def main() -> None:
 
     # 1) I/O setup, device, loggers
     device = get_device(preferred=cfg["training"].get("device", "cuda"))
-    log_dir = Path(cfg["training"]["log_dir"]) / f"{cfg['model']['name']}_{cfg['loss']['name']}"
+    log_dir = Path(cfg["training"]["log_dir"]) / \
+        f"{cfg['model']['name']}_{cfg['loss']['name']}"
     log_dir.mkdir(parents=True, exist_ok=True)
-    logger = get_logger(log_dir / f"{cfg['model']['name']}_{cfg['loss']['name']}.log")
+    logger = get_logger(
+        log_dir / f"{cfg['model']['name']}_{cfg['loss']['name']}.log")
     tb_logger = TensorboardLogger(log_dir / "tensorboard_logs")
 
     # 2) DataLoaders

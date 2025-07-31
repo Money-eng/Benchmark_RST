@@ -43,6 +43,7 @@ class Evaluator:
             epoch: int = 0,
             patch_size: Optional[int] = None,
             *,
+            roi_fnc: Optional[callable] = None,
             compute_cpu_metrics: bool = True,
             use_dask: bool = True,
     ) -> None:
@@ -96,6 +97,7 @@ class Evaluator:
             self.client = Client(self.cluster)
 
         self._log(logging.INFO, "Evaluator initialised (epoch %d).", self.epoch)
+        self.roi_fnc = roi_fnc
 
     # =====================================================================
     # API
@@ -119,13 +121,23 @@ class Evaluator:
 
         with torch.no_grad():
             pbar = tqdm(loader, desc="Evaluating", leave=False, dynamic_ncols=True)
-            for imgs, masks, *_ in pbar:
+            for imgs, masks, time, mtgs in pbar:
                 imgs = imgs.to(self.device)
                 masks = masks.to(self.device).float()
 
                 # (B, C, H, W) - already sigmoid
                 predictions = self._infer(imgs)
                 preds = (predictions > self.threshold).float()
+                
+                if self.roi_fnc is not None:
+                    roi_masks = self.roi_fnc(imgs, time, mtgs) # imgs is a tensor, time and mtgs are lists
+                    roi_masks = roi_masks.to(self.device).float()
+                else:
+                    roi_masks = torch.ones_like(masks)
+                
+                # Apply ROI mask to predictions and ground truth masks
+                preds_of_interest = preds * roi_masks
+                masks_of_interest = masks * roi_masks
 
                 # -------------------------- Loss -----------------------
                 if self.criterion is not None:
@@ -138,11 +150,15 @@ class Evaluator:
                 for metric in self.gpu_metrics:
                     name = metric.__class__.__name__
                     raw[name].append(metric(preds, masks))
+                    raw[f"{name}_of_interest"].append(metric(preds_of_interest, masks_of_interest))
 
                 # ---------------------- CPU metrics -----------------------
                 if self.compute_cpu_metrics:
                     preds_cpu.extend(preds.detach().cpu().numpy())
                     masks_cpu.extend(masks.detach().cpu().numpy())
+                    if self.roi_fnc is not None:
+                        preds_cpu.extend(preds_of_interest.detach().cpu().numpy())
+                        masks_cpu.extend(masks_of_interest.detach().cpu().numpy())
 
                 # ---------------- TensorBoard images -------------------
                 if save_first_pred and self.tb_logger is not None:

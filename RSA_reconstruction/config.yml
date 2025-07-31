@@ -26,7 +26,7 @@ metrics:
   per_plant:
     - name: "number_of_organs_ratio"
     - name: "total_root_length_distances"
-    - name: "Area_convex_HullRatio"
+    - name: "area_convex_hull_ratio"
     - name: "area_below_intercept"
     - name: "dtw_below_intercept"
     - name: "euclidian_btw_intercepts"
