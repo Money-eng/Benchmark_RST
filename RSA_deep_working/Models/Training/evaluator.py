@@ -129,9 +129,9 @@ class Evaluator:
                     on_trace_ready=tensorboard_trace_handler(
                         self.profile_dir / "profiler_eval"),  # (3)
                     profile_memory=True,                                      # (4)
-                    record_shapes=True,                                      # (5)
-                    with_stack=True,                                         # (6)
-                    with_flops=True) as prof:  # (7)
+                    record_shapes=False,                                      # (5)
+                    with_stack=False,                                         # (6)
+                    with_flops=False) as prof:  # (7)
                 pbar = tqdm(loader, desc="Evaluating", leave=False, dynamic_ncols=True)
                 for imgs, masks, time, mtgs in pbar:
                     imgs = imgs.to(self.device)

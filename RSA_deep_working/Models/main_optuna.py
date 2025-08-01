@@ -271,6 +271,7 @@ def main() -> None:
         log_metric_path=metric_logger_path,
         profile_dir=profile_dir,
         roi_fnc=roi_fnc,
+        compute_cpu_metrics=True,
     )
 
     trainer = Trainer(
