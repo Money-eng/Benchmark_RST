@@ -94,6 +94,7 @@ def make_objective(
         val_loader,
         device,
         logger,
+        profile_dir: str = "",
 ) -> callable:
     """Return the parameterised `objective` function for Optuna."""
     epochs_search = base_cfg["training"].get("optuna_epochs", 10)
@@ -137,12 +138,8 @@ def make_objective(
             log_metric_path=None,
             roi_fnc=roi_fnc,
             compute_cpu_metrics=False,
+            profile_dir=profile_dir
         )
-
-        val_loss = evaluator.evaluate().get(
-            f"val_loss_{criterion.__class__.__name__}", float("inf")
-        )
-
 
         # 4) Quick training run
         Trainer(
@@ -159,6 +156,7 @@ def make_objective(
             epochs=epochs_search,
             epochs_btw_eval=50,
             do_evaluation=False,
+            profile_dir=profile_dir
         ).train()
 
         # 5) Validation
@@ -203,6 +201,8 @@ def main() -> None:
     logger = get_logger(
         log_dir / f"{cfg['model']['name']}_{cfg['loss']['name']}.log")
     tb_logger = TensorboardLogger(log_dir / "tensorboard_logs")
+    profile_dir = os.path.join(log_dir, "profile")
+    os.makedirs(profile_dir, exist_ok=True)
 
     # 2) DataLoaders
     train_loader, val_loader, test_loader = build_dataloaders(cfg)
@@ -218,7 +218,7 @@ def main() -> None:
         direction="minimize",
     )
     study.optimize(
-        make_objective(cfg, train_loader, val_loader, device, logger),
+        make_objective(cfg, train_loader, val_loader, device, logger, profile_dir),
         n_trials=cfg["training"].get("optuna_trials", 10),
     )
 
@@ -269,6 +269,8 @@ def main() -> None:
         tb_logger=tb_logger,
         patch_size=best_cfg["data"].get("patch_size", 512),
         log_metric_path=metric_logger_path,
+        profile_dir=profile_dir,
+        roi_fnc=roi_fnc,
     )
 
     trainer = Trainer(
@@ -283,8 +285,10 @@ def main() -> None:
         checkpoint_dir=os.path.join(best_cfg["training"].get("checkpoint_dir", os.path.join(log_dir, "checkpoints")),
                                     f"{best_cfg['model']['name']}_{best_cfg['loss']['name']}"),
         device=device,
-        epochs=best_cfg["training"].get("epochs", 150),
+        epochs=best_cfg["training"].get("epochs", 200),
         epochs_btw_eval=best_cfg["training"].get("epochs_btw_eval", 5),
+        do_evaluation=True,
+        profile_dir=profile_dir,
     )
 
     evaluator.evaluate()  # baseline before training

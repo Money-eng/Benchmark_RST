@@ -19,7 +19,7 @@ training:
     patience: 5
   checkpoint_dir: RSA_deep_working/Models/Checkpoints
   log_dir: RSA_deep_working/Models/Logs
-  optuna_trials: 10
+  optuna_trials: 20
   optuna_epochs: 5
 
 

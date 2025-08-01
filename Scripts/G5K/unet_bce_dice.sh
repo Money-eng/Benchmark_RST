@@ -1,12 +1,13 @@
 #!/bin/bash
 
 #OAR -q abaca
+#OAR -l host=1/gpu=1,walltime=15:00:00
 #OAR -p musa
-#OAR -l host=1/gpu=2,walltime=6:00:00
-#OAR -O run_unet_bce_dice.out
-#OAR -E run_unet_bce_dice.err
+#OAR -O /home/lgandeel/out/run_unet_bce_dice.out
+#OAR -E /home/lgandeel/err/run_unet_bce_dice.err
 
 source ~/.bashrc
 mamba activate test
 cd ~/Code
-python3 ./RSA_deep_working/Models/main_optuna.py --config "./RSA_deep_working/Models/configs/unet_bce_dice.yml" > log_unet_bce_dice.log 2>&1
+
+python3 ./RSA_deep_working/Models/main_optuna.py --config "./RSA_deep_working/Models/configs/unet_bce_dice.yml" > /home/lgandeel/log/unet_bce_dice.log 2>&1
