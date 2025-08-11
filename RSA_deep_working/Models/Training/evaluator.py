@@ -124,74 +124,62 @@ class Evaluator:
         masks_cpu: List[np.ndarray] = []
 
         with torch.no_grad():
-            with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], # (1)
-                    schedule=schedule(wait=1, warmup=1, active=5, repeat=1),  # (2)
-                    on_trace_ready=tensorboard_trace_handler(
-                        self.profile_dir / "profiler_eval"),  # (3)
-                    profile_memory=True,                                      # (4)
-                    record_shapes=False,                                      # (5)
-                    with_stack=False,                                         # (6)
-                    with_flops=False) as prof:  # (7)
-                pbar = tqdm(loader, desc="Evaluating", leave=False, dynamic_ncols=True)
-                for imgs, masks, time, mtgs in pbar:
-                    imgs = imgs.to(self.device)
-                    masks = masks.to(self.device).float()
+            pbar = tqdm(loader, desc="Evaluating", leave=False, dynamic_ncols=True)
+            for imgs, masks, time, mtgs in pbar:
+                imgs = imgs.to(self.device)
+                masks = masks.to(self.device).float()
 
-                    # (B, C, H, W) - already sigmoid
-                    predictions = self._infer(imgs)
-                    preds = (predictions > self.threshold).float()
-                    
+                # (B, C, H, W) - already sigmoid
+                predictions = self._infer(imgs)
+                preds = (predictions > self.threshold).float()
+                
+                if self.roi_fnc is not None:
+                    roi_masks = self.roi_fnc(imgs, time, mtgs) # imgs is a tensor, time and mtgs are lists
+                    roi_masks = roi_masks.to(self.device).float()
+                else:
+                    roi_masks = torch.ones_like(masks)
+                
+                # Apply ROI mask to predictions and ground truth masks
+                preds_of_interest = preds * roi_masks
+                masks_of_interest = masks * roi_masks
+
+                # -------------------------- Loss -----------------------
+                if self.criterion is not None:
+                    loss_val = self.criterion(predictions, masks).item()
+                    raw[f"val_loss_{self.criterion.__class__.__name__}"].append(
+                        loss_val)
+                    pbar.set_postfix(loss=f"{loss_val:.4f}")
+
+                # ---------------------- GPU metrics --------------------
+                for metric in self.gpu_metrics:
+                    name = metric.__class__.__name__
+                    raw[name].append(metric(preds, masks))
+                    raw[f"{name}_of_interest"].append(metric(preds_of_interest, masks_of_interest))
+
+                # ---------------------- CPU metrics -----------------------
+                if self.compute_cpu_metrics:
+                    preds_cpu.extend(preds.detach().cpu().numpy())
+                    masks_cpu.extend(masks.detach().cpu().numpy())
                     if self.roi_fnc is not None:
-                        roi_masks = self.roi_fnc(imgs, time, mtgs) # imgs is a tensor, time and mtgs are lists
-                        roi_masks = roi_masks.to(self.device).float()
-                    else:
-                        roi_masks = torch.ones_like(masks)
-                    
-                    # Apply ROI mask to predictions and ground truth masks
-                    preds_of_interest = preds * roi_masks
-                    masks_of_interest = masks * roi_masks
+                        preds_cpu.extend(preds_of_interest.detach().cpu().numpy())
+                        masks_cpu.extend(masks_of_interest.detach().cpu().numpy())
 
-                    # -------------------------- Loss -----------------------
-                    if self.criterion is not None:
-                        loss_val = self.criterion(predictions, masks).item()
-                        raw[f"val_loss_{self.criterion.__class__.__name__}"].append(
-                            loss_val)
-                        pbar.set_postfix(loss=f"{loss_val:.4f}")
+                # ---------------- TensorBoard images -------------------
+                if save_first_pred and self.tb_logger is not None:
+                    self.tb_logger.log_image(
+                        "Mask", masks * 255.0, global_step=self.epoch)
+                    self.tb_logger.log_image(
+                        "Prediction", preds * 255.0, global_step=self.epoch)
+                    save_first_pred = False
 
-                    # ---------------------- GPU metrics --------------------
-                    for metric in self.gpu_metrics:
-                        name = metric.__class__.__name__
-                        raw[name].append(metric(preds, masks))
-                        raw[f"{name}_of_interest"].append(metric(preds_of_interest, masks_of_interest))
+                # Manual clean‑up --------------------------------------
+                del preds, predictions
+                torch.cuda.empty_cache()
 
-                    # ---------------------- CPU metrics -----------------------
-                    if self.compute_cpu_metrics:
-                        preds_cpu.extend(preds.detach().cpu().numpy())
-                        masks_cpu.extend(masks.detach().cpu().numpy())
-                        if self.roi_fnc is not None:
-                            preds_cpu.extend(preds_of_interest.detach().cpu().numpy())
-                            masks_cpu.extend(masks_of_interest.detach().cpu().numpy())
-
-                    # ---------------- TensorBoard images -------------------
-                    if save_first_pred and self.tb_logger is not None:
-                        self.tb_logger.log_image(
-                            "Mask", masks * 255.0, global_step=self.epoch)
-                        self.tb_logger.log_image(
-                            "Prediction", preds * 255.0, global_step=self.epoch)
-                        save_first_pred = False
-
-                    prof.step()
-                    # Manual clean‑up --------------------------------------
-                    del preds, predictions
-                    torch.cuda.empty_cache()
-
-            # ----------------------------------------------------------------
-            if self.compute_cpu_metrics:
-                self._compute_cpu_metrics(preds_cpu, masks_cpu, raw)
-                prof.step() 
-                
-                
-
+        # ----------------------------------------------------------------
+        if self.compute_cpu_metrics:
+            self._compute_cpu_metrics(preds_cpu, masks_cpu, raw)
+            
         # ----------------------------------------------------------------
         torch.cuda.empty_cache()
         gc.collect()

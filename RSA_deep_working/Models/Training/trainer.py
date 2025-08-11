@@ -120,65 +120,56 @@ class Trainer:
 
         best_metrics: Dict[str, float] = {}
         global_step = 0  # counts *batches*
-        with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], # (1)
-                    schedule=schedule(wait=1, warmup=1, active=5, repeat=1),  # (2)
-                    on_trace_ready=tensorboard_trace_handler(
-                        self.profile_dir / "profiler_train"),  # (3)
-                    profile_memory=True,                                      # (4)
-                    record_shapes=False,                                      # (5)
-                    with_stack=False,                                         # (6)
-                    with_flops=False) as prof:  # (7)
-            for epoch in range(1, self.epochs + 1):
-                # ---------------------------- TRAIN PHASE ---------------------
-                self.model.train()
-                epoch_loss = 0.0
+        for epoch in range(1, self.epochs + 1):
+            # ---------------------------- TRAIN PHASE ---------------------
+            self.model.train()
+            epoch_loss = 0.0
 
-                pbar = tqdm(
-                    self.train_loader,
-                    desc=f"Epoch {epoch}/{self.epochs} [Train]",
-                    leave=False,
-                    dynamic_ncols=True,
-                )
+            pbar = tqdm(
+                self.train_loader,
+                desc=f"Epoch {epoch}/{self.epochs} [Train]",
+                leave=False,
+                dynamic_ncols=True,
+            )
 
-                for imgs, masks, *_ in pbar:
-                    imgs = imgs.to(self.device)
-                    masks = masks.to(self.device).float()
+            for imgs, masks, *_ in pbar:
+                imgs = imgs.to(self.device)
+                masks = masks.to(self.device).float()
 
-                    # already passed through a sigmoid inside the model
-                    preds = self.model(imgs).float()
-                    loss = self.criterion(preds, masks)
+                # already passed through a sigmoid inside the model
+                preds = self.model(imgs).float()
+                loss = self.criterion(preds, masks)
 
-                    self.optimizer.zero_grad(set_to_none=True)
-                    loss.backward()
-                    self.optimizer.step()
+                self.optimizer.zero_grad(set_to_none=True)
+                loss.backward()
+                self.optimizer.step()
 
-                    epoch_loss += loss.item()
-                    pbar.set_postfix({"batch_loss": f"{loss.item():.6f}"})
+                epoch_loss += loss.item()
+                pbar.set_postfix({"batch_loss": f"{loss.item():.6f}"})
 
-                    if self.tb_logger is not None:
-                        self.tb_logger.log_scalar(
-                            "train/batch_loss", loss.item(), global_step)
-                    global_step += 1
-                    prof.step()  # (8) step the profiler
+                if self.tb_logger is not None:
+                    self.tb_logger.log_scalar(
+                        "train/batch_loss", loss.item(), global_step)
+                global_step += 1
 
-                # ------------------------ END OF EPOCH ------------------------
-                avg_epoch_loss = epoch_loss / len(self.train_loader)
-                self._after_epoch(avg_epoch_loss, epoch)
+            # ------------------------ END OF EPOCH ------------------------
+            avg_epoch_loss = epoch_loss / len(self.train_loader)
+            self._after_epoch(avg_epoch_loss, epoch)
 
-                # ------------------------ EVALUATION --------------------------
-                if self.do_evaluation and epoch % self.epochs_btw_eval == 0:
-                    improved = self._run_validation(epoch, best_metrics)
+            # ------------------------ EVALUATION --------------------------
+            if self.do_evaluation and epoch % self.epochs_btw_eval == 0:
+                improved = self._run_validation(epoch, best_metrics)
 
-                    # Handle early‑stopping only after we have evaluation results.
-                    if self.early_stopper(improved):
-                        self._log(logging.INFO,
-                                "Early stopping triggered at epoch %d.", epoch)
-                        break
-            
-            # Final clean‑up ----------------------------------------------------
-            if self.do_evaluation:
-                self.evaluator.done_evaluating()
-            self._log(logging.INFO, "Training finished.")
+                # Handle early‑stopping only after we have evaluation results.
+                if self.early_stopper(improved):
+                    self._log(logging.INFO,
+                            "Early stopping triggered at epoch %d.", epoch)
+                    break
+        
+        # Final clean‑up ----------------------------------------------------
+        if self.do_evaluation:
+            self.evaluator.done_evaluating()
+        self._log(logging.INFO, "Training finished.")
             
             
 

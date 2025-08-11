@@ -7,7 +7,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=48
 #SBATCH --hint=nomultithread
-#SBATCH --time=12:00:00
+#SBATCH --time=15:00:00
 #SBATCH --output=/lustre/fswork/projects/rech/vey/unq35lq/out/run_unet_dice_cldice.out
 #SBATCH --error=/lustre/fswork/projects/rech/vey/unq35lq/err/run_unet_dice_cldice.err
 
