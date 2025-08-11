@@ -72,10 +72,12 @@ class Evaluator:
         self.profile_dir = Path(profile_dir) if profile_dir else None
 
         # Output path for long‑term metric storage ------------------------
-        self.metrics_dir = Path(log_metric_path or "metrics")
-        self.metrics_dir.mkdir(parents=True, exist_ok=True)
-        self.metrics_file = os.path.join(self.metrics_dir, "metrics_results.parquet")
-        self.metrics_file = Path(self.metrics_file)
+        self.metrics_dir = Path(log_metric_path) if log_metric_path else None
+        self.metrics_file = None
+        if self.metrics_dir is not None:
+            self.metrics_dir.mkdir(parents=True, exist_ok=True)
+            self.metrics_file = os.path.join(self.metrics_dir, "metrics_results.parquet")
+            self.metrics_file = Path(self.metrics_file)
 
         # Sliding‑window inference ---------------------------------------
         self.sw_inferer: Optional[SlidingWindowInfererAdapt] = None
@@ -254,6 +256,8 @@ class Evaluator:
 
     # ------------------------------------------------------------------
     def _persist_raw_metrics(self, raw: Dict[str, List[float]]) -> None:
+        if self.metrics_file is None:
+            return 
         records = [{"epoch": self.epoch, "metric": k, "value": float(
             v)} for k, vals in raw.items() for v in vals]
         df = pd.DataFrame.from_records(records)

@@ -8,6 +8,9 @@ from pathlib import Path
 
 # --- Third‑party imports -----------------------------------------------------
 import optuna
+from optuna.samplers import TPESampler
+from optuna.pruners import MedianPruner
+
 import torch
 import yaml
 from torch.nn import DataParallel
@@ -43,10 +46,6 @@ SEARCH_SPACE: dict[str, tuple | list] = {
     "optimizer": ["adamw", "adam"],
 }
 
-
-# --------------------------------------------------------------------------- #
-#                             UTILITY FUNCTIONS                               #
-# --------------------------------------------------------------------------- #
 def load_config(cfg_path: Path | str) -> dict:
     """Load and return the YAML configuration dictionary."""
     cfg_path = Path(cfg_path)
@@ -54,7 +53,6 @@ def load_config(cfg_path: Path | str) -> dict:
         raise FileNotFoundError(f"Config file not found: {cfg_path}")
     with cfg_path.open("r") as f:
         return yaml.safe_load(f)
-
 
 def build_dataloaders(cfg: dict) -> tuple:
     """Build and return (train_loader, val_loader, test_loader)."""
@@ -71,23 +69,16 @@ def build_dataloaders(cfg: dict) -> tuple:
         batch_size=int(cfg["data"].get("batch_size", 32))
     )
 
-
 def build_optimizer(
         name: str, params, lr: float, wd: float
 ) -> torch.optim.Optimizer:
-    """Create and return an optimizer according to its name."""
     name = name.lower()
     if name == "adamw":
         return torch.optim.AdamW(params, lr=lr, weight_decay=wd)
-    if name == "sgd":
+    elif name == "sgd":
         return torch.optim.SGD(params, lr=lr, weight_decay=wd)
-    # Default: Adam
     return torch.optim.Adam(params, lr=lr, weight_decay=wd)
 
-
-# --------------------------------------------------------------------------- #
-#                        OPTUNA OBJECTIVE FUNCTION                            #
-# --------------------------------------------------------------------------- #
 def make_objective(
         base_cfg: dict,
         train_loader,
@@ -96,11 +87,13 @@ def make_objective(
         logger,
         profile_dir: str = "",
 ) -> callable:
-    """Return the parameterised `objective` function for Optuna."""
     epochs_search = base_cfg["training"].get("optuna_epochs", 10)
 
     def objective(trial: optuna.Trial) -> float:
-        """One Optuna trial → returns the validation loss (to minimise)."""
+        
+        trial_profile_dir = os.path.join(profile_dir, f"trial_{trial.number}")
+        os.makedirs(trial_profile_dir, exist_ok=True)
+        
         cfg = copy.deepcopy(base_cfg)
 
         # 1) Hyper‑parameter sampling
@@ -138,7 +131,7 @@ def make_objective(
             log_metric_path=None,
             roi_fnc=roi_fnc,
             compute_cpu_metrics=False,
-            profile_dir=profile_dir
+            profile_dir=trial_profile_dir
         )
 
         # 4) Quick training run
@@ -154,29 +147,21 @@ def make_objective(
             checkpoint_dir=None,
             device=device,
             epochs=epochs_search,
-            epochs_btw_eval=50,
+            epochs_btw_eval=10000,
             do_evaluation=False,
-            profile_dir=profile_dir
+            profile_dir=trial_profile_dir
         ).train()
 
         # 5) Validation
         val_loss = evaluator.evaluate().get(
             f"val_loss_{criterion.__class__.__name__}", float("inf")
         )
-
-        # — Free VRAM —
-        del model, optimizer, criterion
         torch.cuda.empty_cache()
         return val_loss
 
     return objective
 
-
-# --------------------------------------------------------------------------- #
-#                             MAIN EXECUTION BLOCK                            #
-# --------------------------------------------------------------------------- #
 def main() -> None:
-    """Script entry point: parse args, run Optuna, then final training."""
     parser = argparse.ArgumentParser(
         description="Train/Test a model for root system segmentation in 2D grayscale images."
     )
@@ -207,36 +192,16 @@ def main() -> None:
     # 2) DataLoaders
     train_loader, val_loader, test_loader = build_dataloaders(cfg)
 
-    # 3) Optuna search
-    study_path = log_dir / "study.pkl"
-    storage = optuna.storages.RDBStorage(
-        url=f"sqlite:///{study_path}"
-    )
-    study = optuna.create_study(
-        study_name=f"Optuna_{cfg['model']['name']}_{cfg['loss']['name']}",
-        storage=storage,
-        direction="minimize",
-    )
-    study.optimize(
-        make_objective(cfg, train_loader, val_loader, device, logger, profile_dir),
-        n_trials=cfg["training"].get("optuna_trials", 10),
-    )
-
-    logger.info("\n=== BEST TRIAL ===")
-    logger.info("  value (val_loss): %s", study.best_value)
-    logger.info("  params: %s", study.best_params)
-    logger.info("≡ Optuna study saved at %s\n", study_path)
-
     metric_logger_path = os.path.join(log_dir, "metrics")
     os.makedirs(metric_logger_path, exist_ok=True)
 
     # 4) Best hyper‑parameter configuration
     best_cfg = copy.deepcopy(cfg)
-    best_cfg["optimizer"].update(
+    best_cfg["optimizer"].update( # bce unet
         {
-            "learning_rate": study.best_params["learning_rate"],
-            "weight_decay": study.best_params["weight_decay"],
-            "name": study.best_params["optimizer"],
+            "learning_rate": 0.029106359131330698,
+            "weight_decay": 6.251373574521749e-06,
+            "name": 'adam',
         }
     )
 
@@ -295,7 +260,6 @@ def main() -> None:
     evaluator.evaluate()  # baseline before training
     logger.info("Starting final training…")
     trainer.train()
-
 
 if __name__ == "__main__":
     main()

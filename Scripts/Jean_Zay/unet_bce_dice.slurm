@@ -19,4 +19,4 @@ mamba activate utils
 
 cd /lustre/fswork/projects/rech/vey/unq35lq # $WORK
 
-python3 ./RSA_deep_working/Models/main_optuna.py --config "./RSA_deep_working/Models/configs/unet_bce_dice.yml" > /lustre/fswork/projects/rech/vey/unq35lq/log/unet_bce_dice.log 2>&1
+python3 ./RSA_deep_working/Models/main.py --config "./RSA_deep_working/Models/configs/unet_bce_dice.yml" > /lustre/fswork/projects/rech/vey/unq35lq/log/unet_bce_dice.log 2>&1
