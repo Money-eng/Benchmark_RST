@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=48
+#SBATCH --cpus-per-task=24
 #SBATCH --hint=nomultithread
 #SBATCH --time=15:00:00
 #SBATCH --output=/lustre/fswork/projects/rech/vey/unq35lq/out/run_unet_dice.out
@@ -19,4 +19,4 @@ mamba activate utils
 
 cd /lustre/fswork/projects/rech/vey/unq35lq # $WORK
 
-python3 ./RSA_deep_working/Models/main.py --config "./RSA_deep_working/Models/configs/unet_dice.yml" > /lustre/fswork/projects/rech/vey/unq35lq/log/log_unet_dice.log 2>&1
+python3 ./RSA_deep_working/Models/main_unet_dice.py --config "./RSA_deep_working/Models/configs/unet_dice.yml" > /lustre/fswork/projects/rech/vey/unq35lq/log/log_unet_dice.log 2>&1

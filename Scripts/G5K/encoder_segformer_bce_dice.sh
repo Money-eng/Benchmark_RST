@@ -9,4 +9,4 @@
 source ~/.bashrc
 mamba activate test
 cd ~/Code
-python3 ./RSA_deep_working/Models/main_optuna.py --config "./RSA_deep_working/Models/configs/segformer_bce_dice.yml" > log_segformer_bce_dice.log 2>&1
+python3 ./RSA_deep_working/Models/main.py --config "./RSA_deep_working/Models/configs/segformer_bce_dice.yml" > log_segformer_bce_dice.log 2>&1

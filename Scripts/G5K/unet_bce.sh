@@ -10,4 +10,4 @@ source ~/.bashrc
 mamba activate test
 cd ~/Code
 
-python3 ./RSA_deep_working/Models/main_optuna.py --config "./RSA_deep_working/Models/configs/unet_bce.yml" > /home/lgandeel/log/unet_bce.log 2>&1
+python3 ./RSA_deep_working/Models/main.py --config "./RSA_deep_working/Models/configs/unet_bce.yml" > /home/lgandeel/log/unet_bce.log 2>&1
