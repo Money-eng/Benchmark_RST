@@ -1,7 +1,6 @@
 import logging
 from pathlib import Path
 
-
 from torch.utils.tensorboard import SummaryWriter
 
 
@@ -25,12 +24,12 @@ def get_logger(log_file=None) -> logging.Logger:
 
 class TensorboardLogger:
     def __init__(self, log_dir: str, flush_secs: int = 30):
-        Path(log_dir).mkdir(parents=True, exist_ok=True) 
+        Path(log_dir).mkdir(parents=True, exist_ok=True)
         self.writer = SummaryWriter(log_dir=log_dir, flush_secs=flush_secs)
 
     def log_scalar(self, tag: str, value: float, step: int):
         self.writer.add_scalar(tag, value, step)
-        #self.writer.flush()
+        # self.writer.flush()
 
     def log_image(self, tag, img_tensor, global_step=None, walltime=None, dataformats="NCHW"):
         try:
@@ -40,7 +39,7 @@ class TensorboardLogger:
             print(f"Error logging image {tag}: {e}")
 
     def close(self):
-        #self.writer.flush()
+        # self.writer.flush()
         self.writer.close()
 
 

@@ -1,0 +1,55 @@
+from typing import Tuple
+from attr import dataclass
+import numpy as np
+
+@dataclass
+class RuptureDownDetector:
+    """
+    Détecteur de 'rupture descendante' (maximum mean-shift).
+    Calcule, pour chaque pixel, l'instant i maximisant Δ(i) = mean(0..i-1) - mean(i..T-1).
+    Renvoie:
+      - rupture_index: i* (0..T-1, avec 0 réservé si pas de rupture => on encode i* en 1..T-1 puis remap)
+      - rupture_score: Δ_max (float)
+    Seuil appliqué: rupture_score > threshold_rupture  => rupture valide.
+    """
+    threshold_rupture: float = 0.3  # adapté à des valeurs [0,1]
+
+    def __call__(self, seq: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        # seq: (T, H, W), float32
+        if seq.ndim != 3:
+            raise ValueError(f"`seq` doit être de forme (T, H, W), reçu {seq.shape}")
+        T, H, W = seq.shape
+        P = H * W
+
+        if T < 2:
+            # pas assez d'instants pour une rupture
+            rupture_score = np.full((H, W), -np.inf, dtype=np.float32)
+            rupture_index = np.zeros((H, W), dtype=np.int32)
+            return rupture_index, rupture_score
+
+        X = seq.reshape(T, P)  # (T, P)
+
+        # cumsum pad pour sommes rapides
+        csum = np.zeros((T + 1, P), dtype=np.float32)
+        np.cumsum(X, axis=0, out=csum[1:])
+        total = csum[T]  # (P,)
+
+        # Δ(i) pour i = 1..T-1
+        deltas = np.empty((T - 1, P), dtype=np.float32)
+        for i in range(1, T):
+            sum1 = csum[i]               # somme 0..i-1
+            den1 = float(i)
+            sum2 = total - csum[i]       # somme i..T-1
+            den2 = float(T - i)
+            mu1 = sum1 / den1
+            mu2 = sum2 / den2
+            deltas[i - 1] = (mu1 - mu2)
+
+        delta_max = deltas.max(axis=0)            # (P,)
+        i_star = deltas.argmax(axis=0) + 1        # indices 1..T-1
+
+        # seuil: si Δ_max <= seuil => index 0 (pas de rupture)
+        rupture_index = np.where(delta_max > self.threshold_rupture, i_star, 0).astype(np.int32)
+        rupture_score = delta_max.astype(np.float32)
+
+        return rupture_index.reshape(H, W), rupture_score.reshape(H, W)

@@ -4,8 +4,8 @@
 #SBATCH -C h100
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=24
+#SBATCH --gres=gpu:4
+#SBATCH --cpus-per-task=96
 #SBATCH --hint=nomultithread
 #SBATCH --time=15:00:00
 #SBATCH --output=/lustre/fswork/projects/rech/vey/unq35lq/out/run_unet_dice.out

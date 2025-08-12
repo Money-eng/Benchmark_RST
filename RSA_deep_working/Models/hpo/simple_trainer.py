@@ -62,18 +62,18 @@ class SimpleTrainer:
     """
 
     def __init__(
-        self,
-        model: nn.Module,
-        optimizer: Optimizer,
-        criterion: nn.Module,
-        device: torch.device,
-        train_loader: DataLoader,
-        val_loader: DataLoader,
-        *,
-        num_epochs: int = 10,
-        eval_every: int = 1,
-        trial: Optional["optuna.Trial"] = None,
-        patience: Optional[int] = None,
+            self,
+            model: nn.Module,
+            optimizer: Optimizer,
+            criterion: nn.Module,
+            device: torch.device,
+            train_loader: DataLoader,
+            val_loader: DataLoader,
+            *,
+            num_epochs: int = 10,
+            eval_every: int = 1,
+            trial: Optional["optuna.Trial"] = None,
+            patience: Optional[int] = None,
     ) -> None:
         self.model = model
         self.optimizer = optimizer

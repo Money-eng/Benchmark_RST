@@ -33,8 +33,8 @@ from typing import Callable, Dict, Iterable, Optional, Tuple
 
 import optuna
 import torch
-from optuna.samplers import TPESampler
 from optuna.pruners import SuccessiveHalvingPruner
+from optuna.samplers import TPESampler
 
 from simple_trainer import SimpleTrainer
 
@@ -77,14 +77,14 @@ class HPOSearcher:
     """
 
     def __init__(
-        self,
-        build_model: Callable[[Dict], torch.nn.Module],
-        build_criterion: Callable[[], torch.nn.Module],
-        *,
-        make_optimizer: Optional[Callable[[Iterable, str, float, float], torch.optim.Optimizer]] = None,
-        seed: int = 42,
-        study_storage: Optional[str] = None,
-        study_name: Optional[str] = None,
+            self,
+            build_model: Callable[[Dict], torch.nn.Module],
+            build_criterion: Callable[[], torch.nn.Module],
+            *,
+            make_optimizer: Optional[Callable[[Iterable, str, float, float], torch.optim.Optimizer]] = None,
+            seed: int = 42,
+            study_storage: Optional[str] = None,
+            study_name: Optional[str] = None,
     ) -> None:
         self.build_model = build_model
         self.build_criterion = build_criterion
@@ -95,17 +95,17 @@ class HPOSearcher:
 
     # ------------------------------- API publique ----------------------------
     def search(
-        self,
-        train_loader,
-        val_loader,
-        *,
-        n_trials: int = 50,
-        epochs_per_trial: int = 8,
-        eval_every: int = 1,
-        lr_bounds: Tuple[float, float] = (1e-4, 3e-2),
-        wd_bounds: Tuple[float, float] = (1e-7, 1e-3),
-        optimizers: Tuple[str, ...] = ("adamw", "adam"),
-        device: Optional[torch.device] = None,
+            self,
+            train_loader,
+            val_loader,
+            *,
+            n_trials: int = 50,
+            epochs_per_trial: int = 8,
+            eval_every: int = 1,
+            lr_bounds: Tuple[float, float] = (1e-4, 3e-2),
+            wd_bounds: Tuple[float, float] = (1e-7, 1e-3),
+            optimizers: Tuple[str, ...] = ("adamw", "adam"),
+            device: Optional[torch.device] = None,
     ) -> BestTrial:
         """Lance une étude Optuna et retourne le meilleur essai (val_loss minimale)."""
         self.device = device or default_device()
@@ -139,15 +139,15 @@ class HPOSearcher:
 
     # ----------------------------- Détails internes --------------------------
     def _make_objective(
-        self,
-        *,
-        train_loader,
-        val_loader,
-        epochs_per_trial: int,
-        eval_every: int,
-        lr_bounds: Tuple[float, float],
-        wd_bounds: Tuple[float, float],
-        optimizers: Tuple[str, ...],
+            self,
+            *,
+            train_loader,
+            val_loader,
+            epochs_per_trial: int,
+            eval_every: int,
+            lr_bounds: Tuple[float, float],
+            wd_bounds: Tuple[float, float],
+            optimizers: Tuple[str, ...],
     ):
         def objective(trial: optuna.Trial) -> float:
             # 1) Échantillonnage des hyperparamètres (log pour LR et WD)
@@ -207,7 +207,7 @@ class HPOSearcher:
             return torch.optim.AdamW(params, lr=lr, weight_decay=wd)
         if name == "sgd":
             return torch.optim.SGD(params, lr=lr, weight_decay=wd, momentum=0.9, nesterov=True)
-        return torch.optim.Adam(params, lr=lr, weight_decay=wd) 
+        return torch.optim.Adam(params, lr=lr, weight_decay=wd)
 
 
 if __name__ == "__main__":
@@ -228,11 +228,14 @@ if __name__ == "__main__":
     train_loader = DataLoader(ds, batch_size=32, shuffle=True)
     val_loader = DataLoader(ds, batch_size=64)
 
+
     def build_model(_cfg: Dict) -> nn.Module:
         return nn.Sequential(nn.Linear(16, 32), nn.ReLU(), nn.Linear(32, 1), nn.Sigmoid())
 
+
     def build_criterion() -> nn.Module:
         return nn.BCELoss()
+
 
     searcher = HPOSearcher(build_model, build_criterion, study_storage=None)
     best = searcher.search(train_loader, val_loader, n_trials=20, epochs_per_trial=3)

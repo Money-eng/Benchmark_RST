@@ -1,7 +1,7 @@
 data:
   base_dir: RSA_deep_working/Data
   patch_size: 512
-  batch_size: 8
+  batch_size: 128
 
 training:
   epochs: 300
@@ -60,8 +60,21 @@ metrics:
     - { name: "precision" }
     - { name: "recall" }
     - { name: "specificity" }
-    - { name: "surface_dice" }
-    - { name: "surface_distance" }
+    - { name: "betti0_jaccard_ratio_gpu" }
+    - { name: "betti0_relative_error_gpu" }
+    - { name: "betti0_variation_index_gpu" }
+    - { name: "betti1_jaccard_ratio_gpu" }
+    - { name: "betti1_relative_error_gpu" }
+    - { name: "betti1_variation_index_gpu" }
+    - { name: "centerline_f1_gpu" }
+    - { name: "persistence_bottleneck_gpu" }
+    - { name: "persistence_wasserstein_gpu" }
+    - { name: "average_centerline_distance" }
+    - { name: "average_path_length_similarity" }
+    #- { name: "branch_break_rate" }
+    #- { name: "branch_length_rate" }
+    #- { name: "surface_dice" }
+    #- { name: "surface_distance" }
   cpu:
     - { name: "variation_of_information" }
     - { name: "betti0_jaccard_ratio" }

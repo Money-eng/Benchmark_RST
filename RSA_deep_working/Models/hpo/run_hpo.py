@@ -1,21 +1,10 @@
-"""
-run_hpo_hardcoded.py — Recherche d'hyperparamètres **uniquement**, sans argparse.
-
-Tout est configuré **en dur** ci‑dessous :
-- chemins/logs
-- bornes HPO (LR/WD) et optimizers
-- nb d'essais et nb d'époques par essai
-- persistance de l'étude (study.db) et export d'un YAML des meilleurs params
-
-Dépend de :
-- hpo_search.HPOSearcher (Optuna TPE + ASHA) — fichier séparé
-- simple_trainer.SimpleTrainer (entraîneur minimal) — importé par HPOSearcher
-- vos modules projet (Model, Losses, DataLoaders, etc.)
-
-Usage :
-    python run_hpo_hardcoded.py
-"""
 from __future__ import annotations
+
+# setup work space to parent directory
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 # -------- Standard --------
 from pathlib import Path
@@ -46,12 +35,12 @@ from hpo_search import HPOSearcher
 # 1) CONFIGURATION EN DUR (modifie simplement ces variables)
 # -----------------------------------------------------------------------------
 # Chemin vers ta config YAML projet
-CONFIG_PATH: Path = Path("RSA_deep_working/Models/configs/unet_dice.yml")
+CONFIG_PATH: Path = Path("RSA_deep_working/Models/configs/unet_dice_cldice.yml")
 
 # Budget Optuna
-N_TRIALS: int = 80           # nombre d'essais
-EPOCHS_PER_TRIAL: int = 8    # époques par essai (entraînement court)
-EVAL_EVERY: int = 1          # fréquence d'évaluation/pruning (1 = chaque époque)
+N_TRIALS: int = 80  # nombre d'essais
+EPOCHS_PER_TRIAL: int = 20  # époques par essai (entraînement court)
+EVAL_EVERY: int = 1  # fréquence d'évaluation/pruning (1 = chaque époque)
 
 # Espace HPO (bornes log-uniformes pour LR & WD)
 LR_BOUNDS: Tuple[float, float] = (1e-3, 1e-1)
@@ -69,6 +58,7 @@ RUN_NAME: str = "HPO_ONLY"  # utilisé pour les dossiers de log
 # -----------------------------------------------------------------------------
 set_seed(SEED)
 N_GPUS: int = torch.cuda.device_count()
+
 
 def load_config(cfg_path: Path | str) -> dict:
     cfg_path = Path(cfg_path)
@@ -96,17 +86,20 @@ def build_dataloaders(cfg: dict) -> tuple:
 
 def make_build_model(cfg: dict):
     """Fabriqueur de modèle pour HPOSearcher (respecte le multi‑GPU)."""
+
     def _build_model(_unused: Dict) -> torch.nn.Module:
         model = get_model(cfg["model"])
         if N_GPUS > 1:
             model = DataParallel(model)
         return model
+
     return _build_model
 
 
 def make_build_criterion(cfg: dict):
     def _build_criterion() -> torch.nn.Module:
         return get_loss(cfg["loss"])  # .to(device) géré par SimpleTrainer
+
     return _build_criterion
 
 
@@ -145,7 +138,8 @@ def main() -> None:
 
     logger.info(
         "[HPO] trials=%d | epochs/trial=%d | eval_every=%d | lr=[%.1e, %.1e] | wd=[%.1e, %.1e] | optims=%s",
-        N_TRIALS, EPOCHS_PER_TRIAL, EVAL_EVERY, LR_BOUNDS[0], LR_BOUNDS[1], WD_BOUNDS[0], WD_BOUNDS[1], ",".join(OPTIMIZERS)
+        N_TRIALS, EPOCHS_PER_TRIAL, EVAL_EVERY, LR_BOUNDS[0], LR_BOUNDS[1], WD_BOUNDS[0], WD_BOUNDS[1],
+        ",".join(OPTIMIZERS)
     )
 
     best = searcher.search(

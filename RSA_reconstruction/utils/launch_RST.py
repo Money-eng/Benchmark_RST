@@ -26,16 +26,13 @@ def preprocess_RST_pipeline(
         output_dir (str): Chemin temporaire vers le dossier de sortie pour RST.
         obs_hours (float): Temps d'observation extrait du RSML ground truth (sera rempli après chargement MTG GT).
     """
-    # Crée un dossier temporaire pour l'entrée
     temp_name = "./temps_" + str(os.getpid()) + '/'
-    os.makedirs(temp_name, exist_ok=True)  # Assure que le dossier temps existe
+    os.makedirs(temp_name, exist_ok=True)
     input_dir = tempfile.mkdtemp(prefix="rst_input_", dir=temp_name)
 
-    # Récupère le batch sous forme de numpy (valeurs 0/1)
-    prediction_np = prediction.cpu().numpy().astype(np.uint8)  # (batch_size, 1, H, W)
+    prediction_np = prediction.cpu().numpy().astype(np.uint8)
     batch_size, _, height, width = prediction_np.shape
 
-    # Construit la date_map : chaque pixel prend l'index + 1 de la première prédiction non nulle
     pred_datemap = np.zeros((height, width), dtype=np.uint8)
     for i in range(batch_size):
         mask_i = (prediction_np[i, 0] > 0) & (pred_datemap == 0)

@@ -10,12 +10,11 @@ import torch
 from torch import nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, _LRScheduler
+from torch.profiler import profile, tensorboard_trace_handler, ProfilerActivity, schedule
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from utils.logger import TensorboardLogger
 from utils.misc import SEED, get_device, set_seed
-from torch.profiler import profile, tensorboard_trace_handler, ProfilerActivity, schedule
-
 
 from .evaluator import Evaluator
 
@@ -163,15 +162,13 @@ class Trainer:
                 # Handle early‑stopping only after we have evaluation results.
                 if self.early_stopper(improved):
                     self._log(logging.INFO,
-                            "Early stopping triggered at epoch %d.", epoch)
+                              "Early stopping triggered at epoch %d.", epoch)
                     break
-        
+
         # Final clean‑up ----------------------------------------------------
         if self.do_evaluation:
             self.evaluator.done_evaluating()
         self._log(logging.INFO, "Training finished.")
-            
-            
 
     # ------------------------------------------------------------------
     # Private helpers

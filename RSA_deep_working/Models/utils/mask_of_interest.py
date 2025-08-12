@@ -1,18 +1,21 @@
+import math
+
 import torch
 from openalea.mtg import MTG
-from .mtg_operations import extract_mtg_at_time_t
-import math
 from rsml import rsml2mtg
 
+from .mtg_operations import extract_mtg_at_time_t
+
+
 def _segment_mask(
-    x1: float,
-    y1: float,
-    x2: float,
-    y2: float,
-    H: int,
-    W: int,
-    radius: float,
-    device: torch.device,
+        x1: float,
+        y1: float,
+        x2: float,
+        y2: float,
+        H: int,
+        W: int,
+        radius: float,
+        device: torch.device,
 ) -> torch.Tensor:
     """
     Retourne un masque [1, H, W] où les pixels à distance <= radius du segment
@@ -89,38 +92,42 @@ def roi_fnc(imgs: torch.Tensor, time: list, mtgs: list, diameter: float = 10.0) 
 
         roi_masks[i] = (accum_mask > 0).float()
 
-    #import matplotlib.pyplot as plt
+    # import matplotlib.pyplot as plt
     # Visualisation des masques ROI
-    #num_imgs = roi_masks.shape[0]
-    #fig, axs = plt.subplots(1, num_imgs, figsize=(15, 5))
-    #for i in range(num_imgs):
-     #   axs[i].imshow(roi_masks[i, 0].cpu().numpy(), cmap='gray')
-      #  axs[i].set_title(f'ROI Mask {i+1}')
-       # axs[i].axis('off')
-    #plt.tight_layout()
-    #plt.show()
+    # num_imgs = roi_masks.shape[0]
+    # fig, axs = plt.subplots(1, num_imgs, figsize=(15, 5))
+    # for i in range(num_imgs):
+    #   axs[i].imshow(roi_masks[i, 0].cpu().numpy(), cmap='gray')
+    #  axs[i].set_title(f'ROI Mask {i+1}')
+    # axs[i].axis('off')
+    # plt.tight_layout()
+    # plt.show()
 
     return roi_masks
 
+
 if __name__ == "__main__":
-    
+
     # Example usage
     imgs = torch.randn(6, 3, 1166, 1366)  # Example image tensor
     time = [5, 10, 15, 20, 25, 29]  # Example time list
     from rsml import rsml2mtg
-    mtg1 = rsml2mtg("/home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Prediction/Segformer_bce_dice/Val/230629PN012/61_prediction_before_expertized_graph.rsml")
+
+    mtg1 = rsml2mtg(
+        "/home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Prediction/Segformer_bce_dice/Val/230629PN012/61_prediction_before_expertized_graph.rsml")
     mtgs = [mtg1, mtg1, mtg1, mtg1, mtg1, mtg1]  # Example list of MTG objects
-    
+
     roi_masks = roi_fnc(imgs, time, mtgs)
     print(roi_masks.shape)  # Should print (6, 1, 1166, 1366)
-    
+
     # plot all roi_masks in subplots
     import matplotlib.pyplot as plt
-    fig, axs = plt.subplots(2, 3, figsize=(15, 10 ))
+
+    fig, axs = plt.subplots(2, 3, figsize=(15, 10))
     axs = axs.flatten()
     for i in range(6):
         axs[i].imshow(roi_masks[i, 0].cpu().numpy(), cmap='gray')
-        axs[i].set_title(f'ROI Mask {i+1}')
+        axs[i].set_title(f'ROI Mask {i + 1}')
         axs[i].axis('off')
     plt.tight_layout()
     plt.show()
