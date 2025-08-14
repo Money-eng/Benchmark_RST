@@ -1,9 +1,6 @@
-from monai.losses import DiceLoss
+from monai.losses import DiceLoss as MonaiDiceLoss
 
 
-class DiceLoss(DiceLoss):
+class DiceLoss(MonaiDiceLoss):
     def __init__(self, **kwargs):
-        super().__init__(kwargs)
-
-    def forward(self, inputs, targets):
-        return super().forward(inputs, targets)
+        super().__init__(**kwargs)

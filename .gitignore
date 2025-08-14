@@ -52,6 +52,7 @@ __pycache__/
 *.pyc
 events.*
 Data/
+Results/
 *.crt
 OLD/*
 *.tif 

@@ -15,7 +15,17 @@ from .cpu.euler_charac_variation_index import EulerCharacVariationIndex
 from .cpu.persistence_bottleneck import PeristenceBottleneck
 from .cpu.persistence_wasserstein import PeristenceWasserstein
 from .cpu.variation_of_information import VI
-
+from .gpu.apls import APLS
+from .gpu.avg_centerline_distance import AverageCenterlineDistance
+from .gpu.betti0_ratio_gpu import Betti0JaccardRatioGPU
+from .gpu.betti0_relative_error_gpu import Betti0RelativeErrorGPU
+from .gpu.betti0_variation_index_gpu import Betti0VariationIndexGPU
+from .gpu.betti1_ratio_gpu import Betti1JaccardRatioGPU
+from .gpu.betti1_relative_error_gpu import Betti1RelativeErrorGPU
+from .gpu.betti1_variation_index_gpu import Betti1VariationIndexGPU
+from .gpu.branch_break_rate import BranchBrakeRate
+from .gpu.branch_length_rate import BranchLengthRate
+from .gpu.centerline_f1 import CenterlineF1
 from .gpu.cldice import CLDice
 from .gpu.dice import Dice
 from .gpu.f1_score import F1Score
@@ -23,25 +33,14 @@ from .gpu.focal import FocalLoss
 from .gpu.haussdorff import HausdorffDistance
 from .gpu.iou import MeanIoU
 from .gpu.mutual_information import NormalizedMutualInformation
+from .gpu.persistence_bottleneck_gpu import PersistenceBottleneckGPUParallel
+from .gpu.persistence_wasserstein_gpu import PersistenceWassersteinGPUParallel
 from .gpu.pixel_accuracy import PixelAccuracy
 from .gpu.precision import Precision
 from .gpu.recall import Recall
 from .gpu.specificity import Specificity
 from .gpu.surface_dice import Surface_dice
 from .gpu.surface_difference import Surface_distance
-from .gpu.betti0_ratio_gpu import Betti0JaccardRatioGPU
-from .gpu.betti0_relative_error_gpu import Betti0RelativeErrorGPU
-from .gpu.betti0_variation_index_gpu import Betti0VariationIndexGPU
-from .gpu.betti1_ratio_gpu import Betti1JaccardRatioGPU
-from .gpu.betti1_relative_error_gpu import Betti1RelativeErrorGPU
-from .gpu.betti1_variation_index_gpu import Betti1VariationIndexGPU
-from .gpu.persistence_bottleneck_gpu import PersistenceBottleneckGPUParallel
-from .gpu.persistence_wasserstein_gpu import PersistenceWassersteinGPUParallel
-from .gpu.centerline_f1 import CenterlineF1
-from .gpu.branch_break_rate import BranchBrakeRate
-from .gpu.branch_length_rate import BranchLengthRate
-from .gpu.avg_centerline_distance import AverageCenterlineDistance
-from .gpu.apls import APLS
 
 # from .mtg.area_below_intercep import AreaBetweenIntercepts
 # from .mtg.dtw_below_intercep import DTWBetweenIntercepts
@@ -76,6 +75,8 @@ METRIC_FACTORIES = {
     "centerline_f1_gpu": CenterlineF1,
     "average_centerline_distance": AverageCenterlineDistance,
     "average_path_length_similarity": APLS,
+    "persistence_bottleneck_gpu": PersistenceBottleneckGPUParallel,
+    "persistence_wasserstein_gpu": PersistenceWassersteinGPUParallel,
     "branch_break_rate": BranchBrakeRate,
     "branch_length_rate": BranchLengthRate,
 

@@ -5,17 +5,17 @@ from cucim.skimage import measure
 
 from ..base import BaseMetric
 
-    
+
 def _betti0_jaccard_gpu(prediction_torch, mask_torch):
-        pred = cp.from_dlpack(torch.utils.dlpack.to_dlpack((prediction_torch > 0).to(torch.uint8)))
-        mask = cp.from_dlpack(torch.utils.dlpack.to_dlpack((mask_torch > 0).to(torch.uint8)))
-        scores = []
-        for i in range(pred.shape[0]):  # label agit image par image
-            n_pred = measure.label(pred[i]).max()
-            n_mask = measure.label(mask[i]).max()
-            scores.append(cp.minimum(n_pred, n_mask) / (cp.maximum(n_pred, n_mask) + 1e-8))
-        return float(cp.mean(cp.asarray(scores)).get())
-    
+    pred = cp.from_dlpack(torch.utils.dlpack.to_dlpack((prediction_torch > 0).to(torch.uint8)))
+    mask = cp.from_dlpack(torch.utils.dlpack.to_dlpack((mask_torch > 0).to(torch.uint8)))
+    scores = []
+    for i in range(pred.shape[0]):  # label agit image par image
+        n_pred = measure.label(pred[i]).max()
+        n_mask = measure.label(mask[i]).max()
+        scores.append(cp.minimum(n_pred, n_mask) / (cp.maximum(n_pred, n_mask) + 1e-8))
+    return float(cp.mean(cp.asarray(scores)).get())
+
 
 class Betti0JaccardRatioGPU(BaseMetric):
     type = "gpu"

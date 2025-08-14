@@ -66,6 +66,7 @@ class SimpleTrainer:
             model: nn.Module,
             optimizer: Optimizer,
             criterion: nn.Module,
+            metric: nn.Module,
             device: torch.device,
             train_loader: DataLoader,
             val_loader: DataLoader,
@@ -78,6 +79,7 @@ class SimpleTrainer:
         self.model = model
         self.optimizer = optimizer
         self.criterion = criterion
+        self.eval_metric = metric
         self.device = device
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -101,7 +103,7 @@ class SimpleTrainer:
         Retourne la meilleure val_loss observée et un petit historique.
         """
         history = {"train_loss": [], "val_loss": []}
-        best_val = float("inf")
+        best_val = -float("inf")
         best_epoch = -1
         no_improve = 0  # compteur early-stopping
 
@@ -129,18 +131,18 @@ class SimpleTrainer:
 
             # ------------------- phase VAL (selon fréquence) ----
             if epoch % self.eval_every == 0:
-                val_loss = self._validate()
-                history["val_loss"].append(val_loss)
+                val_value = self._validate()
+                history["val_loss"].append(val_value)
 
                 # Si utilisé dans une étude Optuna → report + prune
                 if self.trial is not None and optuna is not None:
-                    self.trial.report(val_loss, step=epoch)
+                    self.trial.report(val_value, step=epoch)
                     if self.trial.should_prune():
                         raise optuna.TrialPruned(f"Pruned at epoch {epoch}")
 
                 # Suivi du meilleur modèle
-                if val_loss < best_val - 1e-8:
-                    best_val = float(val_loss)
+                if val_value > best_val + 1e-8:
+                    best_val = float(val_value)
                     best_epoch = epoch
                     no_improve = 0
                 else:
@@ -163,7 +165,11 @@ class SimpleTrainer:
             imgs = imgs.to(self.device)
             masks = masks.to(self.device).float()
             preds = self.model(imgs).float()
-            loss = self.criterion(preds, masks)
-            running += float(loss.item())
+            value = self.eval_metric(preds, masks)
+            if isinstance(value, torch.Tensor):
+                value = float(value.detach().mean().item())
+            else:
+                value = float(value)
+            running += float(value)
             nbatches += 1
         return running / max(1, nbatches)

@@ -15,6 +15,7 @@ def _betti0_relative_error_gpu(prediction_torch, mask_torch):
         scores.append(cp.abs(n_pred - n_mask) / (n_mask + 1e-8))
     return float(cp.mean(cp.asarray(scores)).get())
 
+
 class Betti0RelativeErrorGPU(BaseMetric):
     type = "gpu"
 

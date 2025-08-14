@@ -80,6 +80,7 @@ class HPOSearcher:
             self,
             build_model: Callable[[Dict], torch.nn.Module],
             build_criterion: Callable[[], torch.nn.Module],
+            build_metric: Callable[[], torch.nn.Module],
             *,
             make_optimizer: Optional[Callable[[Iterable, str, float, float], torch.optim.Optimizer]] = None,
             seed: int = 42,
@@ -88,10 +89,13 @@ class HPOSearcher:
     ) -> None:
         self.build_model = build_model
         self.build_criterion = build_criterion
+        self.build_metric = build_metric
         self.make_optimizer = make_optimizer
         self.seed = seed
         self.study_storage = study_storage
         self.study_name = study_name
+
+        print("Eval_metric:", build_metric())
 
     # ------------------------------- API publique ----------------------------
     def search(
@@ -107,14 +111,14 @@ class HPOSearcher:
             optimizers: Tuple[str, ...] = ("adamw", "adam"),
             device: Optional[torch.device] = None,
     ) -> BestTrial:
-        """Lance une étude Optuna et retourne le meilleur essai (val_loss minimale)."""
+        """Lance une étude Optuna et retourne le meilleur essai (metric val maximale)."""
         self.device = device or default_device()
 
         sampler = TPESampler(seed=self.seed, multivariate=True, group=True)
         pruner = SuccessiveHalvingPruner(reduction_factor=3, min_resource=1)
 
         study = optuna.create_study(
-            direction="minimize",
+            direction="maximize",
             sampler=sampler,
             pruner=pruner,
             study_name=self.study_name,
@@ -159,6 +163,7 @@ class HPOSearcher:
             model = self.build_model({})  # passe une dict vide si non utilisée
             model = model.to(self.device)
             criterion = self.build_criterion().to(self.device)
+            eval_metric = self.build_metric() #.to(self.device)
 
             # 3) Optimiseur (basique et lisible)
             optimizer = self._build_optimizer(model.parameters(), opt_name, lr, wd)
@@ -168,6 +173,7 @@ class HPOSearcher:
                 model=model,
                 optimizer=optimizer,
                 criterion=criterion,
+                metric=eval_metric,
                 device=self.device,
                 train_loader=train_loader,
                 val_loader=val_loader,
@@ -208,35 +214,3 @@ class HPOSearcher:
         if name == "sgd":
             return torch.optim.SGD(params, lr=lr, weight_decay=wd, momentum=0.9, nesterov=True)
         return torch.optim.Adam(params, lr=lr, weight_decay=wd)
-
-
-if __name__ == "__main__":
-    """Exemple minimal pour tester rapidement (à adapter à ton projet).
-
-    Tu dois fournir :
-    - un build_model() qui retourne un nn.Module
-    - un build_criterion() qui retourne une loss
-    - des DataLoaders train/val
-    """
-    from torch import nn
-    from torch.utils.data import DataLoader, TensorDataset
-
-    # Données jouet (binaire) : 1000 échantillons, 16 features
-    X = torch.randn(1000, 16)
-    y = (X.sum(dim=1) > 0).float().unsqueeze(1)
-    ds = TensorDataset(X, y)
-    train_loader = DataLoader(ds, batch_size=32, shuffle=True)
-    val_loader = DataLoader(ds, batch_size=64)
-
-
-    def build_model(_cfg: Dict) -> nn.Module:
-        return nn.Sequential(nn.Linear(16, 32), nn.ReLU(), nn.Linear(32, 1), nn.Sigmoid())
-
-
-    def build_criterion() -> nn.Module:
-        return nn.BCELoss()
-
-
-    searcher = HPOSearcher(build_model, build_criterion, study_storage=None)
-    best = searcher.search(train_loader, val_loader, n_trials=20, epochs_per_trial=3)
-    print("Best:", best)

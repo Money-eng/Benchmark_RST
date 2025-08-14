@@ -4,6 +4,7 @@ from cucim.skimage import measure
 
 from ..base import BaseMetric
 
+
 def _betti1_variation_index_gpu(prediction_torch, mask_torch):
     pred = cp.from_dlpack(torch.utils.dlpack.to_dlpack((prediction_torch > 0).to(torch.uint8)))
     mask = cp.from_dlpack(torch.utils.dlpack.to_dlpack((mask_torch > 0).to(torch.uint8)))
@@ -15,6 +16,7 @@ def _betti1_variation_index_gpu(prediction_torch, mask_torch):
         b1_mask = max(0, n_mask - 1)
         scores.append(cp.abs(b1_pred - b1_mask) / (b1_mask + b1_pred + 1e-8))
     return float(cp.mean(cp.asarray(scores)).get())
+
 
 class Betti1VariationIndexGPU(BaseMetric):
     type = "gpu"

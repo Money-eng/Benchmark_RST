@@ -51,6 +51,7 @@ class AverageCenterlineDistance(BaseMetric):
 
     def is_better(self, old_score, new_score) -> bool:
         return new_score < old_score
+
     @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor):
         import cupy as cp
@@ -70,7 +71,7 @@ class AverageCenterlineDistance(BaseMetric):
             dt_gt = _edt_to_ones(sk_gt, sampling=self.sampling)
             dt_pr = _edt_to_ones(sk_pred, sampling=self.sampling)
 
-            d1 = dt_gt[sk_pred.astype(bool)] # image with skeletonized prediction (binary)
+            d1 = dt_gt[sk_pred.astype(bool)]  # image with skeletonized prediction (binary)
             d2 = dt_pr[sk_gt.astype(bool)]
 
             if d1.size == 0 and d2.size == 0:
@@ -79,4 +80,3 @@ class AverageCenterlineDistance(BaseMetric):
             acd.append(float(all_d.mean().get()))
 
         return float(np.mean(acd)) if acd else float("nan")
-

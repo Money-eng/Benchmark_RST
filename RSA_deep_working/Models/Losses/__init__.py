@@ -8,10 +8,10 @@ from .cldice_dice import CLDice_Dice
 from .dice_loss import DiceLoss
 from .generalized_dice_loss import GeneralizedDiceLoss
 
-set_seed(SEED)  # Ensure reproducibility
+set_seed(SEED)
 
 LOSS_FACTORIES = {
-    "bce": BCEDiceLoss,
+    "bce": BCE,
     "dice": DiceLoss,
     "bce_dice": BCEDiceLoss,
     "generalized_dice": GeneralizedDiceLoss,

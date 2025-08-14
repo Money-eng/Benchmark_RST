@@ -1,9 +1,8 @@
 # Metrics/gpu/centerline_f1.py
+import cupy as cp
 import torch
 
 from ..base import BaseMetric
-
-import cupy as cp
 
 # cache flag to disable cucim after first failure
 _USE_CUCIM = True

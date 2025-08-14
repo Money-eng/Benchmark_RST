@@ -1,7 +1,7 @@
 data:
   base_dir: RSA_deep_working/Data
   patch_size: 512
-  batch_size: 64
+  batch_size: 128
 
 training:
   epochs: 300
@@ -19,8 +19,6 @@ training:
     patience: 5
   checkpoint_dir: RSA_deep_working/Models/Checkpoints
   log_dir: RSA_deep_working/Models/Logs
-  optuna_trials: 20
-  optuna_epochs: 5
 
 
 model:
@@ -36,8 +34,8 @@ model:
 
 optimizer:
   name: Adam
-  learning_rate: 0.029106359131330698
-  weight_decay: 6.251373574521749e-06
+  learning_rate: 0.059292767860527756
+  weight_decay: 1.0321301251066715e-05
 
 loss:
   name: cldice_dice
@@ -49,7 +47,7 @@ metrics:
   threshold_4_binarize: 0.5 # to change manually in the code of each metric
   gpu:
     - { name: "dice" }
-    #- { name: "cldice" }
+    - { name: "cldice" }
     - { name: "focal_loss" }
     - { name: "f1_score" }
     - { name: "hausdorff_distance" }
@@ -59,20 +57,34 @@ metrics:
     - { name: "precision" }
     - { name: "recall" }
     - { name: "specificity" }
-    - { name: "surface_dice" }
-    - { name: "surface_distance" }
+    - { name: "betti0_jaccard_ratio_gpu" }
+    - { name: "betti0_relative_error_gpu" }
+    - { name: "betti0_variation_index_gpu" }
+    - { name: "betti1_jaccard_ratio_gpu" }
+    - { name: "betti1_relative_error_gpu" }
+    - { name: "betti1_variation_index_gpu" }
+    - { name: "centerline_f1_gpu" }
+    - { name: "persistence_bottleneck_gpu" }
+    - { name: "persistence_wasserstein_gpu" }
+    - { name: "average_centerline_distance" }
+    - { name: "average_path_length_similarity" }
+    #- { name: "branch_break_rate" }
+    #- { name: "branch_length_rate" }
+    #- { name: "surface_dice" }
+    #- { name: "surface_distance" }
   cpu:
     - { name: "variation_of_information" }
-    - { name: "betti0_jaccard_ratio" }
-    - { name: "betti0_relative_error" }
-    - { name: "betti0_variation_index" }
-    - { name: "betti1_jaccard_ratio" }
-    - { name: "betti1_relative_error" }
-    - { name: "betti1_variation_index" }
-    - { name: "euler_charac_jaccard_ratio" }
-    - { name: "euler_charac_relative_error" }
-    - { name: "euler_charac_variation_index" }
-    - { name: "persistence_bottleneck" }
+    #- { name: "betti0_jaccard_ratio" }
+    #- { name: "betti0_relative_error" }
+    #- { name: "betti0_variation_index" }
+    #- { name: "betti1_jaccard_ratio" }
+    #- { name: "betti1_relative_error" }
+    #- { name: "betti1_variation_index" }
+    #- { name: "euler_charac_jaccard_ratio" }
+    #- { name: "euler_charac_relative_error" }
+    #- { name: "euler_charac_variation_index" }
+    #- { name: "persistence_bottleneck" }
     #- { name: "persistence_wasserstein" }
+
 rst:
   jar_path: RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar

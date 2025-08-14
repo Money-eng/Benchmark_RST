@@ -7,11 +7,8 @@ import os
 from pathlib import Path
 
 # --- Third‑party imports -----------------------------------------------------
-import optuna
 import torch
 import yaml
-from optuna.pruners import MedianPruner
-from optuna.samplers import TPESampler
 from torch.nn import DataParallel
 
 # --- Local package imports ---------------------------------------------------

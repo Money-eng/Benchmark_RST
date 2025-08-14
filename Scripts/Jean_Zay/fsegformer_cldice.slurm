@@ -4,18 +4,15 @@
 #SBATCH -C h100
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=48
+#SBATCH --gres=gpu:4
+#SBATCH --cpus-per-task=96
 #SBATCH --hint=nomultithread
-#SBATCH --time=15:00:00
+#SBATCH --time=20:00:00
 #SBATCH --output=/lustre/fswork/projects/rech/vey/unq35lq/out/run_fsegformer_cldice.out
 #SBATCH --error=/lustre/fswork/projects/rech/vey/unq35lq/err/run_fsegformer_cldice.err
 
 module load arch/h100
-module load miniforge
-mamba init
-source ~/.bashrc
-mamba activate utils
+module load pytorch-gpu/py3/2.7.0
 
 cd /lustre/fswork/projects/rech/vey/unq35lq # $WORK
 

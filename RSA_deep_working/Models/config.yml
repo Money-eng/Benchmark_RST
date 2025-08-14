@@ -1,7 +1,7 @@
 data:
   base_dir: RSA_deep_working/Data
   patch_size: 512
-  batch_size: 128
+  batch_size: 8
 
 training:
   epochs: 300
@@ -53,7 +53,7 @@ metrics:
     - { name: "cldice" }
     - { name: "focal_loss" }
     - { name: "f1_score" }
-    - { name: "hausdorff_distance" }
+    #- { name: "hausdorff_distance" }
     - { name: "mean_iou" }
     - { name: "normalized_mutual_information" }
     - { name: "pixel_accuracy" }
@@ -76,15 +76,15 @@ metrics:
     #- { name: "surface_dice" }
     #- { name: "surface_distance" }
   cpu:
-    - { name: "variation_of_information" }
-    - { name: "betti0_jaccard_ratio" }
-    - { name: "betti0_relative_error" }
-    - { name: "betti0_variation_index" }
-    - { name: "betti1_jaccard_ratio" }
-    - { name: "betti1_relative_error" }
-    - { name: "betti1_variation_index" }
-    - { name: "euler_charac_jaccard_ratio" }
-    - { name: "euler_charac_relative_error" }
-    - { name: "euler_charac_variation_index" }
-    - { name: "persistence_bottleneck" }
-    #- { name: "persistence_wasserstein" }
+  - { name: "variation_of_information" }
+  #- { name: "betti0_jaccard_ratio" }
+  #- { name: "betti0_relative_error" }
+  #- { name: "betti0_variation_index" }
+  #- { name: "betti1_jaccard_ratio" }
+  #- { name: "betti1_relative_error" }
+  #- { name: "betti1_variation_index" }
+  #- { name: "euler_charac_jaccard_ratio" }
+  #- { name: "euler_charac_relative_error" }
+  #- { name: "euler_charac_variation_index" }
+  #- { name: "persistence_bottleneck" }
+  #- { name: "persistence_wasserstein" }

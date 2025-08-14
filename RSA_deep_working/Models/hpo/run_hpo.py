@@ -24,6 +24,7 @@ from DataLoaders.transforms import (
     get__val_test_img_transform,
 )
 from Losses import get_loss
+from Metrics import get_metric
 from Model import get_model
 from utils.logger import get_logger
 from utils.misc import SEED, get_device, set_seed
@@ -35,15 +36,15 @@ from hpo_search import HPOSearcher
 # 1) CONFIGURATION EN DUR (modifie simplement ces variables)
 # -----------------------------------------------------------------------------
 # Chemin vers ta config YAML projet
-CONFIG_PATH: Path = Path("RSA_deep_working/Models/configs/unet_dice_cldice.yml")
+CONFIG_PATH: Path = Path("RSA_deep_working/Models/configs/unet_dice.yml")
 
 # Budget Optuna
-N_TRIALS: int = 80  # nombre d'essais
-EPOCHS_PER_TRIAL: int = 20  # époques par essai (entraînement court)
+N_TRIALS: int = 120  # nombre d'essais
+EPOCHS_PER_TRIAL: int = 15  # époques par essai (entraînement court)
 EVAL_EVERY: int = 1  # fréquence d'évaluation/pruning (1 = chaque époque)
 
 # Espace HPO (bornes log-uniformes pour LR & WD)
-LR_BOUNDS: Tuple[float, float] = (1e-3, 1e-1)
+LR_BOUNDS: Tuple[float, float] = (1e-5, 1e-1)
 WD_BOUNDS: Tuple[float, float] = (1e-7, 1e-4)
 OPTIMIZERS: Tuple[str, ...] = ("adamw", "adam")
 
@@ -85,7 +86,7 @@ def build_dataloaders(cfg: dict) -> tuple:
 
 
 def make_build_model(cfg: dict):
-    """Fabriqueur de modèle pour HPOSearcher (respecte le multi‑GPU)."""
+    """Fabriqueur de modèle pour HPOSearcher (respecte le multi-GPU)."""
 
     def _build_model(_unused: Dict) -> torch.nn.Module:
         model = get_model(cfg["model"])
@@ -102,14 +103,33 @@ def make_build_criterion(cfg: dict):
 
     return _build_criterion
 
+def make_build_metric(cfg: dict):
+    def _build_metric() -> torch.nn.Module:
+        return get_metric(cfg["metrics"]['gpu'][3])
+    return _build_metric
+
 
 # -----------------------------------------------------------------------------
 # 3) Programme principal (aucun argparse : tout vient des constantes ci‑dessus)
 # -----------------------------------------------------------------------------
 
 def main() -> None:
-    # -------- Config & I/O --------
-    cfg = load_config(CONFIG_PATH)
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Train/Test a model for root system segmentation in 2D grayscale images."
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help=(
+            "Path to the YAML configuration file. "
+            "If omitted, 'config.yml' is searched in the same directory as this script."
+        ),
+    )
+    args = parser.parse_args()
+    cfg_path = Path(args.config) if args.config else CONFIG_PATH
+    cfg = load_config(cfg_path)
 
     device = get_device(preferred=cfg["training"].get("device", "cuda"))
     run_dir = Path(cfg["training"]["log_dir"]) / f"{RUN_NAME}_{cfg['model']['name']}_{cfg['loss']['name']}"
@@ -131,6 +151,7 @@ def main() -> None:
     searcher = HPOSearcher(
         build_model=make_build_model(cfg),
         build_criterion=make_build_criterion(cfg),
+        build_metric=make_build_metric(cfg),
         seed=SEED,
         study_storage=storage,
         study_name=study_name,
