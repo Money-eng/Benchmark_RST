@@ -60,7 +60,7 @@ class Reconstructor:
     # API
     # =====================================================================
 
-    # {"test", "val" : {path: MTG}}
+    # {"Test", "Val" : {path: MTG}}
     def reconstruct_all(self) -> Dict[str, Dict[str, MTG]]:
         self.model.eval()
         # Containers ------------------------------------------------------
@@ -75,8 +75,8 @@ class Reconstructor:
                 # Process MTG
                 import os
                 pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(
-                    self.save_path, self.model_name, "val", mtg_box_name))
-                val_or_test_str = "val"
+                    self.save_path, "Val", mtg_box_name))
+                val_or_test_str = "Val"
                 predicted_mtgs[val_or_test_str][mtg_list[0]] = pred_mtg
             pbar.close()
             # Clear memory
@@ -92,8 +92,8 @@ class Reconstructor:
                 # Process MTG
                 import os
                 pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(
-                    self.save_path, self.model_name, "test", mtg_box_name))
-                val_or_test_str = "test"
+                    self.save_path, self.model_name, "Test", mtg_box_name))
+                val_or_test_str = "Test"
                 predicted_mtgs[val_or_test_str][mtg_list[0]] = pred_mtg
             pbar.close()
             # Clear memory

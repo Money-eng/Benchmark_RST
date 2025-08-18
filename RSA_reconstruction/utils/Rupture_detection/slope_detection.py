@@ -8,9 +8,6 @@ class MaxSlopeDetector:
     """
     Détecteur de 'pente maximale' entre instants consécutifs.
     S_t = |X_t - X_{t-1}| pour t>=1 ; S_0 = 0.
-    Renvoie:
-      - slope_index: argmax_t S_t (0..T-1), ou 0 si s_max <= threshold_slope
-      - slope_score: s_max
     """
     threshold_slope: float = 0.5
 
@@ -27,12 +24,21 @@ class MaxSlopeDetector:
 
         X = seq.reshape(T, P)  # (T, H * W)
 
-        S = np.zeros((T, P), dtype=np.float32)
-        np.abs(X[1:] - X[:-1], out=S[1:])  # S[1:] = |Δ|
+        DIFF = np.zeros((T, P), dtype=np.float32)
+        DIFF[1:] = np.abs(X[1:] - X[:-1])  # S[1:] = |Δ|
         # S[0] déjà zéro
 
-        s_max = S.max(axis=0)                 # (P,)
-        k_s = S.argmax(axis=0).astype(np.int32)  # 0..T-1
+        s_max = DIFF.max(axis=0)                 # (P,)
+        k = DIFF.argmax(axis=0).astype(np.int32)  # 0..T-1
 
-        k_s = np.where(s_max > self.threshold_slope, k_s, 0).astype(np.int32)
-        return k_s.reshape(H, W), s_max.reshape(H, W).astype(np.float32)
+        k = np.where(s_max > self.threshold_slope, k, -1).astype(np.float32).reshape(H,W)
+        #k = np.where(seq[0] > 0.5, 1, k).astype(np.int32)
+
+        #import matplotlib.pyplot as plt
+        #plt.figure(figsize=(10, 5))
+        #plt.imshow(k, cmap='jet', interpolation='nearest')
+        #plt.colorbar()
+        #plt.title("Max Slope Index")
+        #plt.show()
+
+        return k
