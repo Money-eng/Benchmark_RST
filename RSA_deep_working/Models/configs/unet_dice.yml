@@ -34,8 +34,8 @@ model:
 
 optimizer:
   name: Adam
-  learning_rate: 0.00022545746815139396
-  weight_decay: 7.379970508094715e-05
+  learning_rate: 0.00014010700505126466
+  weight_decay: 6.780461607194574e-06
 
 loss:
   name: dice

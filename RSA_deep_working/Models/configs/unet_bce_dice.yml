@@ -34,8 +34,8 @@ model:
 
 optimizer:
   name: Adam
-  learning_rate: 1.5536986309594363e-05
-  weight_decay: 2.2423189858382967e-05
+  learning_rate: 0.09803844710345694
+  weight_decay: 1.1628213376574615e-05
 loss:
   name: bce_dice
   params:

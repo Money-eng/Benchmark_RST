@@ -33,9 +33,9 @@ model:
     return_logits: False
 
 optimizer:
-  name: AdamW
-  learning_rate: 2.5558912218837558e-05
-  weight_decay: 7.832848429458124e-05
+  name: Adam
+  learning_rate: 0.09562894104741092
+  weight_decay: 5.469605033039051e-07
 
 loss:
   name: bce

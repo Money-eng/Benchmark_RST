@@ -7,11 +7,14 @@ import numpy as np
 import tifffile as tiff
 import torch
 from rsml import rsml2mtg
+from utils.Rupture_detection.making_date_map import RuptureSlopeTimeDetector
 from utils.root_System_class import RootSystem
 
+DEFAULT_DATE_MAP_ASSEMBLY = "Rupture_detection"
 
 def preprocess_RST_pipeline(
-        prediction: torch.Tensor
+        prediction: torch.Tensor,
+        gt_date_map: np.ndarray | None = None,
 ):
     """
     À partir du tenseur de prédiction (batch de masques), crée un date_map unique,
@@ -30,13 +33,7 @@ def preprocess_RST_pipeline(
     os.makedirs(temp_name, exist_ok=True)
     input_dir = tempfile.mkdtemp(prefix="rst_input_", dir=temp_name)
 
-    prediction_np = prediction.cpu().numpy().astype(np.uint8)
-    batch_size, _, height, width = prediction_np.shape
-
-    pred_datemap = np.zeros((height, width), dtype=np.uint8)
-    for i in range(batch_size):
-        mask_i = (prediction_np[i, 0] > 0) & (pred_datemap == 0)
-        pred_datemap[mask_i] = i + 1
+    pred_datemap = assemble_date_map(prediction.detach().cpu().float())
 
     # Sauvegarde date_map au format float32
     input_file = os.path.join(input_dir, "40_date_map.tif")
@@ -48,6 +45,25 @@ def preprocess_RST_pipeline(
     # obs_hours est déterminé à partir du RSML ground truth
     # Pour le moment, on retourne None et l'appelant doit le remplir après chargement GT
     return pred_datemap, input_dir, output_dir, None
+
+
+def assemble_date_map(prediction: torch.Tensor) -> np.ndarray:
+    batch_size, _, height, width = prediction.shape
+    prediction = (prediction > 0.5).float()
+    pred_datemap = np.zeros((height, width), dtype=np.uint8)
+    if (DEFAULT_DATE_MAP_ASSEMBLY != "Rupture_detection"):
+        for i in range(batch_size):
+            mask_i = (prediction[i, 0] > 0) & (pred_datemap == 0)
+            pred_datemap[mask_i] = i + 1
+    else:
+        detector = RuptureSlopeTimeDetector()
+        pred_datemap = detector(prediction)
+        import matplotlib.pyplot as plt
+        plt.imshow(pred_datemap, cmap='jet')
+        plt.colorbar()
+        plt.title("Date Map")
+        plt.show()
+    return pred_datemap
 
 
 from pyvirtualdisplay import Display

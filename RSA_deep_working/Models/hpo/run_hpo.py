@@ -44,7 +44,7 @@ EPOCHS_PER_TRIAL: int = 15  # époques par essai (entraînement court)
 EVAL_EVERY: int = 1  # fréquence d'évaluation/pruning (1 = chaque époque)
 
 # Espace HPO (bornes log-uniformes pour LR & WD)
-LR_BOUNDS: Tuple[float, float] = (1e-5, 1e-1)
+LR_BOUNDS: Tuple[float, float] = (1e-4, 1e-1)
 WD_BOUNDS: Tuple[float, float] = (1e-7, 1e-4)
 OPTIMIZERS: Tuple[str, ...] = ("adamw", "adam")
 

@@ -13,7 +13,7 @@ from DataLoaders.transforms import (
     get__val_test_img_transform,
 )
 from Models import get_model
-from RSA_reconstruction.reconstructor import Reconstructor
+from reconstructor import Reconstructor
 from utils.misc import SEED, set_seed, get_device
 
 set_seed(SEED)
@@ -60,14 +60,15 @@ def main() -> None:
     )
     args = parser.parse_args()
     cfg_path = Path(args.config) if args.config else DEFAULT_CFG
+    cfg_path = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/configs/unet_dice_cldice.yml"
     cfg = load_config(cfg_path)
 
     # Build dataloaders
     _, val_loader, test_loader = build_dataloaders(cfg)
 
     # Model checkpoints folder path
-    model_checkpoints_path = cfg.get("model_checkpoints", {}).get(
-        "folder_pretrained_path", "Models/Unet_cldice_dice")
+    #model_checkpoints_path = cfg.get("model_checkpoints", {}).get(
+     #   "folder_pretrained_path", "Models/Unet_cldice_dice")
     # Contains :
     # Model checkpoint that maximized a score over a certain metric
     # Model checkpoint folder ('by_epoch') which saved every epoch
@@ -79,7 +80,7 @@ def main() -> None:
         "model_checkpoints", {}).get("name", "Model_X")
     model = DataParallel(model)
     state_dict = torch.load(
-        "/home/loai/Documents/code/RSMLExtraction/Results/Checkpoints/Unet_cldice_dice/by_epochs/DataParallel_epoch128.pth",
+        "/home/loai/Documents/code/RSMLExtraction/Results/Training/Checkpoints/Unet_cldice_dice/by_epochs/DataParallel_epoch261.pth",
         map_location=device)
     model.load_state_dict(state_dict)
     model = model.to(device)

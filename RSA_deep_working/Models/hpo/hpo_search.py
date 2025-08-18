@@ -115,7 +115,7 @@ class HPOSearcher:
         self.device = device or default_device()
 
         sampler = TPESampler(seed=self.seed, multivariate=True, group=True)
-        pruner = SuccessiveHalvingPruner(reduction_factor=3, min_resource=1)
+        pruner = SuccessiveHalvingPruner(reduction_factor=3, min_resource=5)
 
         study = optuna.create_study(
             direction="maximize",

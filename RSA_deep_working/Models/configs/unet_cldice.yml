@@ -33,9 +33,9 @@ model:
     return_logits: False
 
 optimizer:
-  name: AdamW
-  learning_rate: 0.0007266127014081949
-  weight_decay: 4.59744328744573e-07
+  name: Adam
+  learning_rate: 0.00044777374522527764
+  weight_decay: 7.315376707340849e-07
 
 loss:
   name: cldice

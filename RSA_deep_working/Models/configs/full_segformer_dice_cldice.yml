@@ -34,8 +34,8 @@ model:
 
 optimizer:
   name: Adam
-  learning_rate: 0.29106359131330698
-  weight_decay: 6.251373574521749e-06
+  learning_rate: 0.002522186097216823
+  weight_decay: 1.5309479342842887e-06
 
 loss:
   name: cldice_dice

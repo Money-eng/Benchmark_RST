@@ -12,38 +12,35 @@ class RuptureDownDetector:
       - rupture_score: Δ_max (float)
     Seuil appliqué: rupture_score > threshold_rupture  => rupture valide.
     """
-    threshold_rupture: float = 0.3  # adapté à des valeurs [0,1]
+    threshold_rupture: float = 0.5
 
     def __call__(self, seq: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        # seq: (T, H, W), float32
         if seq.ndim != 3:
             raise ValueError(f"`seq` doit être de forme (T, H, W), reçu {seq.shape}")
         T, H, W = seq.shape
         P = H * W
 
         if T < 2:
-            # pas assez d'instants pour une rupture
             rupture_score = np.full((H, W), -np.inf, dtype=np.float32)
             rupture_index = np.zeros((H, W), dtype=np.int32)
             return rupture_index, rupture_score
 
         X = seq.reshape(T, P)  # (T, P)
 
-        # cumsum pad pour sommes rapides
         csum = np.zeros((T + 1, P), dtype=np.float32)
-        np.cumsum(X, axis=0, out=csum[1:])
-        total = csum[T]  # (P,)
+        np.cumsum(X, axis=0, out=csum[1:])  # cumulative sum of X over time
+        total = csum[T]  # (P,) # last time step c
 
         # Δ(i) pour i = 1..T-1
         deltas = np.empty((T - 1, P), dtype=np.float32)
-        for i in range(1, T):
+        for i in range(1, T): # time = i
             sum1 = csum[i]               # somme 0..i-1
             den1 = float(i)
             sum2 = total - csum[i]       # somme i..T-1
             den2 = float(T - i)
             mu1 = sum1 / den1
             mu2 = sum2 / den2
-            deltas[i - 1] = (mu1 - mu2)
+            deltas[i - 1] = (mu2 - mu1)
 
         delta_max = deltas.max(axis=0)            # (P,)
         i_star = deltas.argmax(axis=0) + 1        # indices 1..T-1

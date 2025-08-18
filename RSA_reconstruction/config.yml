@@ -1,8 +1,8 @@
 data:
   base_dir: RSA_deep_working/Data
   patch_size: 512
-  batch_size: 64
-  rsml_save_path: RSA_reconstruction/Prediction
+  batch_size: 128
+  rsml_save_path: Results/Reconstruction/Date_maps
 
 model:
   name: Unet
@@ -17,7 +17,7 @@ model:
 
 model_checkpoints:
   name: Unet_dice_cldice
-  folder_pretrained_path: RSA_reconstruction/Models/Unet_bce
+  folder_pretrained_path: RSA_reconstruction/Models/Unet_dice_cldice
 
 maximized_score: null
 
