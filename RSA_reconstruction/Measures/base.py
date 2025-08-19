@@ -4,7 +4,7 @@ import abc
 
 
 class BaseMeasure(abc.ABC):
-    type: str  
+    type: str
 
     @abc.abstractmethod
     def __call__(self, prediction, mask) -> object:

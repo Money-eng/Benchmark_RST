@@ -12,4 +12,4 @@ class NumberOfOrgans(BaseMeasure):
         super().__init__()
 
     def __call__(self, mtg: MTG) -> float:
-        return len(root_vertices(mtg)) 
+        return len(root_vertices(mtg))

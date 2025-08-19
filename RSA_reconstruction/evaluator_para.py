@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-import argparse
 import os
-from collections import defaultdict
 from typing import Dict, List, Tuple, Optional
 
+from distributed import LocalCluster
 import pandas as pd
 from dask import delayed, compute
 from dask.distributed import Client, progress
-
 from rsml import rsml2mtg
-from rsml.misc import plant_vertices
 from rsml.matching import match_plants
+from rsml.misc import plant_vertices
 from torch.nn import Module
 
 from utils.misc import SEED, set_seed
@@ -22,6 +20,7 @@ from utils.mtg_operations import (
 
 set_seed(SEED)
 
+
 # ================================================================
 # 1)  MESURATOR (inchangé depuis la version précédente)            
 # ================================================================
@@ -29,14 +28,14 @@ set_seed(SEED)
 # ------------------------------------------------------------------
 @delayed
 def _mesurator_metrics_for_time(
-    model_name: str,
-    split: str,
-    box_name: str,
-    time: int,
-    mtg_pred,
-    mtg_exp,
-    mtg_bexp,
-    measure: Dict[str, List[Module]],
+        model_name: str,
+        split: str,
+        box_name: str,
+        time: int,
+        mtg_pred,
+        mtg_exp,
+        mtg_bexp,
+        measure: Dict[str, List[Module]],
 ) -> Tuple[List[dict], List[dict]]:
     rows_box, rows_plant = [], []
 
@@ -85,19 +84,20 @@ class ReconstructionMesurator:
     """Version parallèle (inchangée) – voir la description de la PR précédente"""
 
     def __init__(
-        self,
-        gt_folder: str,
-        pred_folder: str,
-        measure: Optional[Dict[str, Module]] = None,
-        client: Optional[Client] = None,
+            self,
+            gt_folder: str,
+            pred_folder: str,
+            measure: Optional[Dict[str, Module]] = None,
+            client: Optional[Client] = None,
     ) -> None:
         self.measure = measure or {}
         self.gt_folder = gt_folder
         self.pred_folder = pred_folder
-        self.models_folder = [os.path.join(pred_folder, d) 
+        self.models_folder = [os.path.join(pred_folder, d)
                               for d in os.listdir(pred_folder)
-                                if os.path.isdir(os.path.join(pred_folder, d))]
-        self.client = client or Client()
+                              if os.path.isdir(os.path.join(pred_folder, d))]
+        cluster = LocalCluster(dashboard_address=":8787")
+        self.client = client or Client(cluster)
         print("GT  :", self.gt_folder)
         print("PRED:", self.models_folder)
         print("Dashboard →", self.client.dashboard_link)
@@ -106,19 +106,20 @@ class ReconstructionMesurator:
     def evaluate(self) -> None:  # ← contenu inchangé par rapport à la version précédente
         pass  # placeholder : contenu complet disponible dans la PR originale
 
+
 # ================================================================
 # 2)  EVALUATOR (nouvelle version parallélisée)                    
 # ================================================================
 @delayed
 def _evaluator_metrics_for_time(
-    model_name: str,
-    split: str,
-    box_name: str,
-    time: int,
-    mtg_pred,
-    mtg_gt_exp,
-    mtg_gt_bexp,
-    metrics: Dict[str, List[Module]],
+        model_name: str,
+        split: str,
+        box_name: str,
+        time: int,
+        mtg_pred,
+        mtg_gt_exp,
+        mtg_gt_bexp,
+        metrics: Dict[str, List[Module]],
 ) -> Tuple[List[dict], List[dict]]:
     """Calcule toutes les métriques pour (model,split,box,time)."""
 
@@ -179,11 +180,11 @@ class ReconstructionEvaluator:
     """Évaluation parallèle (boîte + plante) avec barre de progression."""
 
     def __init__(
-        self,
-        gt_folder: str,
-        pred_folder: str,
-        metrics: Optional[Dict[str, Module]] = None,
-        client: Optional[Client] = None,
+            self,
+            gt_folder: str,
+            pred_folder: str,
+            metrics: Optional[Dict[str, Module]] = None,
+            client: Optional[Client] = None,
     ) -> None:
         self.metrics = metrics or {}
         self.gt_folder = gt_folder

@@ -20,6 +20,7 @@ set_seed(SEED)
 DEFAULT_CFG: Path = Path(__file__).with_name("config.yml")
 DEFAULT_MODEL_PATH = ""
 
+
 def build_dataloaders(cfg: dict) -> tuple:
     """Build and return (train_loader, val_loader, test_loader)."""
     patch_size: int = cfg["data"]["patch_size"]
@@ -58,7 +59,7 @@ def main() -> None:
             "If omitted, 'config.yml' is searched in the same directory as this script."
         ),
     )
-    
+
     parser.add_argument(
         "--model_path",
         type=str,
@@ -71,7 +72,7 @@ def main() -> None:
     args = parser.parse_args()
     cfg_path = Path(args.config) if args.config else DEFAULT_CFG
     cfg = load_config(cfg_path)
-    
+
     model_checkpoints_path = Path(args.model_path) if args.model_path else DEFAULT_MODEL_PATH
 
     # Build dataloaders
@@ -97,7 +98,8 @@ def main() -> None:
         threshold=cfg.get("threshold_4_binarize", 0.5),
         patch_size=cfg.get("data", {}).get("patch_size", 512),
         jar_path=cfg.get("rst", {}).get("jar_path", None),
-        save_path=cfg.get("data", {}).get("save_path", "RSA_reconstruction/Logs/Prediction") + cfg.get("model", {}).get("name", "Model_X") + "_" + cfg.get("loss", {}).get("name", "loss_x")
+        save_path=cfg.get("data", {}).get("save_path", "RSA_reconstruction/Logs/Prediction") + cfg.get("model", {}).get(
+            "name", "Model_X") + "_" + cfg.get("loss", {}).get("name", "loss_x")
     )
 
     preds = reconstructor.reconstruct_all()

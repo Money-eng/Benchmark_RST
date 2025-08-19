@@ -1,5 +1,5 @@
-from openalea.mtg import MTG
 from Measures.box.number_of_plants import NumberOfPlants
+from openalea.mtg import MTG
 
 from ..base import BaseMetric
 

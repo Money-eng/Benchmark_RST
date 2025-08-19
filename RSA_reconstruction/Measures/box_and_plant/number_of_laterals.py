@@ -3,6 +3,7 @@ from rsml.misc import root_vertices as rt_verts
 
 from ..base import BaseMeasure
 
+
 class NumberOfLateralRoots(BaseMeasure):
     type = "cpu"
     need = "serie"

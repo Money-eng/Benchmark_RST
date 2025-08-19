@@ -46,8 +46,6 @@ def main() -> None:
 
     PRED_VAL_FOLDERS = os.path.join(cfg["data"]["save_path"], model_name, "Val")
     PRED_TEST_FOLDERS = os.path.join(cfg["data"]["save_path"], model_name, "Test")
-    
-    
 
     # list subfolder in all above directories and assert we can find the same number of folders in each
     gt_val_folders = sorted(os.listdir(GT_VAL_FOLDERS))

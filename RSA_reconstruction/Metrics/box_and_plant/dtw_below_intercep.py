@@ -1,7 +1,7 @@
 import numpy as np
+from Measures.box_and_plant.intercep import Intercept_curve
 from fastdtw import fastdtw
 from openalea.mtg import MTG
-from Measures.box_and_plant.intercep import Intercept_curve
 
 from ..base import BaseMetric
 

@@ -1,17 +1,18 @@
 # Metrics/cpu/ari_index.py
 import numpy as np
 from openalea.mtg import MTG
-from .intercep import Intercept_curve
 
+from .intercep import Intercept_curve
 from ..base import BaseMeasure
-    
+
+
 class Intercept_curve_Area(BaseMeasure):
     type = "cpu"
     need = "serie"
 
     def __init__(self):
         super().__init__()
-        
+
     @staticmethod
     def _area_between_surfaces(x: np.ndarray,
                                y1: np.ndarray,
@@ -27,5 +28,3 @@ class Intercept_curve_Area(BaseMeasure):
             raise ValueError("Les courbes d'interception doivent avoir la même forme.")
         area = self._area_between_surfaces(curve[0], curve[1], np.zeros_like(curve[1]))
         return area
-        
-        

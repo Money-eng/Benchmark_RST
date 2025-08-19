@@ -4,18 +4,15 @@ from utils.misc import set_seed, SEED
 
 from .base import BaseMeasure
 from .box.number_of_plants import NumberOfPlants
-
 from .box_and_plant.intercep import Intercept_curve
 from .box_and_plant.intercep_area import Intercept_curve_Area
+from .box_and_plant.number_of_laterals import NumberOfLateralRoots
 from .box_and_plant.number_of_organs import NumberOfOrgans
 from .box_and_plant.total_root_length import TotalRootLength
-from .box_and_plant.number_of_laterals import NumberOfLateralRoots
-
 from .plant.area_convex_hull import Convex_Area_Hull
-from .plant.root_density import RootDensity
-from .plant.primary_root_length import PrimaryRootLength
 from .plant.lateral_root_length import LateralRootLength
-
+from .plant.primary_root_length import PrimaryRootLength
+from .plant.root_density import RootDensity
 
 set_seed(SEED)  # Ensure reproducibility
 
@@ -30,7 +27,7 @@ MEASURES_FACTORIES = {
     "intercept_curve_area": Intercept_curve_Area,
     # Per plant
     "convex_area_hull": Convex_Area_Hull,
-    "root_density": RootDensity, 
+    "root_density": RootDensity,
     "primary_root_length": PrimaryRootLength,
     "lateral_root_length": LateralRootLength,
 }

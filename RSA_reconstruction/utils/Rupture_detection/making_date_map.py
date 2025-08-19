@@ -1,14 +1,13 @@
-
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
 import torch
-from typing import Tuple
-
 from utils.Rupture_detection.rupture_detection import RuptureDownDetector
 from utils.Rupture_detection.slope_detection import MaxSlopeDetector
+
 
 @dataclass
 class ChangeCombiner:
@@ -16,7 +15,7 @@ class ChangeCombiner:
     Combine les indices:
       output_index = slope_index si rupture détectée (rupture_index != 0), sinon 0.
     """
-    
+
     def __call__(self, rupture_index: np.ndarray, slope_index: np.ndarray, seq: np.ndarray) -> np.ndarray:
         out = np.where(rupture_index != -1, slope_index + 1, 0)
         out = np.where(seq[0] > 0.5, 1, out)

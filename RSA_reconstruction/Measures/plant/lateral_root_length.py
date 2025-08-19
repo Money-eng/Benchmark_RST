@@ -2,6 +2,7 @@ from openalea.mtg import MTG
 
 from ..base import BaseMeasure
 
+
 def lateral_root_length(mtg: MTG) -> float:
     roots = mtg.vertices(scale=mtg.max_scale())
     # remove 1st vertex 
@@ -15,6 +16,7 @@ def lateral_root_length(mtg: MTG) -> float:
                       (polyline[i][1] - polyline[i + 1][1]) ** 2) ** 0.5
             total_length += length
     return total_length
+
 
 class LateralRootLength(BaseMeasure):
     type = "cpu"

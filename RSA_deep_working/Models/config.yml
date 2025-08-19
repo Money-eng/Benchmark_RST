@@ -76,7 +76,7 @@ metrics:
     #- { name: "surface_dice" }
     #- { name: "surface_distance" }
   cpu:
-  - { name: "variation_of_information" }
+    - { name: "variation_of_information" }
   #- { name: "betti0_jaccard_ratio" }
   #- { name: "betti0_relative_error" }
   #- { name: "betti0_variation_index" }

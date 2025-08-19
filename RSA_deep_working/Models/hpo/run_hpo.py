@@ -103,9 +103,11 @@ def make_build_criterion(cfg: dict):
 
     return _build_criterion
 
+
 def make_build_metric(cfg: dict):
     def _build_metric() -> torch.nn.Module:
         return get_metric(cfg["metrics"]['gpu'][3])
+
     return _build_metric
 
 

@@ -118,7 +118,7 @@ class Reconstructor:
                 pred_img = predictions[i].cpu().numpy()
                 tifffile.imwrite(os.path.join(save_path, f"pred_heatmap_{i}.tif"), pred_img)
 
-        preds = predictions.float() # (predictions > self.threshold).float()
+        preds = predictions.float()  # (predictions > self.threshold).float()
 
         # original image size is 1348 × 1166 but = 1376 × 1184 after padding operation : A.PadIfNeeded(min_height=ajusted_width, min_width=ajusted_height, border_mode=0, position='top_left'),
         # removing padding to get the original size

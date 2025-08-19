@@ -1,5 +1,5 @@
-from openalea.mtg import MTG
 from Measures.box_and_plant.total_root_length import TotalRootLength
+from openalea.mtg import MTG
 
 from ..base import BaseMetric
 

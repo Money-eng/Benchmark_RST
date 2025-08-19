@@ -15,4 +15,3 @@ class Intercept_curve(BaseMeasure):
 
     def __call__(self, mtg: MTG) -> tuple:
         return intercept_curve(mtg)  # x = array([0, 0.1, 0.2, ...,]), y = array([0, 0, 1, 1, ...])
-        

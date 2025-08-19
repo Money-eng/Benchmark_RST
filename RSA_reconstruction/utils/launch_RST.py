@@ -12,6 +12,7 @@ from utils.root_System_class import RootSystem
 
 DEFAULT_DATE_MAP_ASSEMBLY = "Rupture_detection"
 
+
 def preprocess_RST_pipeline(
         prediction: torch.Tensor,
 ):
@@ -57,11 +58,11 @@ def assemble_date_map(prediction: torch.Tensor) -> np.ndarray:
     else:
         detector = RuptureSlopeTimeDetector()
         pred_datemap = detector(prediction)
-        #import matplotlib.pyplot as plt
-        #plt.imshow(pred_datemap, cmap='jet')
-        #plt.colorbar()
-        #plt.title("Date Map")
-        #plt.show()
+        # import matplotlib.pyplot as plt
+        # plt.imshow(pred_datemap, cmap='jet')
+        # plt.colorbar()
+        # plt.title("Date Map")
+        # plt.show()
     return pred_datemap
 
 

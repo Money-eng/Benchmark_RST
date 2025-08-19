@@ -36,15 +36,16 @@ def main() -> None:
     )
     args = parser.parse_args()
     cfg_path = Path(args.config) if args.config else DEFAULT_CFG
+    cfg_path = Path("/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/configs/unet_bce.yml")
     cfg = load_config(cfg_path)
 
-    model_name = cfg["model_checkpoints"]["name"]
+    model_name = cfg.get("model", {}).get("name", "Model_X") + "_" + cfg.get("loss", {}).get("name", "loss_x")
 
     GT_VAL_FOLDERS = os.path.join(cfg["data"]["base_dir"], "Val")
     GT_TEST_FOLDERS = os.path.join(cfg["data"]["base_dir"], "Test")
 
-    PRED_VAL_FOLDERS = os.path.join(cfg["data"]["rsml_save_path"], model_name, "Val")
-    PRED_TEST_FOLDERS = os.path.join(cfg["data"]["rsml_save_path"], model_name, "Test")
+    PRED_VAL_FOLDERS = os.path.join(cfg["data"]["save_path"], model_name, "Val")
+    PRED_TEST_FOLDERS = os.path.join(cfg["data"]["save_path"], model_name, "Test")
 
     # list subfolder in all above directories and assert we can find the same number of folders in each
     gt_val_folders = sorted(os.listdir(GT_VAL_FOLDERS))
@@ -56,10 +57,12 @@ def main() -> None:
     assert len(gt_test_folders) == len(pred_test_folders), "Mismatch in number of test folders"
 
     evaluator = ReconstructionEvaluator(
-        pred_folder="RSA_reconstruction/Prediction",
+        pred_folder="Results/Reconstruction/",
         gt_folder="RSA_deep_working/Data",
-        metrics=get_metrics(cfg["metrics"])
+        metrics=get_metrics(cfg["metrics_graph"])
     )
+    
+    evaluator.evaluate()
 
 
 if __name__ == "__main__":

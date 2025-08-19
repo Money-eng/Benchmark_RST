@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from collections import defaultdict
-from typing import Dict, Optional, Sequence
+from typing import Dict, Optional
 
 import pandas as pd
 from rsml import rsml2mtg
@@ -56,10 +56,12 @@ class ReconstructionEvaluator:
                 os.path.join(model_folder, "Val", folder) for folder in os.listdir(os.path.join(model_folder, "Val"))
             ]
             gt_test_folders = [
-                os.path.join(self.gt_folder, "Test", folder) for folder in os.listdir(os.path.join(self.gt_folder, "Test"))
+                os.path.join(self.gt_folder, "Test", folder) for folder in
+                os.listdir(os.path.join(self.gt_folder, "Test"))
             ]
             gt_val_folders = [
-                os.path.join(self.gt_folder, "Val", folder) for folder in os.listdir(os.path.join(self.gt_folder, "Val"))
+                os.path.join(self.gt_folder, "Val", folder) for folder in
+                os.listdir(os.path.join(self.gt_folder, "Val"))
             ]
             # We assume that in every folder there is a "61_graph.rsml" file (the expertized RSML) and a "61_before_expertized_graph.rsml" file (the before expertized RSML)
             self.dict_pred = {

@@ -8,7 +8,7 @@ from ..base import BaseMeasure
 def convex_hull_area(points):
     points = np.array(points)
     hull = ConvexHull(points)
-    return hull.area 
+    return hull.area
 
 
 class Convex_Area_Hull(BaseMeasure):
@@ -18,7 +18,7 @@ class Convex_Area_Hull(BaseMeasure):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, mtg : MTG) -> float:
+    def __call__(self, mtg: MTG) -> float:
         geometry = mtg.property('geometry')  # {1: [[598.0, 148.0], [597.0, 162.0], ...]}
 
         points = [point for points in geometry.values() for point in points]

@@ -1,6 +1,6 @@
 import numpy as np
-from openalea.mtg import MTG
 from Measures.box_and_plant.intercep import Intercept_curve
+from openalea.mtg import MTG
 
 from ..base import BaseMetric
 

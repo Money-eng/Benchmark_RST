@@ -163,7 +163,7 @@ class HPOSearcher:
             model = self.build_model({})  # passe une dict vide si non utilisée
             model = model.to(self.device)
             criterion = self.build_criterion().to(self.device)
-            eval_metric = self.build_metric() #.to(self.device)
+            eval_metric = self.build_metric()  # .to(self.device)
 
             # 3) Optimiseur (basique et lisible)
             optimizer = self._build_optimizer(model.parameters(), opt_name, lr, wd)

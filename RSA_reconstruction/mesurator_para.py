@@ -2,17 +2,17 @@
 # pip install "dask[complete]" distributed tqdm rsml torch pandas
 
 from __future__ import annotations
+
 import os
 from typing import Dict, List, Tuple, Optional
 
-from distributed import LocalCluster
 import pandas as pd
 from dask import delayed, compute
 from dask.distributed import Client, progress
-
+from distributed import LocalCluster
 from rsml import rsml2mtg
-from rsml.misc import plant_vertices
 from rsml.matching import match_plants
+from rsml.misc import plant_vertices
 from torch.nn import Module
 
 from utils.misc import SEED, set_seed
@@ -26,14 +26,14 @@ set_seed(SEED)
 
 @delayed
 def _compute_metrics_for_time(
-    model_name: str,
-    split: str,
-    box_name: str,
-    time: int,
-    mtg_pred,
-    mtg_exp,
-    mtg_bexp,
-    measure: Dict[str, List[Module]],
+        model_name: str,
+        split: str,
+        box_name: str,
+        time: int,
+        mtg_pred,
+        mtg_exp,
+        mtg_bexp,
+        measure: Dict[str, List[Module]],
 ) -> Tuple[List[dict], List[dict]]:
     rows_box, rows_plant = [], []
 
@@ -72,10 +72,12 @@ def _compute_metrics_for_time(
             v: extract_plant_sub_mtg(mtg_bexp, v) for v in plant_vertices(mtg_bexp)
         }
 
-        matched_pred_exp, _, _ = match_plants( # {(21, 10, 0.0), (9, 5, 0.0), (1, 1, 0.0), (31, 15, 0.0), (23, 12, 0.0)}
+        matched_pred_exp, _, _ = match_plants(
+            # {(21, 10, 0.0), (9, 5, 0.0), (1, 1, 0.0), (31, 15, 0.0), (23, 12, 0.0)}
             mtg_pred, mtg_exp
         )
-        matched_exp_bexp, _, _ = match_plants( # {(10, 15, 0.0), (5, 12, 0.0), (1, 1, 0.0), (15, 14, 0.0), (12, 60, 0.0)}
+        matched_exp_bexp, _, _ = match_plants(
+            # {(10, 15, 0.0), (5, 12, 0.0), (1, 1, 0.0), (15, 14, 0.0), (12, 60, 0.0)}
             mtg_exp, mtg_bexp
         )
 
@@ -85,11 +87,10 @@ def _compute_metrics_for_time(
             for (p3, p4, d2) in matched_exp_bexp:
                 if p2 == p3:
                     matched[(p1, p2, p4)] = (d, d2)
-        
-        
-        Prediction={v: func(sub_mtgs_pred[v]) for v in sub_mtgs_pred}
-        expertized={v: func(sub_mtgs_exp[v]) for v in sub_mtgs_exp}
-        before_expertized={v: func(sub_mtgs_bexp[v]) for v in sub_mtgs_bexp}
+
+        Prediction = {v: func(sub_mtgs_pred[v]) for v in sub_mtgs_pred}
+        expertized = {v: func(sub_mtgs_exp[v]) for v in sub_mtgs_exp}
+        before_expertized = {v: func(sub_mtgs_bexp[v]) for v in sub_mtgs_bexp}
         # make dict : (p1, p2, p3) : (pred_value, exp_value, bexp_value)
         values = {
             (p1, p2, p3): (
@@ -142,11 +143,11 @@ def _compute_metrics_for_time(
 
 class ReconstructionMesurator:
     def __init__(
-        self,
-        gt_folder: str,
-        pred_folder: str,
-        measure: Optional[Dict[str, Module]] = None,
-        client: Optional[Client] = None,
+            self,
+            gt_folder: str,
+            pred_folder: str,
+            measure: Optional[Dict[str, Module]] = None,
+            client: Optional[Client] = None,
     ) -> None:
         self.measure = measure or {}
         self.gt_folder = gt_folder

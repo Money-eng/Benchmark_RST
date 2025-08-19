@@ -103,6 +103,6 @@ measures:
     - name: "number_of_organs"
     - name: "total_root_length"
     - name: "number_of_laterals"
-    
+
 rst:
   jar_path: RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar

@@ -1,9 +1,8 @@
 import numpy as np
-from openalea.mtg import MTG
 from Measures.plant.area_convex_hull import Convex_Area_Hull
+from openalea.mtg import MTG
 
 from ..base import BaseMetric
-
 
 
 class Area_convex_HullRatio(BaseMetric):

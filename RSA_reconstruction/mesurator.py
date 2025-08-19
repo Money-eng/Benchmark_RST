@@ -18,10 +18,10 @@ set_seed(SEED)
 
 class ReconstructionMesurator:
     def __init__(
-        self,
-        gt_folder: str,
-        pred_folder: str,
-        measure: Optional[Dict[str, Module]] = None
+            self,
+            gt_folder: str,
+            pred_folder: str,
+            measure: Optional[Dict[str, Module]] = None
     ) -> None:
         self.measure = measure or {}
         self.gt_folder = gt_folder
@@ -62,7 +62,8 @@ class ReconstructionMesurator:
                 'Val': [os.path.join(model_folder, 'Val', d) for d in os.listdir(os.path.join(model_folder, 'Val'))]
             }
             gt_folders = {
-                'Test': [os.path.join(self.gt_folder, 'Test', d) for d in os.listdir(os.path.join(self.gt_folder, 'Test'))],
+                'Test': [os.path.join(self.gt_folder, 'Test', d) for d in
+                         os.listdir(os.path.join(self.gt_folder, 'Test'))],
                 'Val': [os.path.join(self.gt_folder, 'Val', d) for d in os.listdir(os.path.join(self.gt_folder, 'Val'))]
             }
 
@@ -126,9 +127,8 @@ class ReconstructionMesurator:
 
                             root_vertices_pred = plant_vertices(mtg_pred)
                             root_vertices_exp = plant_vertices(mtg_exp)
-                            root_vertices_bexp = plant_vertices(mtg_bexp) 
+                            root_vertices_bexp = plant_vertices(mtg_bexp)
 
-                            
                             sub_mtgs_pred = {
                                 v: extract_plant_sub_mtg(mtg_pred, v)
                                 for v in root_vertices_pred
@@ -141,7 +141,7 @@ class ReconstructionMesurator:
                                 v: extract_plant_sub_mtg(mtg_bexp, v)
                                 for v in root_vertices_bexp
                             }
-                            
+
                             measure_per_plant[model_name][split][box_name][name][time] = {
                                 'Prediction': {
                                     v: func(sub_mtgs_pred[v]) for v in root_vertices_pred

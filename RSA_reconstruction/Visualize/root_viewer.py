@@ -210,5 +210,5 @@ if __name__ == "__main__":
         pred_date_map="/home/loai/Documents/code/RSMLExtraction/Results/Reconstruction/Segformer_bce_dice/Val/230629PN031/40_date_map.tif",
         gt_date_map="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN031/40_date_map.tif",
     )
-    
+
     viewer.show()

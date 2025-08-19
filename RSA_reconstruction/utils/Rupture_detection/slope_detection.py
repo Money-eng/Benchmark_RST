@@ -1,7 +1,8 @@
-
 from typing import Tuple
+
 import numpy as np
 from attr import dataclass
+
 
 @dataclass
 class MaxSlopeDetector:
@@ -28,17 +29,17 @@ class MaxSlopeDetector:
         DIFF[1:] = np.abs(X[1:] - X[:-1])  # S[1:] = |Δ|
         # S[0] déjà zéro
 
-        s_max = DIFF.max(axis=0)                 # (P,)
+        s_max = DIFF.max(axis=0)  # (P,)
         k = DIFF.argmax(axis=0).astype(np.int32)  # 0..T-1
 
-        k = np.where(s_max > self.threshold_slope, k, -1).astype(np.float32).reshape(H,W)
-        #k = np.where(seq[0] > 0.5, 1, k).astype(np.int32)
+        k = np.where(s_max > self.threshold_slope, k, -1).astype(np.float32).reshape(H, W)
+        # k = np.where(seq[0] > 0.5, 1, k).astype(np.int32)
 
-        #import matplotlib.pyplot as plt
-        #plt.figure(figsize=(10, 5))
-        #plt.imshow(k, cmap='jet', interpolation='nearest')
-        #plt.colorbar()
-        #plt.title("Max Slope Index")
-        #plt.show()
+        # import matplotlib.pyplot as plt
+        # plt.figure(figsize=(10, 5))
+        # plt.imshow(k, cmap='jet', interpolation='nearest')
+        # plt.colorbar()
+        # plt.title("Max Slope Index")
+        # plt.show()
 
         return k
