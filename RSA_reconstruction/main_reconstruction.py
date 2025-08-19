@@ -18,7 +18,7 @@ from utils.misc import SEED, set_seed, get_device
 
 set_seed(SEED)
 DEFAULT_CFG: Path = Path(__file__).with_name("config.yml")
-
+DEFAULT_MODEL_PATH = ""
 
 def build_dataloaders(cfg: dict) -> tuple:
     """Build and return (train_loader, val_loader, test_loader)."""
@@ -58,29 +58,33 @@ def main() -> None:
             "If omitted, 'config.yml' is searched in the same directory as this script."
         ),
     )
+    
+    parser.add_argument(
+        "--model_path",
+        type=str,
+        default=None,
+        help=(
+            "Path to the model checkpoint file. "
+            "If omitted, 'model.pth' is searched in the same directory as this script."
+        ),
+    )
     args = parser.parse_args()
     cfg_path = Path(args.config) if args.config else DEFAULT_CFG
-    cfg_path = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/configs/unet_dice_cldice.yml"
     cfg = load_config(cfg_path)
+    
+    model_checkpoints_path = Path(args.model_path) if args.model_path else DEFAULT_MODEL_PATH
 
     # Build dataloaders
     _, val_loader, test_loader = build_dataloaders(cfg)
-
-    # Model checkpoints folder path
-    #model_checkpoints_path = cfg.get("model_checkpoints", {}).get(
-     #   "folder_pretrained_path", "Models/Unet_cldice_dice")
-    # Contains :
-    # Model checkpoint that maximized a score over a certain metric
-    # Model checkpoint folder ('by_epoch') which saved every epoch
-    # Per default, we will take the model of the last epoch
 
     device = get_device()
     model = get_model(cfg["model"])
     model_checkpoints_name = cfg.get("model", {}).get("name", "Model_X")
     model = DataParallel(model)
     state_dict = torch.load(
-        "/home/loai/Documents/code/RSMLExtraction/Results/Training/Checkpoints/Unet_cldice_dice/by_epochs/DataParallel_epoch261.pth",
-        map_location=device)
+        model_checkpoints_path,
+        map_location=device
+    )
     model.load_state_dict(state_dict)
     model = model.to(device)
 

@@ -92,7 +92,7 @@ class Reconstructor:
                 # Process MTG
                 import os
                 pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(
-                    self.save_path, self.model_name, "Test", mtg_box_name))
+                    self.save_path, "Test", mtg_box_name))
                 val_or_test_str = "Test"
                 predicted_mtgs[val_or_test_str][mtg_list[0]] = pred_mtg
             pbar.close()

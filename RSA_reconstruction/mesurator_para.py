@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from typing import Dict, List, Tuple, Optional
 
+from distributed import LocalCluster
 import pandas as pd
 from dask import delayed, compute
 from dask.distributed import Client, progress
@@ -151,9 +152,10 @@ class ReconstructionMesurator:
         self.gt_folder = gt_folder
         self.pred_folder = pred_folder
         self.models_folder = [
-            os.path.join(pred_folder, d) for d in os.listdir(pred_folder)
+            os.path.join(pred_folder, d) for d in os.listdir(pred_folder) if os.path.isdir(os.path.join(pred_folder, d))
         ]
-        self.client = client or Client()
+        cluster = LocalCluster(dashboard_address=":8787")
+        self.client = client or Client(cluster)
         print("GT :", self.gt_folder)
         print("PRED :", self.models_folder)
 
@@ -230,6 +232,7 @@ class ReconstructionMesurator:
                         )
 
         print(f"Lancement de {len(tasks)} tâches…")
+        print(f"Client : {self.client}")
         if isinstance(self.client, Client):
             futures = self.client.compute(tasks)
             progress(futures)
