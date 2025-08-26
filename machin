@@ -6,3 +6,129 @@ meilleur seuil 0.630 avec perte 0.5704
 
 meilleur seuil 0.970 avec perte 5.1506
 meilleur seuil 0.970 avec perte 0.7869
+
+
+module avail
+
+---------------------------------- /opt/software/gaia/prod/latest/Base ----------------------------------
+   anaconda3/2023.09-0        gsl/2.7.1                              ninja/1.11.1
+   aocc/5.0.0                 hpctoolkit/2024.01.stable-mpi          nsimd/3.0.1
+   binutils/2.43.1            hpcviewer/2024.02                      openblas/0.3.28
+   blitz/1.0.2                hwloc/2.9.1-rocm-gpu                   openjdk/17.0.11_9
+   bzip2/1.0.8                imagemagick/7.1.1-29                   papi/7.1.0
+   cfitsio/4.3.0              intel-oneapi-compilers/2025.0.0        paraview/5.13.0-osmesa
+   cmake/3.27.9               intel-oneapi-mkl/2025.0.0              paraview/5.13.0        (D)
+   ddt/24.1.3          (D)    jasper/3.0.3                           patchelf/0.17.2
+   doxygen/1.12.0             jdk/21.0.2                      (D)    poppler/23.04.0
+   easybuild/4.7.0            julia/1.10.0                           proj/9.2.1
+   eigen/3.4.0                libsndfile/1.2.2                       python/3.12.1
+   ferret/7.6.0-mpi           libtirpc/1.3.3                         qt/5.15.11
+   ffmpeg/6.1.1               libxml2/2.13.4                         r/4.4.0
+   firefox/142.0              libxsmm/1.17                           rclone/1.68.1
+   gdal/3.8.5                 likwid/5.3.0-cuda                      rust/1.78.0
+   gdb/14.1                   metis/5.1.0-int64                      sox/14.4.2
+   git/2.47.0                 metis/5.1.0                     (D)    swig/4.1.1
+   glew/2.2.0                 mmg/5.7.1                              udunits/2.2.28
+   gmake/4.4.1                mpfr/4.2.1                             valgrind/3.23.0
+   gmp/6.2.1                  mpifileutils/0.11.1-mpi                visit/3.4.2
+   gmsh/4.13.1-mpi            nco/5.1.9-mpi                          zlib-ng/2.1.4
+   gnuplot/6.0.0              ncview/2.1.9-mpi                       zlib/1.3.1
+
+--------------------------------------- /opt/software/modulefiles ---------------------------------------
+   alphafold/alphafold_mono_gpu_2.3.0        horovod-gpu/0.26.1
+   aocc/3.2.0                         (D)    intel-classic/2022.1.0
+   aomp/15.0.3                               intel-oneapi/2022.1.0
+   aws-ofi-rccl/1.4.0_rocm6                  intel/2022.1.0
+   aws-ofi-rccl/1.4.0                 (D)    jdk/8.202
+   binutils/2.38                      (D)    libfabric/1.15.2.0
+   ccfr/2025                                 libfabric/1.23.1
+   chapel/1.27.0                             netcdf-hdf5parallel/gnu/10.3/4.9.0.5
+   conda/22.9.0                              pytorch-gpu/py3/1.13.0
+   ddt/24.0.4                                tensorflow-gpu/py3/2.7.4
+   gcc/12.2.0                                torch/2.3.0
+   gcc/13.2.0                         (D)
+
+---------------------------------- /opt/cray/pe/lmod/modulefiles/core -----------------------------------
+   PrgEnv-amd/8.3.3             cpe/24.07                 (D)    cray-stat/4.12.2
+   PrgEnv-amd/8.4.0             cray-R/4.2.1.1                   cray-stat/4.12.3       (D)
+   PrgEnv-amd/8.5.0      (D)    cray-R/4.2.1.2                   craype/2.7.19
+   PrgEnv-aocc/8.3.3            cray-R/4.3.1                     craype/2.7.21
+   PrgEnv-aocc/8.4.0            cray-R/4.4.0              (D)    craype/2.7.30
+   PrgEnv-aocc/8.5.0     (D)    cray-ccdb/4.12.13                craype/2.7.32          (D)
+   PrgEnv-cray-amd/8.3.3        cray-ccdb/5.0.0                  craypkg-gen/1.3.27
+   PrgEnv-cray-amd/8.4.0        cray-ccdb/5.0.2                  craypkg-gen/1.3.28
+   PrgEnv-cray-amd/8.5.0 (D)    cray-ccdb/5.0.4           (D)    craypkg-gen/1.3.31
+   PrgEnv-cray/8.3.3            cray-cti/2.15.14                 craypkg-gen/1.3.33     (D)
+   PrgEnv-cray/8.4.0            cray-cti/2.16.0                  cuda/11.8
+   PrgEnv-cray/8.5.0     (D)    cray-cti/2.17.0                  cuda/12.3              (D)
+   PrgEnv-gnu-amd/8.3.3         cray-cti/2.17.1                  gcc-native/10.3
+   PrgEnv-gnu-amd/8.4.0         cray-cti/2.17.2                  gcc-native/11.2
+   PrgEnv-gnu-amd/8.5.0  (D)    cray-cti/2.18.0                  gcc-native/12.1
+   PrgEnv-gnu/8.3.3             cray-cti/2.18.2                  gcc-native/12.2
+   PrgEnv-gnu/8.4.0             cray-cti/2.18.4           (D)    gcc-native/13.2        (D)
+   PrgEnv-gnu/8.5.0      (D)    cray-dsmml/0.2.2                 gcc/10.3.0
+   PrgEnv-intel/8.3.3           cray-dsmml/0.3.0          (D)    gcc/11.2.0
+   PrgEnv-intel/8.4.0           cray-dyninst/12.1.1              gcc/12.1.0
+   PrgEnv-intel/8.5.0    (D)    cray-dyninst/12.2.0              gcc/12.2.0
+   PrgEnv-nvhpc/8.3.3           cray-dyninst/12.3.1              gdb4hpc/4.16.0.1
+   PrgEnv-nvhpc/8.4.0           cray-dyninst/12.3.2       (D)    gdb4hpc/4.16.2         (D)
+   PrgEnv-nvhpc/8.5.0    (D)    cray-libpals/1.2.4               nvhpc/24.3
+   PrgEnv-nvidia/8.3.3          cray-libpals/1.2.5               nvidia/24.3
+   PrgEnv-nvidia/8.4.0          cray-libpals/1.2.9               papi/6.0.0.16
+   PrgEnv-nvidia/8.5.0   (D)    cray-libpals/1.2.12              papi/6.0.0.17
+   amd/5.2.0                    cray-libpals/1.2.14       (D)    papi/7.0.0.1
+   amd/5.2.3                    cray-libsci/22.11.1.2            papi/7.0.0.2
+   amd/5.3.0                    cray-libsci/22.12.1.1            papi/7.0.1.2
+   amd/5.5.1                    cray-libsci/23.02.1.1            papi/7.1.0.2           (D)
+   amd/5.7.1                    cray-libsci/23.05.1.4     (D)    perftools-base/22.09.0
+   amd/6.0.0                    cray-libsci_acc/22.10.2.1        perftools-base/22.12.0
+   amd/6.1.2             (D)    cray-libsci_acc/22.12.2.1        perftools-base/23.02.0
+   amd/6.2.1                    cray-libsci_acc/23.05.2.1        perftools-base/23.05.0
+   amd/6.3.3                    cray-libsci_acc/23.12.0          perftools-base/23.12.0
+   aocc/3.2.0                   cray-libsci_acc/24.07.0   (D)    perftools-base/24.07.0 (D)
+   atp/3.14.15                  cray-mrnet/5.0.4                 rocm/5.2.0
+   atp/3.14.16                  cray-mrnet/5.1.0                 rocm/5.2.3
+   atp/3.15.0                   cray-mrnet/5.1.2                 rocm/5.3.0
+   atp/3.15.2                   cray-mrnet/5.1.3          (D)    rocm/5.5.1
+   atp/3.15.4            (D)    cray-pals/1.2.4                  rocm/5.7.1
+   cce/15.0.0                   cray-pals/1.2.5                  rocm/6.0.0
+   cce/15.0.1                   cray-pals/1.2.9                  rocm/6.1.2             (D)
+   cce/16.0.0                   cray-pals/1.2.12                 rocm/6.2.1
+   cce/17.0.0                   cray-pals/1.2.14          (D)    rocm/6.3.3
+   cce/18.0.0            (D)    cray-pmi/6.1.7                   sanitizers4hpc/1.0.3
+   cpe-cuda/22.11               cray-pmi/6.1.8                   sanitizers4hpc/1.0.4
+   cpe-cuda/22.12               cray-pmi/6.1.9                   sanitizers4hpc/1.1.0
+   cpe-cuda/23.02               cray-pmi/6.1.11                  sanitizers4hpc/1.1.2
+   cpe-cuda/23.05               cray-pmi/6.1.13                  sanitizers4hpc/1.1.3   (D)
+   cpe-cuda/23.12               cray-pmi/6.1.15           (D)    valgrind4hpc/2.12.10
+   cpe-cuda/24.07        (D)    cray-python/3.9.13.1             valgrind4hpc/2.12.11
+   cpe/22.11                    cray-python/3.10.10              valgrind4hpc/2.13.0
+   cpe/22.12                    cray-python/3.11.5               valgrind4hpc/2.13.2
+   cpe/23.02                    cray-python/3.11.7        (D)    valgrind4hpc/2.13.3    (D)
+   cpe/23.05                    cray-stat/4.11.13
+   cpe/23.12                    cray-stat/4.12.0
+
+------------------------- /opt/cray/pe/lmod/modulefiles/craype-targets/default --------------------------
+   craype-accel-amd-gfx90a    craype-accel-host        craype-network-ucx    craype-x86-trento
+   craype-accel-amd-gfx940    craype-accel-nvidia80    craype-x86-genoa
+   craype-accel-amd-gfx942    craype-network-ofi       craype-x86-rome
+
+----------------------------------------- /opt/cray/modulefiles -----------------------------------------
+   libfabric/1.20.1 (D)
+
+---------------------------------- /opt/software/gaia/prod/latest/Core ----------------------------------
+   CCE-CPU-4.0.0    CCE-GPU-4.0.0    GCC-CPU-4.0.0    GCC-GPU-4.0.0    develop    spack-user-4.0.0
+
+------------------------------------- /opt/software/gaia/deprecated -------------------------------------
+   CCE-CPU-3.2.0    CCE-GPU-3.2.0    GCC-CPU-3.2.0    GCC-GPU-3.2.0    archive
+
+  Where:
+   D:  Default Module
+
+If the avail list is too long consider trying:
+
+"module --default avail" or "ml -d av" to just list the default modules.
+"module overview" or "ml ov" to display the number of modules for each name.
+
+Use "module spider" to find all possible modules and extensions.
+Use "module keyword key1 key2 ..." to search for all possible modules matching any of the "keys".

@@ -66,7 +66,13 @@ def assemble_date_map(prediction: torch.Tensor) -> np.ndarray:
     return pred_datemap
 
 
-from pyvirtualdisplay import Display
+from contextlib import nullcontext
+
+try:
+    # pyvirtualdisplay est optionnel ; on le charge seulement si Xvfb est disponible
+    from pyvirtualdisplay import Display
+except Exception:
+    Display = None
 
 
 def generate_graph_with_java(
@@ -78,38 +84,52 @@ def generate_graph_with_java(
         timeout: int = 120,
 ):
     """
-    Exécute le pipeline Java pour reconstruire un graphe et retourne le chemin du fichier généré.
-    Fonction prête à être utilisée en parallèle (multiprocessing, joblib...).
-
-    Args:
-        input_path (str): Chemin vers le dossier d'entrée.
-        output_dir (str): Dossier de sortie.
-        acq_times (list): Temps d’acquisition, séparés par des virgules.
-        jar_path (str): Chemin vers le JAR.
-        expected_filename (str): Nom du fichier à chercher dans output_dir.
-        timeout (int): Temps max d’attente en secondes.
-
-    Returns:
-        str | None: Chemin complet du fichier généré, ou None si échec.
+    Lance le pipeline Java en environnement graphique virtuel si Xvfb est présent,
+    sinon en mode headless (sans display). Retourne le chemin du fichier généré.
     """
-    with Display(visible=False, size=(1024, 768)) as _:
-        cmd = [
-            "java",
-            "-cp",
-            jar_path,
-            "io.github.rocsg.rootsystemtracker.PipelineActionsHandler",
-            f"--input={input_path}",
-            f"--output={output_dir}",
-            f"--acqTimes={acq_times}",
-        ]
-        try:
-            # On ne log pas stdout, juste les vraies erreurs
-            _ = subprocess.run(cmd, capture_output=False, text=False, timeout=timeout)
-        except Exception as e:
-            print(f"[ERREUR] Java failed for {input_path} → {e}")
-            return None
+    # 1) Détecte si Xvfb est dispo
+    xvfb_available = shutil.which("Xvfb") is not None and Display is not None
 
-    # Vérifie la présence du fichier attendu
+    # 2) Construit la commande Java
+    #    On ajoute -Djava.awt.headless=true en TOUTES circonstances : c'est sans risque
+    #    même si un DISPLAY est présent.
+    cmd = [
+        "java",
+        "-Djava.awt.headless=true",
+        "-cp",
+        jar_path,
+        "io.github.rocsg.rootsystemtracker.PipelineActionsHandler",
+        f"--input={input_path}",
+        f"--output={output_dir}",
+        f"--acqTimes={acq_times}",
+    ]
+
+    # 3) Prépare l’environnement d’exécution
+    env = os.environ.copy()
+    # Par prudence on force aussi via JAVA_TOOL_OPTIONS (cumulatif, non bloquant)
+    env["JAVA_TOOL_OPTIONS"] = (env.get("JAVA_TOOL_OPTIONS", "") + " -Djava.awt.headless=true").strip()
+
+    # 4) Choisit le contexte (Display virtuel si possible, sinon nullcontext)
+    ctx = Display(visible=False, size=(1024, 768)) if xvfb_available else nullcontext()
+
+    try:
+        with ctx:
+            # Si pas de Xvfb, on peut aussi supprimer toute variable DISPLAY résiduelle
+            if not xvfb_available and "DISPLAY" in env:
+                env.pop("DISPLAY", None)
+
+            _ = subprocess.run(
+                cmd,
+                capture_output=False,  # conserve le flux propre (logs Java s’affichent)
+                text=False,
+                timeout=timeout,
+                env=env,
+            )
+    except Exception as e:
+        print(f"[ERREUR] Java failed for {input_path} → {e}")
+        return None
+
+    # 5) Vérifie la sortie attendue
     expected_path = os.path.join(output_dir, expected_filename)
     if os.path.exists(expected_path):
         return expected_path

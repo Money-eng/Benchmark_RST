@@ -3,7 +3,6 @@ from typing import List, Dict
 
 import numpy as np
 from openalea.mtg import MTG
-from openalea.mtg import MTG
 from rsml.misc import root_vertices
 
 

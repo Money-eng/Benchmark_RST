@@ -19,7 +19,6 @@ set_seed(SEED)
 
 TARGET_SIZE = (1348, 1166)
 
-
 class Reconstructor:
     def __init__(
             self,
@@ -124,7 +123,6 @@ class Reconstructor:
         # removing padding to get the original size
         preds = preds[:, :, :TARGET_SIZE[1], :TARGET_SIZE[0]]
         masks = masks[:, :, :TARGET_SIZE[1], :TARGET_SIZE[0]]
-
         _, mtg_pred = process_date_map(mtgs,
                                        preds,
                                        save_path=save_path,

@@ -85,8 +85,8 @@ def process_set(model1_root: Path, model2_root: Path, set_name: str):
 
 
 if __name__ == '__main__':
-    model1 = Path('/home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Prediction/Unet_dice_cldice')
-    model2 = Path('/home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Prediction/Segformer_bce')
+    model1 = Path('/home/loai/Documents/code/RSMLExtraction/Results/Reconstruction_0.55/Unet_cldice_dice')
+    model2 = Path('/home/loai/Documents/code/RSMLExtraction/Results/Reconstruction_0.55/Segformer_bce')
 
     # Execution pour les deux sets
     for set_name in ['Test', 'Val']:

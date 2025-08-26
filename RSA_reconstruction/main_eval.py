@@ -61,7 +61,7 @@ def main() -> None:
         gt_folder="RSA_deep_working/Data",
         metrics=get_metrics(cfg["metrics_graph"])
     )
-    
+
     evaluator.evaluate()
 
 

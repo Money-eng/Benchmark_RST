@@ -4,7 +4,7 @@ import torch
 from openalea.mtg import MTG
 from rsml import rsml2mtg
 
-from .mtg_operations import extract_mtg_at_time_t
+from mtg_operations import extract_mtg_at_time_t
 
 
 def _segment_mask(
@@ -113,8 +113,7 @@ if __name__ == "__main__":
     time = [5, 10, 15, 20, 25, 29]  # Example time list
     from rsml import rsml2mtg
 
-    mtg1 = rsml2mtg(
-        "/home/loai/Documents/code/RSMLExtraction/RSA_reconstruction/Prediction/Segformer_bce_dice/Val/230629PN012/61_prediction_before_expertized_graph.rsml")
+    mtg1 = "/home/loai/Documents/code/RSMLExtraction/Results/Reconstruction_0.55/Segformer_bce/Test/230629PN024/61_prediction_before_expertized_graph.rsml"
     mtgs = [mtg1, mtg1, mtg1, mtg1, mtg1, mtg1]  # Example list of MTG objects
 
     roi_masks = roi_fnc(imgs, time, mtgs)

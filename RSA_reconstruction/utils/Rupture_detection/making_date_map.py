@@ -35,7 +35,7 @@ class RuptureSlopeTimeDetector:
         date_map = detector(prediction_torch)  # prediction_torch: (T, 1, H, W), float in [0,1]
     """
 
-    threshold_rupture: float = 0.55
+    threshold_rupture: float = 0.75
     threshold_slope: float = threshold_rupture
     one_based: bool = True
     max_T: int | None = None

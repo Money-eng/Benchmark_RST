@@ -49,11 +49,11 @@ class RuptureDownDetector:
         rupture_index = np.where(
             delta_max > self.threshold_rupture, i_star, -1).astype(np.float32).reshape(H, W)
 
-        # import matplotlib.pyplot as plt
-        # plt.figure(figsize=(10, 5))
-        # plt.imshow(rupture_index, cmap='jet', interpolation='nearest')
-        # plt.colorbar()
-        # plt.title("Rupture Index")
-        # plt.show()
+        import matplotlib.pyplot as plt
+        plt.figure(figsize=(10, 5))
+        plt.imshow(rupture_index, cmap='jet', interpolation='nearest')
+        plt.colorbar()
+        plt.title("Rupture Index")
+        plt.show()
 
         return rupture_index
