@@ -19,6 +19,7 @@ set_seed(SEED)
 
 TARGET_SIZE = (1348, 1166)
 
+
 class Reconstructor:
     def __init__(
             self,

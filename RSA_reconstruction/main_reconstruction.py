@@ -69,7 +69,7 @@ def main() -> None:
             "If omitted, 'model.pth' is searched in the same directory as this script."
         ),
     )
-    
+
     args = parser.parse_args()
     cfg_path = Path(args.config) if args.config else DEFAULT_CFG
     cfg = load_config(cfg_path)

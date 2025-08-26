@@ -6,10 +6,11 @@ Calcule pour chaque échantillon du Test et du Val :
  - ratio de pixels différents dont l’intensité dans Unet est non nulle par rapport au nombre de pixels non nuls dans Unet
 Puis affiche la moyenne de ces ratios pour chaque set (Test et Val).
 """
-import argparse
 from pathlib import Path
+
 import numpy as np
 import tifffile
+
 
 def compare_images(path1: Path, path2: Path):
     """

@@ -1,5 +1,4 @@
-
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 """
 tb_export.py — Export TensorBoard event files to CSV (scalars) and PNGs (images).
 
@@ -21,10 +20,9 @@ Notes:
 
 import argparse
 import csv
-import os
 import re
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # TensorBoard event reader
 try:
@@ -38,11 +36,12 @@ except Exception as e:
 SIZE_GUIDANCE = {
     "compressedHistograms": 0,
     "histograms": 0,
-    "images": 1000,   # adjust if you have many images
+    "images": 1000,  # adjust if you have many images
     "scalars": 0,
     "tensors": 0,
     "audio": 0,
 }
+
 
 def human_time(ts: float) -> str:
     try:
@@ -50,18 +49,22 @@ def human_time(ts: float) -> str:
     except Exception:
         return ""
 
+
 def sanitize(s: str) -> str:
     return re.sub(r'[^A-Za-z0-9._\-]+', '_', s)
+
 
 def iter_event_files(root: Path):
     for p in root.rglob("*"):
         if p.is_file() and p.name.startswith("events.out.tfevents."):
             yield p
 
+
 def load_run(event_file: Path) -> EventAccumulator:
     ea = EventAccumulator(str(event_file), size_guidance=SIZE_GUIDANCE)
     ea.Reload()
     return ea
+
 
 def export_scalars(ea: EventAccumulator, run_name: str, out_dir: Path, writer_all=None, tag_re=None):
     tags = ea.Tags().get("scalars", [])
@@ -88,6 +91,7 @@ def export_scalars(ea: EventAccumulator, run_name: str, out_dir: Path, writer_al
                     writer_all.writerow([run_name, tag, ev.step, f"{ev.wall_time:.6f}", iso, f"{ev.value:.10g}"])
     return rows, tags_count
 
+
 def export_images(ea: EventAccumulator, run_name: str, out_dir: Path, tag_re=None, limit_per_tag=None):
     tags = ea.Tags().get("images", [])
     if tag_re:
@@ -109,6 +113,7 @@ def export_images(ea: EventAccumulator, run_name: str, out_dir: Path, tag_re=Non
                 f.write(ev.encoded_image_string)
             total += 1
     return total, tags_count
+
 
 def main():
     ap = argparse.ArgumentParser(description="Export TensorBoard event files to CSV (scalars) and PNGs (images).")
@@ -172,6 +177,7 @@ def main():
     if args.scalars and args.one_csv:
         print(f"Combined CSV: {all_csv_path}")
     print(f"Output directory: {out_dir.resolve()}")
+
 
 if __name__ == "__main__":
     main()
