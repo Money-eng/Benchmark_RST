@@ -7,128 +7,309 @@ meilleur seuil 0.630 avec perte 0.5704
 meilleur seuil 0.970 avec perte 5.1506
 meilleur seuil 0.970 avec perte 0.7869
 
-
 module avail
+------------------------------------------------------------------ /lustre/fshomisc/sup/hpe/pub/module-rh/modulefiles ------------------------------------------------------------------
+arch/a100             intel-advisor/2016.4(16.0.4)  intel-compilers/19.1.0     intel-mkl/11.3.4(16.0.4)         intel-python/2020.2         nvidia-compilers/21.3              
+arch/h100             intel-advisor/2018.1(18.0.1)  intel-compilers/19.1.1     intel-mkl/2018.1(18.0.1)         intel-python/2020.4         nvidia-compilers/21.5              
+arm-forge/19.1.1      intel-advisor/2018.4(18.0.5)  intel-compilers/19.1.2     intel-mkl/2018.4(18.0.5)         intel-tbb/4.4.6(16.0.4)     nvidia-compilers/21.7              
+arm-forge/20.1.2      intel-advisor/2019.2(19.0.2)  intel-compilers/19.1.3     intel-mkl/2019.2(19.0.2)         intel-tbb/2018.1(18.0.1)    nvidia-compilers/21.9              
+arm-forge/20.2.1      intel-advisor/2019.4(19.0.4)  intel-compilers/2021.9.0   intel-mkl/2019.4(19.0.4)         intel-tbb/2018.6(18.0.5)    nvidia-compilers/22.5              
+arm-forge/21.1.0      intel-advisor/2019.5(19.0.5)  intel-inspector/2023.1     intel-mkl/2019.5(19.0.5)         intel-tbb/2019.2(19.0.2)    nvidia-compilers/22.9              
+arm-forge/22.1.1      intel-advisor/2020.0          intel-ipp/9.0.4(16.0.4)    intel-mkl/2020.0                 intel-tbb/2019.6(19.0.4)    nvidia-compilers/23.1              
+ccfr/1.0              intel-advisor/2020.1          intel-ipp/2018.1(18.0.1)   intel-mkl/2020.1                 intel-tbb/2019.8(19.0.5)    nvidia-compilers/23.9              
+cpuarch/amd           intel-advisor/2020.2          intel-ipp/2018.5(18.0.5)   intel-mkl/2020.2                 intel-tbb/2020.0            nvidia-compilers/23.11             
+cuda/9.2              intel-advisor/2020.3          intel-ipp/2019.2(19.0.2)   intel-mkl/2020.4                 intel-tbb/2020.2            nvidia-compilers/24.3              
+cuda/10.0             intel-advisor/2023.1          intel-ipp/2019.4(19.0.4)   intel-mpi/5.1.3(16.0.4)          intel-tbb/2020.3            nvidia-compilers/25.1              
+cuda/10.1.1           intel-all/2016.4(16.0.4)      intel-ipp/2019.5(19.0.5)   intel-mpi/2018.1(18.0.1)         intel-vtune/2018.1(18.0.1)  nvidia-nsight-compute/2020.3.1     
+cuda/10.1.2           intel-all/2018.1(18.0.1)      intel-ipp/2020.0           intel-mpi/2018.5(18.0.5)         intel-vtune/2018.4(18.0.5)  nvidia-nsight-compute/2021.3.0     
+cuda/10.2             intel-all/2018.5(18.0.5)      intel-ipp/2020.1           intel-mpi/2019.2(19.0.2)         intel-vtune/2019.2(19.0.2)  nvidia-nsight-compute/2022.1.0     
+cuda/11.2             intel-all/2019.2(19.0.2)      intel-ipp/2020.2           intel-mpi/2019.4(19.0.4)         intel-vtune/2019.4(19.0.4)  nvidia-nsight-compute/2022.4.0     
+cuda/11.7.1           intel-all/2019.4(19.0.4)      intel-ipp/2020.3           intel-mpi/2019.5(19.0.5)         intel-vtune/2019.6(19.0.5)  nvidia-nsight-compute/2023.3.1.0   
+cuda/11.8.0           intel-all/2019.5(19.0.5)      intel-ipp/2021.8           intel-mpi/2019.6                 intel-vtune/2020.0          nvidia-nsight-compute/2024.3.2.0   
+cuda/12.0.0           intel-all/2020.0              intel-itac/2018.1(18.0.1)  intel-mpi/2019.7                 intel-vtune/2020.1          nvidia-nsight-systems/2021.1.1     
+cuda/12.1.0           intel-all/2020.1              intel-itac/2018.4(18.0.5)  intel-mpi/2019.8                 intel-vtune/2020.2          nvidia-nsight-systems/2021.2.1     
+cuda/12.2.0           intel-all/2020.2              intel-itac/2019.2(19.0.2)  intel-mpi/2019.9                 intel-vtune/2020.3          nvidia-nsight-systems/2021.4.1     
+cuda/12.4.1           intel-all/2020.4              intel-itac/2019.4(19.0.4)  intel-mpi/2021.9                 intel-vtune/2023.1.0        nvidia-nsight-systems/2022.1.1     
+cuda/12.6.3           intel-compilers/16.0.4        intel-itac/2019.5(19.0.5)  intel-oneapi-all/2023.1          linaro-forge/23.0.4         nvidia-nsight-systems/2022.5.1     
+cuda/12.8.0           intel-compilers/18.0.1        intel-itac/2020.0          intel-oneapi-compilers/2023.1.0  nccl/2.4.2-1+cuda9.2        nvidia-nsight-systems/2024.1.1.59  
+cudnn/9.2-v7.5.1.10   intel-compilers/18.0.5        intel-itac/2020.1          intel-oneapi-mkl/2023.1          nccl/2.4.2-1+cuda10.1       nvidia-nsight-systems/2024.7.1.84  
+cudnn/10.1-v7.5.1.10  intel-compilers/19.0.2        intel-itac/2020.2          intel-oneapi-tbb/2021.9          nvidia-compilers/20.7       pgi/19.10                          
+hpe/MPInside/4.2.41   intel-compilers/19.0.4        intel-itac/2020.3          intel-python/2020.0              nvidia-compilers/20.9       pgi/20.1                           
+hpe/mpiplace/2.00     intel-compilers/19.0.5        intel-itac/2021.9          intel-python/2020.1              nvidia-compilers/20.11      pgi/20.4                           
 
----------------------------------- /opt/software/gaia/prod/latest/Base ----------------------------------
-   anaconda3/2023.09-0        gsl/2.7.1                              ninja/1.11.1
-   aocc/5.0.0                 hpctoolkit/2024.01.stable-mpi          nsimd/3.0.1
-   binutils/2.43.1            hpcviewer/2024.02                      openblas/0.3.28
-   blitz/1.0.2                hwloc/2.9.1-rocm-gpu                   openjdk/17.0.11_9
-   bzip2/1.0.8                imagemagick/7.1.1-29                   papi/7.1.0
-   cfitsio/4.3.0              intel-oneapi-compilers/2025.0.0        paraview/5.13.0-osmesa
-   cmake/3.27.9               intel-oneapi-mkl/2025.0.0              paraview/5.13.0        (D)
-   ddt/24.1.3          (D)    jasper/3.0.3                           patchelf/0.17.2
-   doxygen/1.12.0             jdk/21.0.2                      (D)    poppler/23.04.0
-   easybuild/4.7.0            julia/1.10.0                           proj/9.2.1
-   eigen/3.4.0                libsndfile/1.2.2                       python/3.12.1
-   ferret/7.6.0-mpi           libtirpc/1.3.3                         qt/5.15.11
-   ffmpeg/6.1.1               libxml2/2.13.4                         r/4.4.0
-   firefox/142.0              libxsmm/1.17                           rclone/1.68.1
-   gdal/3.8.5                 likwid/5.3.0-cuda                      rust/1.78.0
-   gdb/14.1                   metis/5.1.0-int64                      sox/14.4.2
-   git/2.47.0                 metis/5.1.0                     (D)    swig/4.1.1
-   glew/2.2.0                 mmg/5.7.1                              udunits/2.2.28
-   gmake/4.4.1                mpfr/4.2.1                             valgrind/3.23.0
-   gmp/6.2.1                  mpifileutils/0.11.1-mpi                visit/3.4.2
-   gmsh/4.13.1-mpi            nco/5.1.9-mpi                          zlib-ng/2.1.4
-   gnuplot/6.0.0              ncview/2.1.9-mpi                       zlib/1.3.1
-
---------------------------------------- /opt/software/modulefiles ---------------------------------------
-   alphafold/alphafold_mono_gpu_2.3.0        horovod-gpu/0.26.1
-   aocc/3.2.0                         (D)    intel-classic/2022.1.0
-   aomp/15.0.3                               intel-oneapi/2022.1.0
-   aws-ofi-rccl/1.4.0_rocm6                  intel/2022.1.0
-   aws-ofi-rccl/1.4.0                 (D)    jdk/8.202
-   binutils/2.38                      (D)    libfabric/1.15.2.0
-   ccfr/2025                                 libfabric/1.23.1
-   chapel/1.27.0                             netcdf-hdf5parallel/gnu/10.3/4.9.0.5
-   conda/22.9.0                              pytorch-gpu/py3/1.13.0
-   ddt/24.0.4                                tensorflow-gpu/py3/2.7.4
-   gcc/12.2.0                                torch/2.3.0
-   gcc/13.2.0                         (D)
-
----------------------------------- /opt/cray/pe/lmod/modulefiles/core -----------------------------------
-   PrgEnv-amd/8.3.3             cpe/24.07                 (D)    cray-stat/4.12.2
-   PrgEnv-amd/8.4.0             cray-R/4.2.1.1                   cray-stat/4.12.3       (D)
-   PrgEnv-amd/8.5.0      (D)    cray-R/4.2.1.2                   craype/2.7.19
-   PrgEnv-aocc/8.3.3            cray-R/4.3.1                     craype/2.7.21
-   PrgEnv-aocc/8.4.0            cray-R/4.4.0              (D)    craype/2.7.30
-   PrgEnv-aocc/8.5.0     (D)    cray-ccdb/4.12.13                craype/2.7.32          (D)
-   PrgEnv-cray-amd/8.3.3        cray-ccdb/5.0.0                  craypkg-gen/1.3.27
-   PrgEnv-cray-amd/8.4.0        cray-ccdb/5.0.2                  craypkg-gen/1.3.28
-   PrgEnv-cray-amd/8.5.0 (D)    cray-ccdb/5.0.4           (D)    craypkg-gen/1.3.31
-   PrgEnv-cray/8.3.3            cray-cti/2.15.14                 craypkg-gen/1.3.33     (D)
-   PrgEnv-cray/8.4.0            cray-cti/2.16.0                  cuda/11.8
-   PrgEnv-cray/8.5.0     (D)    cray-cti/2.17.0                  cuda/12.3              (D)
-   PrgEnv-gnu-amd/8.3.3         cray-cti/2.17.1                  gcc-native/10.3
-   PrgEnv-gnu-amd/8.4.0         cray-cti/2.17.2                  gcc-native/11.2
-   PrgEnv-gnu-amd/8.5.0  (D)    cray-cti/2.18.0                  gcc-native/12.1
-   PrgEnv-gnu/8.3.3             cray-cti/2.18.2                  gcc-native/12.2
-   PrgEnv-gnu/8.4.0             cray-cti/2.18.4           (D)    gcc-native/13.2        (D)
-   PrgEnv-gnu/8.5.0      (D)    cray-dsmml/0.2.2                 gcc/10.3.0
-   PrgEnv-intel/8.3.3           cray-dsmml/0.3.0          (D)    gcc/11.2.0
-   PrgEnv-intel/8.4.0           cray-dyninst/12.1.1              gcc/12.1.0
-   PrgEnv-intel/8.5.0    (D)    cray-dyninst/12.2.0              gcc/12.2.0
-   PrgEnv-nvhpc/8.3.3           cray-dyninst/12.3.1              gdb4hpc/4.16.0.1
-   PrgEnv-nvhpc/8.4.0           cray-dyninst/12.3.2       (D)    gdb4hpc/4.16.2         (D)
-   PrgEnv-nvhpc/8.5.0    (D)    cray-libpals/1.2.4               nvhpc/24.3
-   PrgEnv-nvidia/8.3.3          cray-libpals/1.2.5               nvidia/24.3
-   PrgEnv-nvidia/8.4.0          cray-libpals/1.2.9               papi/6.0.0.16
-   PrgEnv-nvidia/8.5.0   (D)    cray-libpals/1.2.12              papi/6.0.0.17
-   amd/5.2.0                    cray-libpals/1.2.14       (D)    papi/7.0.0.1
-   amd/5.2.3                    cray-libsci/22.11.1.2            papi/7.0.0.2
-   amd/5.3.0                    cray-libsci/22.12.1.1            papi/7.0.1.2
-   amd/5.5.1                    cray-libsci/23.02.1.1            papi/7.1.0.2           (D)
-   amd/5.7.1                    cray-libsci/23.05.1.4     (D)    perftools-base/22.09.0
-   amd/6.0.0                    cray-libsci_acc/22.10.2.1        perftools-base/22.12.0
-   amd/6.1.2             (D)    cray-libsci_acc/22.12.2.1        perftools-base/23.02.0
-   amd/6.2.1                    cray-libsci_acc/23.05.2.1        perftools-base/23.05.0
-   amd/6.3.3                    cray-libsci_acc/23.12.0          perftools-base/23.12.0
-   aocc/3.2.0                   cray-libsci_acc/24.07.0   (D)    perftools-base/24.07.0 (D)
-   atp/3.14.15                  cray-mrnet/5.0.4                 rocm/5.2.0
-   atp/3.14.16                  cray-mrnet/5.1.0                 rocm/5.2.3
-   atp/3.15.0                   cray-mrnet/5.1.2                 rocm/5.3.0
-   atp/3.15.2                   cray-mrnet/5.1.3          (D)    rocm/5.5.1
-   atp/3.15.4            (D)    cray-pals/1.2.4                  rocm/5.7.1
-   cce/15.0.0                   cray-pals/1.2.5                  rocm/6.0.0
-   cce/15.0.1                   cray-pals/1.2.9                  rocm/6.1.2             (D)
-   cce/16.0.0                   cray-pals/1.2.12                 rocm/6.2.1
-   cce/17.0.0                   cray-pals/1.2.14          (D)    rocm/6.3.3
-   cce/18.0.0            (D)    cray-pmi/6.1.7                   sanitizers4hpc/1.0.3
-   cpe-cuda/22.11               cray-pmi/6.1.8                   sanitizers4hpc/1.0.4
-   cpe-cuda/22.12               cray-pmi/6.1.9                   sanitizers4hpc/1.1.0
-   cpe-cuda/23.02               cray-pmi/6.1.11                  sanitizers4hpc/1.1.2
-   cpe-cuda/23.05               cray-pmi/6.1.13                  sanitizers4hpc/1.1.3   (D)
-   cpe-cuda/23.12               cray-pmi/6.1.15           (D)    valgrind4hpc/2.12.10
-   cpe-cuda/24.07        (D)    cray-python/3.9.13.1             valgrind4hpc/2.12.11
-   cpe/22.11                    cray-python/3.10.10              valgrind4hpc/2.13.0
-   cpe/22.12                    cray-python/3.11.5               valgrind4hpc/2.13.2
-   cpe/23.02                    cray-python/3.11.7        (D)    valgrind4hpc/2.13.3    (D)
-   cpe/23.05                    cray-stat/4.11.13
-   cpe/23.12                    cray-stat/4.12.0
-
-------------------------- /opt/cray/pe/lmod/modulefiles/craype-targets/default --------------------------
-   craype-accel-amd-gfx90a    craype-accel-host        craype-network-ucx    craype-x86-trento
-   craype-accel-amd-gfx940    craype-accel-nvidia80    craype-x86-genoa
-   craype-accel-amd-gfx942    craype-network-ofi       craype-x86-rome
-
------------------------------------------ /opt/cray/modulefiles -----------------------------------------
-   libfabric/1.20.1 (D)
-
----------------------------------- /opt/software/gaia/prod/latest/Core ----------------------------------
-   CCE-CPU-4.0.0    CCE-GPU-4.0.0    GCC-CPU-4.0.0    GCC-GPU-4.0.0    develop    spack-user-4.0.0
-
-------------------------------------- /opt/software/gaia/deprecated -------------------------------------
-   CCE-CPU-3.2.0    CCE-GPU-3.2.0    GCC-CPU-3.2.0    GCC-GPU-3.2.0    archive
-
-  Where:
-   D:  Default Module
-
-If the avail list is too long consider trying:
-
-"module --default avail" or "ml -d av" to just list the default modules.
-"module overview" or "ml ov" to display the number of modules for each name.
-
-Use "module spider" to find all possible modules and extensions.
-Use "module keyword key1 key2 ..." to search for all possible modules matching any of the "keys".
+------------------------------------------------ /lustre/fshomisc/sup/hpe/pub/modules-idris-env4/modulefiles/linux-rhel9-skylake_avx512 ------------------------------------------------
+abinit/7.0.5                             genesis/1.7.1-mpi-openmp-single          MMseqs2/16-mpi-cuda                        plumed/2.9.0                                             
+abinit/8.8.2-mpi                         geos/3.6.1                               molden/6.7                                 plumed/2.9.0-mpi                                         
+abinit/8.10.3-mpi                        geos/3.7.2                               molgw/2.F-mpi                              plumed/2.9.0-mpi-cuda                                    
+abinit/9.8.4-mpi                         geos/3.7.3                               molpro/2019.2.1-mpi                        poppler/23.04.0                                          
+adf/2019.104-mpi-cuda                    geos/3.8.1                               molpro/2020.2.1-mpi                        proj/4.9.3                                               
+adf/2019.305-mpi                         geos/3.9.1                               molpro/2022.1-binaries-mpi                 proj/5.2.0                                               
+adf/2020.101-mpi                         git-annex/10.20230408                    molpro/2022.1-mpi                          proj/7.1.0                                               
+adios2/2.6.0-mpi-cuda                    git-lfs/2.7.2                            mosh/1.4.0                                 proj/8.2.1                                               
+adios2/2.7.1-mpi-cuda                    git-lfs/3.0.2                            mozjpeg/4.1.1                              proj/9.5.1                                               
+adios2/2.8.3-mpi                         git-lfs/3.3.0                            mpfr/3.1.6                                 psi4/1.3.2                                               
+adios2/2.8.3-mpi-cuda                    git/2.21.0                               mpfr/4.0.2                                 psi4/1.3.2-max-am-eri-7                                  
+adios2/2.9.1                             git/2.25.0                               mpfr/4.1.0                                 psi4/1.5-max-am-eri-7                                    
+adios2/2.10.0-mpi-cuda                   git/2.31.1                               mpifileutils/0.11.1-mpi                    pv/1.6.20                                                
+adios2/2.10.0-mpi-python3.10             git/2.39.1                               mpip/3.5-mpi                               pv/1.8.5                                                 
+alphafold/2.1.2                          github-cli/1.13.1                        mrcc/2020.02.22-mpi                        py-fenics-dijitso/2019.1.0                               
+alphafold/2.2.4                          github-cli/2.23.0                        mrtrix3/3.0.4                              py-fenics-ffc/2019.1.0.post0                             
+alphafold/2.3.1                          glib/2.72.1                              mujoco/2.1.0                               py-fenics-fiat/2019.1.0                                  
+alphafold/2.3.2                          gmp/6.1.2                                multinest/3.10-mpi-cuda                    py-fenics-ufl/2019.1.0                                   
+alphafold/3.0.1                          gmp/6.2.1                                multitime/1.4                              python/2.7.16                                            
+alphapulldown/1.0.4                      gmsh/3.0.6-mpi                           multiwfn/3.8                               python/3.5.6                                             
+alphapulldown/2.0.1                      gmsh/4.8.4-mpi                           mumps/5.3.5-mpi                            python/3.6.15                                            
+alps/2.3.0-mpi                           gnuplot/5.2.5                            mumps/5.3.5-mpi-openmp                     python/3.7.3                                             
+amber/18-mpi-cuda                        gnuplot/5.2.8                            must/1.6-mpi                               python/3.7.5                                             
+amber/20-mpi-cuda                        gnuplot/5.4.3                            mutationpp/1.0.0                           python/3.7.6                                             
+amber/20-mpi-cuda-ambertools-mpi         go/1.8.3                                 mxnet-gpu/1.8.0                            python/3.7.10                                            
+amber/22-AmberTools23-mpi-cuda           go/1.13.12                               n2d2/master-cuda                           python/3.8.2                                             
+amber/22-gtipatch-AmberTools23-mpi-cuda  go/1.14.4                                n2p2/2.1.1-mpi                             python/3.8.8                                             
+amber/22-mpi-cuda                        go/1.17.13                               n2p2/2.1.4-mpi                             python/3.9.12                                            
+amgx/2.4.0-cuda                          go/1.18.10                               n2p2/2.3.0-mpi                             python/3.10.4                                            
+amgx/2.4.0-cuda-magma                    go/1.19.5                                namd/2.9-mpi-charmpp-mpi-smp               python/3.11.5                                            
+ams/2020.101-mpi                         go/1.20.6                                namd/2.12-mpi-charmpp-mpi                  python/3.12.7                                            
+ams/2020.103-mpi                         go/1.22.6                                namd/2.13-mpi                              pytorch-cpu/py3/1.4.0                                    
+ams/2021.102-mpi                         go/1.24.1                                namd/2.13-mpi-charmpp-mpi                  pytorch-cpu/py3/1.7.1                                    
+ams/2022.103-mpi                         google-cloud-cli/504.0.1                 namd/2.13-mpi-charmpp-mpi-smp              pytorch-gpu/py3/1.1                                      
+ams/2022.104-fix110788-mpi               gperftools/2.10                          namd/2.13-mpi-cuda                         pytorch-gpu/py3/1.2.0                                    
+ams/2023.104-mpi                         grace/5.1.25                             namd/2.13-mpi-cuda-charmpp-mpi-smp         pytorch-gpu/py3/1.3                                      
+ams/2024.103-mpi                         graphviz/2.40.1                          namd/2.14-cuda-multicore                   pytorch-gpu/py3/1.3.0+nccl-2.5.6                         
+ams/2024.105-mpi                         graphviz/2.49.0                          namd/3.0-a3                                pytorch-gpu/py3/1.3.1                                    
+ams/2025.103-mpi                         gromacs-chain-coordinate/2021.5-0.2-mpi  namd/3.0-a9                                pytorch-gpu/py3/1.3.1+nccl-2.5.6                         
+anaconda-py2/2019.03                     gromacs/2018.7                           namd/3.0-b5                                pytorch-gpu/py3/1.4.0                                    
+anaconda-py3/2019.03                     gromacs/2018.7-mpi-cuda                  namd/3.0-b6                                pytorch-gpu/py3/1.5.0                                    
+anaconda-py3/2020.11                     gromacs/2019.2                           namd/3.0-mpi-charmpp-mpi                   pytorch-gpu/py3/1.5.1                                    
+anaconda-py3/2021.05                     gromacs/2019.2-mpi-cuda                  namd/3.0-mpi-charmpp-mpi-smp               pytorch-gpu/py3/1.6.0                                    
+anaconda-py3/2022.05                     gromacs/2019.4-mpi-cuda-plumed           namd/3.0.1                                 pytorch-gpu/py3/1.7.0                                    
+anaconda-py3/2022.10                     gromacs/2019.6                           namd/3.0.1-cuda                            pytorch-gpu/py3/1.7.0+hvd-0.21.0                         
+anaconda-py3/2023.03                     gromacs/2019.6-mpi-cuda                  namd/3.0.1-cuda-binaries                   pytorch-gpu/py3/1.7.1                                    
+anaconda-py3/2023.09                     gromacs/2020-mpi-cuda                    namd/3.0.1-mpi-charmpp-mpi-smp             pytorch-gpu/py3/1.7.1+nccl-2.8.3-1                       
+anaconda-py3/2024.06                     gromacs/2020.1-cuda                      namd/3.0.1-mpi-cuda-charmpp-mpi-smp        pytorch-gpu/py3/1.7.1-cellpose-cellprofiler              
+ants/2.3.1                               gromacs/2020.1-mpi-cuda                  nasm/2.15.05                               pytorch-gpu/py3/1.8.0                                    
+ants/2.3.5                               gromacs/2020.2-mpi-cuda-plumed           nccl/2.4.2-1-cuda                          pytorch-gpu/py3/1.8.1                                    
+aria2/1.35.0                             gromacs/2020.3-cuda                      nccl/2.4.8-1-cuda                          pytorch-gpu/py3/1.9.0                                    
+arpack-ng/3.7.0-mpi                      gromacs/2020.4-cuda                      nccl/2.5.6-2-cuda                          pytorch-gpu/py3/1.10.0                                   
+arpack-ng/3.7.0-mpi-openblas             gromacs/2020.4-mpi-cuda-plumed           nccl/2.5.7-1-cuda                          pytorch-gpu/py3/1.10.1                                   
+arpack-ng/3.8.0-mpi-cuda                 gromacs/2021.2-cuda                      nccl/2.6.4-1-cuda                          pytorch-gpu/py3/1.11.0                                   
+atat/3.36                                gromacs/2021.4-mpi-cuda                  nccl/2.7.8-1-cuda                          pytorch-gpu/py3/1.12.1                                   
+atomistic_simulation/py3                 gromacs/2021.4-mpi-cuda-plumed           nccl/2.8.3-1-cuda                          pytorch-gpu/py3/1.13.0                                   
+atomistic_simulation/py3.11              gromacs/2021.5-mpi-cuda                  nccl/2.9.6-1-cuda                          pytorch-gpu/py3/2.0.0                                    
+atomistic_simulation/py3.13              gromacs/2022.2-cuda                      nccl/2.12.12-1-cuda                        pytorch-gpu/py3/2.0.1                                    
+atompaw/4.1.1.0                          gromacs/2022.2-mpi-cuda                  nccl/2.14.3-1-cuda                         pytorch-gpu/py3/2.1.1                                    
+autoconf/2.69                            gromacs/2022.3-cuda-plumed               nccl/2.18.1-1-cuda                         pytorch-gpu/py3/2.2.0                                    
+autodock-gpu/develop-cuda                gromacs/2022.3-mpi                       nccl/2.18.5-1-cuda                         pytorch-gpu/py3/2.3.0                                    
+autodock-gpu/develop-opencl              gromacs/2022.3-mpi-avx2                  nccl/2.19.3-1-cuda                         pytorch-gpu/py3/2.4.0                                    
+autogrid/4.2.6                           gromacs/2022.3-mpi-cuda                  nccl/2.21.5-1-cuda                         pytorch-gpu/py3/2.5.0                                    
+automake/1.16.1                          gromacs/2022.3-mpi-cuda-plumed           nccl/2.22.3-1-cuda                         pytorch-gpu/py3/2.6.0                                    
+aws-cli/2.9.13                           gromacs/2022.3-mpi-double-cp2k           nccl/2.25.1-1-cuda                         pytorch-gpu/py3/2.7.0                                    
+azcopy/10.21.2                           gromacs/2022.5-cuda                      nccl/2.27.3-1-cuda                         qmcpack/3.7.0-mpi                                        
+bart/0.7.00-mpi-cuda                     gromacs/2022.5-cuda-plumed               ncdu/1.18.1                                qmcpack/3.7.0-mpi-cuda                                   
+bazel/6.5.0                              gromacs/2022.5-mpi-cuda-plumed           ncdu/1.19                                  qmcpack/3.9.2-mpi                                        
+bbcp/master                              gromacs/2022.5-mpi-plumed                ncl/6.6.2-mpi                              qmcpack/3.9.2-mpi-cuda                                   
+bigdft/devel-0719-mpi-cuda               gromacs/2023.2-cuda                      nco/4.8.1                                  qmcpack/3.10.0-mpi                                       
+binutils/2.34                            gromacs/2023.2-mpi-cuda                  nco/4.9.3                                  qmcpack/3.10.0-mpi-cuda                                  
+binutils/2.38                            gromacs/2023.4                           ncview/2.1.7-mpi                           qt/5.8.0                                                 
+bioem/2.1.0                              gromacs/2023.4-cuda                      ncview/2.1.8                               quantum-espresso/6.3-mpi                                 
+bioem/2.1.0-cuda                         gromacs/2023.4-mpi                       nek5000/17.0-mpi                           quantum-espresso/6.4-mpi                                 
+bioem/2.1.0-mpi                          gromacs/2023.4-mpi-cuda                  nemo/2.2.1                                 quantum-espresso/6.4.1-mpi                               
+bioem/2.1.0-mpi-cuda                     gromacs/2024.2-cuda-plumed               neovim/0.7.0                               quantum-espresso/6.5-mpi                                 
+bison/3.6.4                              gromacs/2024.2-mpi                       neovim/0.9.4                               quantum-espresso/7.1-mpi                                 
+blast-plus/2.9.0                         gromacs/2024.2-mpi-cuda                  neovim/0.10.0                              quantum-espresso/7.1-mpi-cuda                            
+blender/2.93                             gromacs/2024.3-cuda                      nequip/0.5.6                               quickvina-w/1.1                                          
+blender/3.6                              gromacs/2024.3-mpi-cuda-cufftmp          netcdf-c/4.7.2                             quip/0.9.12                                              
+blitz/1.0.1                              gromacs/2024.3-mpi-cuda-plumed           netcdf-c/4.7.2-mpi                         quip/0.9.12-mpi                                          
+blitz/1.0.2                              gsl/2.5                                  netcdf-c/4.7.2-mpi-cuda                    quip/0.9.14                                              
+bloom/torch-1.13.0                       gsl/2.7.1                                netcdf-c/4.7.3                             quip/0.9.14-mpi                                          
+bocs/4.0.0                               hdf/4.2.14                               netcdf-c/4.7.3-mpi                         r-gmp/0.5-13.5                                           
+boost/1.62.0                             hdf/4.2.15                               netcdf-c/4.7.4                             r-rmpfr/0.7-2                                            
+boost/1.70.0                             hdf5-vol-async/1.8.1-mpi-cuda            netcdf-c/4.7.4-mpi                         r-rmpi/0.6-9-mpi                                         
+boost/1.70.0-mpi                         hdf5/1.8.18-mpi                          netcdf-c/4.7.4-mpi-cuda                    r/3.6.0                                                  
+boost/1.73.0-mpi                         hdf5/1.8.21                              netcdf-c/4.8.1-mpi-cuda                    r/4.0.2                                                  
+boost/1.73.0-mpi-python3.7               hdf5/1.8.21-cuda-mpi                     netcdf-cxx4/4.3.1                          r/4.1.3                                                  
+boost/1.74.0                             hdf5/1.8.21-mpi                          netcdf-cxx4/4.3.1-mpi                      r/4.2.2                                                  
+boost/1.74.0-mpi                         hdf5/1.8.21-mpi-cuda                     netcdf-cxx4/4.3.1-mpi-cuda                 r/4.3.2                                                  
+boost/1.74.0-mpi-cuda                    hdf5/1.8.21-threadsafe                   netcdf-fortran/4.5.2                       r/4.4.1                                                  
+boost/1.74.0-mpi-python3.7               hdf5/1.10.5                              netcdf-fortran/4.5.2-mpi                   r/4.5.0                                                  
+boost/1.78.0                             hdf5/1.10.5-mpi                          netcdf-fortran/4.5.2-mpi-cuda              rapids/0.14                                              
+boost/1.78.0-mpi                         hdf5/1.10.5-mpi-cuda                     netcdf-fortran/4.5.3                       rapids/21.08                                             
+boost/1.79.0-mpi-cuda                    hdf5/1.12.0                              netcdf-fortran/4.5.3-mpi                   rapids/23.04                                             
+boost/1.81.0-mpi-cuda                    hdf5/1.12.0-mpi                          netcdf-fortran/4.5.3-mpi-cuda              rapids/24.04                                             
+boost/1.83.0-mpi-cuda                    hdf5/1.12.0-mpi-cuda                     netcdf/4.7.2                               raspa3/3.0.1                                             
+boost/1.86.0                             hdf5/1.12.2-mpi-cuda                     netcdf/4.7.2-mpi                           rawtherapee/5.8                                          
+boost/1.86.0-mpi-cuda                    hdf5/1.14.5-mpi                          netcdf/4.7.2-mpi-cuda                      raxml-ng/1.0.2-mpi                                       
+bwa/0.7.17                               hdf5/1.14.5-mpi-cuda                     netcdf95/0.3                               reframe-hpc/4.8.1                                        
+caffe-gpu/py2/1.0                        hdf5/1.14.5-mpi-cuda-threadsafe          netcdf95/0.3-mpi                           relion/4.0.1-mpi-cuda                                    
+caffe-gpu/py3/1.0                        hh-suite/3.3.0                           netlib-lapack/3.8.0                        rust/1.57.0                                              
+cantera/2.6.0                            hh-suite/3.3.0-mpi                       netlib-lapack/3.10.1                       rust/1.65.0                                              
+cantera/3.0.0-python                     hip/5.7.1-cuda                           netlib-scalapack/2.0.2-mpi                 rust/1.70.0                                              
+casacore/3.4.0                           hip/6.0.2-cuda                           netlib-scalapack/2.0.2-mpi-cuda            rust/1.76.0                                              
+cdo/1.9.7.1                              hipblas/5.7.1-cuda                       netlib-scalapack/2.1.0-mpi                 rust/1.85.0                                              
+cdo/1.9.8                                hipfft/5.7.1-cuda                        netlib-scalapack/2.1.0-mpi-cuda            salome-med/4.1.0                                         
+cdo/2.5.2                                hipfort/5.7.1-cuda                       netlib-scalapack/2.1.0-mpi-cuda-openblas   salome-medcoupling/9.7.0                                 
+cellprofiler/3.1.8                       hipsolver/5.1.0                          nextflow/22.04.0                           samtools/1.18                                            
+cellprofiler/4.2.1                       hipsolver/5.7.1-cuda                     nextflow/24.10.2                           scalasca/2.4-mpi                                         
+cfitsio/3.450                            hipsparse/5.7.1-cuda                     ninja/1.10.0                               scalasca/2.5-mpi                                         
+cfitsio/4.0.0                            hmmer/3.3.2-mpi                          ninja/1.12.1                               scalasca/2.6-mpi                                         
+cfitsio/4.2.0                            hmmer/3.4-mpi-cuda                       nlopt/2.6.1                                scons/4.3.0                                              
+cgns/4.1.2-mpi-int64                     honpas/1.0-mpi                           node-js/11.1.0                             scorep/5.0-mpi                                           
+chargemol/3.5                            honpas/2.0-mpi                           node-js/12.18.4                            scorep/6.0-mpi                                           
+climate_science/py3                      hoomd-blue/2.9.7-mpi-cuda                npm/3.10.9                                 scotch/6.0.3-mpi                                         
+cmake/3.4.3                              hpctoolkit/2020.08.03                    npm/6.14.12                                scotch/6.0.3-mpi-int64                                   
+cmake/3.11.2                             hpctoolkit/2020.08.03-cuda               nvtop/1.1.0                                scotch/6.0.6-mpi                                         
+cmake/3.14.4                             hpctoolkit/2024.01.1                     nvtop/2.0.1                                scotch/6.0.10-mpi                                        
+cmake/3.18.0                             hpctoolkit/2024.01.1-cuda                nwchem/6.8.1-mpi                           scotch/6.0.10-mpi-int64                                  
+cmake/3.21.3                             hpctoolkit/2024.01.1-python3.9           nwchem/7.0.2-mpi                           seismic-unix/44R20                                       
+cmake/3.25.2                             hpctoolkit/2024.01.1-python3.10          nwchem/7.2.0-mpi                           sharc-md/3.0.1                                           
+cmake/3.26.6                             hpcviewer/2020.07                        octave/4.4.1-mpi                           siesta/4.0.2-mpi                                         
+cmake/3.31.4                             hpcviewer/2024.02                        octave/5.2.0-mpi                           siesta/4.0.2-mpi-cuda                                    
+code-saturne/5.1.6                       htop/3.2.2                               octave/6.2.0-mpi                           siesta/4.1.5-mpi                                         
+code-saturne/5.3.4                       hwloc/1.11.11                            octopus/10.0-mpi                           silo/4.11.1-mpi                                          
+code-saturne/6.1                         hwloc/1.11.11-cuda                       octopus/13.0-mpi                           singularity/3.8.5                                        
+code-saturne/7.2                         hwloc/2.0.2                              octopus/14.0-mpi                           skirt/9_2025-06-12-mpi                                   
+codeblocks/1.6                           hwloc/2.2.0                              octopus/15.0-mpi                           slepc/3.13.4-mpi                                         
+colabfold/1.3.0                          hwloc/2.2.0-cuda                         octopus/16.0-mpi                           slepc/3.14.1-mpi                                         
+colabfold/1.5.1                          hwloc/2.7.1                              openbabel/3.0.0                            slepc/3.18.1-mpi                                         
+colmap/3.7-cuda                          hwloc/2.7.1-cuda                         openbabel/3.1.1                            slepc/3.18.1-mpi-complex                                 
+conquest/1.4-mpi                         hypre/2.16.0-mpi                         openblas/0.3.6                             slepc/3.20.1-mpi                                         
+cp2k/6.1-mpi-cuda-popt                   hypre/2.16.0-mpi-cuda                    openblas/0.3.10                            slepc/3.20.1-mpi-complex                                 
+cp2k/6.1-mpi-cuda-psmp                   hypre/2.18.2-mpi                         opencv/4.2.0                               slepc/3.20.1-mpi-complex-int64                           
+cp2k/6.1-mpi-popt                        hypre/2.19.0-mpi                         opencv/4.5.4-cuda                          slepc/3.20.1-mpi-int64                                   
+cp2k/6.1-mpi-psmp-plumed                 hypre/2.20.0-mpi-cuda                    openexr/2.3.0                              slepc/3.20.1-mpi-int64-metis-real64                      
+cp2k/7.1-mpi-openblas-popt-plumed        hypre/2.25.0-cuda                        openfoam-org/2.3.1-mpi                     slepc/3.20.1-mpi-metis-real64                            
+cp2k/7.1-mpi-openblas-psmp-plumed        hypre/2.25.0-cuda-unified-memory         openfoam-org/7-mpi                         smina/develop                                            
+cp2k/7.1-mpi-popt-plumed                 hypre/2.25.0-mpi-cuda                    openfoam-org/9-mpi                         sox/14.4.2                                               
+cp2k/7.1-mpi-psmp                        hypre/2.25.0-mpi-cuda-unified-memory     openfoam-org/12-mpi                        sparsehash/2.0.3                                         
+cp2k/7.1-mpi-psmp-plumed                 icu4c/57.1                               openfoam/1906-mpi                          spdlog/1.10.0                                            
+cp2k/8.2-mpi-psmp-plumed                 idr_accelerate/1.0.0                     openfoam/2012_210414-mpi                   sprng/5.0-mpi                                            
+cp2k/8.2-mpi-psmp-plumed-spglib          idrmem/1.4                               openfoam/2112-mpi                          srilm/1.7.3                                              
+cp2k/2023.1-mpi-cuda-psmp                idrmem/1.4-mpi                           openfoam/2312-mpi                          starpu/1.3.9-cuda                                        
+cp2k/2023.1-mpi-psmp                     ilmbase/2.3.0                            openfoam/2412-mpi                          starpu/1.3.9-cuda-debug                                  
+cp2k/2024.3-mpi-psmp                     imagemagick/7.0.8-7                      openfst/1.7.3                              starpu/1.3.9-cuda-debug-simgrid                          
+cp2k/2024.3-mpi-psmp-plumed              ipknot                                   openjdk/1.8.0_222-b10                      starpu/1.3.9-cuda-simgrid                                
+cp2k/2025.1-mpi-cuda-psmp-spglib         iq-tree/1.6.12-mpi                       openjdk/11.0.2                             starpu/1.4.2-mpi-cuda-debug                              
+cp2k/2025.1-mpi-psmp                     iq-tree/2.1.3                            openjpeg/2.2.0                             starpu/1.4.2-mpi-debug                                   
+cp2k/2025.1-mpi-psmp-spglib              iq-tree/2.1.3-mpi                        openmm/7.7.0                               starpu/1.4.4-mpi                                         
+cpmd/4.3-mpi-cuda                        iq-tree/2.2.2.7-mpi                      openmm/8.2.0                               su2/7.2.1-mpi                                            
+cppcheck/1.87                            jags/4.3.0                               openmolcas/19.11-mpi                       subversion/1.9.7                                         
+cppcheck/2.1                             jasper/2.0.14                            openmolcas/21.06                           suite-sparse/5.3.0                                       
+crest/2.11.1                             jasper/2.0.16                            openmolcas/24.06-mpi                       suite-sparse/5.3.0-cuda                                  
+crystal/17_v1.0.1-mpi                    jq/1.7.1                                 openmpi/3.1.4                              suite-sparse/5.3.0-omp                                   
+crystal/17_v1.0.2-mpi                    jsoncpp/1.9.2                            openmpi/3.1.4-cuda                         suite-sparse/7.8.3                                       
+crystal/23_v1.0.1-mpi                    jube/py2/2.2.2                           openmpi/3.1.5                              sundials/6.5.0-int64-without-lapack                      
+cub/1.11.0                               jube/py3/2.2.2                           openmpi/3.1.6                              sundials/6.5.0-mpi-int64                                 
+cube/4.4.3                               julia/1.3.1                              openmpi/3.1.6-cuda                         superlu/5.2.1                                            
+cube/4.5                                 julia/1.4.0                              openmpi/4.0.1-cuda                         svn/1.9.7                                                
+cudnn/7.6.5.32-cuda-10.1                 julia/1.5.2                              openmpi/4.0.2                              tcl/8.5.19                                               
+cudnn/7.6.5.32-cuda-10.2                 julia/1.5.3                              openmpi/4.0.2-cuda                         tcl/8.6.8                                                
+cudnn/8.0.4.30-cuda                      julia/1.7.2                              openmpi/4.0.4                              tcl/8.6.10                                               
+cudnn/8.0.4.30-cuda-10.2                 julia/1.8.5                              openmpi/4.0.4-cuda                         tcsh/6.22.02                                             
+cudnn/8.1.1.33-cuda                      julia/1.9.3                              openmpi/4.0.5                              tensorboard-jupyterhub/default                           
+cudnn/8.5.0.96-11.7-cuda                 julia/1.10.4                             openmpi/4.0.5-cuda                         tensorflow-gpu/py3/1.4                                   
+cudnn/8.5.0.96-cuda                      kaldi/master-cuda                        openmpi/4.1.0                              tensorflow-gpu/py3/1.8                                   
+cudnn/8.7.0.84-cuda                      kokkos/3.2.00                            openmpi/4.1.0-cuda                         tensorflow-gpu/py3/1.12                                  
+cudnn/8.8.1.3-cuda                       kokkos/3.2.00-cuda                       openmpi/4.1.1                              tensorflow-gpu/py3/1.13                                  
+cudnn/8.9.0.131-cuda                     kokkos/3.4.01-cuda                       openmpi/4.1.1-cuda                         tensorflow-gpu/py3/1.13.1+python3.6                      
+cudnn/8.9.5.30-cuda                      kokkos/3.4.01-cuda-c++17                 openmpi/4.1.4-cuda                         tensorflow-gpu/py3/1.13.2                                
+cudnn/8.9.7.29-cuda                      kokkos/3.4.01-cuda-static                openmpi/4.1.5                              tensorflow-gpu/py3/1.14                                  
+cudnn/9.2.0.82-cuda                      kokkos/3.4.01-cuda-static-c++17          openmpi/4.1.5-cuda                         tensorflow-gpu/py3/1.14-deepmd                           
+cudnn/9.5.1.17-cuda                      kokkos/3.7.01-cuda                       openmpi/4.1.6                              tensorflow-gpu/py3/1.14-mpi                              
+cudnn/9.6.0.74-cuda                      kokkos/3.7.01-cuda-c++17                 openmpi/4.1.6-cuda                         tensorflow-gpu/py3/1.14-openmpi                          
+cudnn/9.7.1.26-cuda                      kokkos/3.7.01-cuda-static                openmpi/4.1.8                              tensorflow-gpu/py3/1.15.2                                
+cudnn/9.8.0.87-cuda                      kokkos/3.7.01-cuda-static-c++17          openmpi/4.1.8-cuda                         tensorflow-gpu/py3/2.0.0                                 
+cudnn/9.10.2.21-12-cuda                  lammps/20170811-mpi                      openmx/3.9-mpi                             tensorflow-gpu/py3/2.1.0                                 
+cylc/8.1.2                               lammps/20170922-mpi                      openslide/3.4.1                            tensorflow-gpu/py3/2.1.0+hvd-0.19                        
+cylc/8.2.2                               lammps/20180831-mpi                      orbit/3.64                                 tensorflow-gpu/py3/2.2.0                                 
+czmq/4.1.1                               lammps/20190605-mpi                      orca/4.2.0-mpi-cuda                        tensorflow-gpu/py3/2.3.0                                 
+deepmd/1.2.2                             lammps/20190605-mpi-cuda-kokkos          orca/5.0.0-mpi                             tensorflow-gpu/py3/2.3.1                                 
+deepmd/2.1.5                             lammps/20190807-mpi-plumed               orca/5.0.1-mpi                             tensorflow-gpu/py3/2.3.1+hvd-0.21.0                      
+dftbplus/21.1-mpi                        lammps/20200630-mpi-cuda-kokkos          orca/5.0.3-mpi                             tensorflow-gpu/py3/2.4.0                                 
+dftbplus/22.1-mpi                        lammps/20200721-mpi                      orca/6.0.1-mpi                             tensorflow-gpu/py3/2.4.0-noMKL                           
+dftbplus/22.1-mpi-plumed                 lammps/20201029-mpi                      orca/6.1.0-mpi                             tensorflow-gpu/py3/2.4.1                                 
+dftbplus/22.2-mpi                        lammps/20210702-mpi                      ovito/3.10.5                               tensorflow-gpu/py3/2.4.1+cuda-11.2                       
+dftbplus/23.1-mpi-plumed                 lammps/20210929-mpi                      p3dfft/2.7.1-mpi                           tensorflow-gpu/py3/2.4.1+nccl-2.8.3-1                    
+dftbplus/master-070320                   lammps/20220623-mpi-cuda                 p3dfft/2.7.9-mpi                           tensorflow-gpu/py3/2.5.0                                 
+dftd4/3.4.0                              lammps/20220623.2-mpi                    p3dfft/2.7.9-mpi-stride1                   tensorflow-gpu/py3/2.5.0+nccl-2.8.3                      
+diamond/0.9.25                           lammps/20220623.2-mpi-plumed             p7zip/16.02                                tensorflow-gpu/py3/2.5.0-NOoneDNN                        
+diamond/2.0.11                           lammps/20230328-mpi                      pajeng/1.3.6                               tensorflow-gpu/py3/2.6.0                                 
+dos2unix/7.3.4                           lammps/20230802-mpi                      pandoc/2.19.2                              tensorflow-gpu/py3/2.7.0                                 
+dotnet-core-sdk/7.0.18                   lammps/20230802-mpi-cuda                 pandoc/3.1.9                               tensorflow-gpu/py3/2.8.0                                 
+dotnet-core-sdk/8.0.4                    lammps/20240829.3-mpi                    paraconf/0.4.6                             tensorflow-gpu/py3/2.9.1                                 
+doxygen/1.8.17                           lammps/20240829.3-mpi-cuda               parallel-netcdf/1.12.1-mpi-cuda            tensorflow-gpu/py3/2.11.0                                
+dssp4/4.0.3                              laszip/3.4.4                             parallel-netcdf/1.12.2-mpi                 tensorflow-gpu/py3/2.16.1                                
+eccodes/2.18.0                           libaio/0.3.110                           parallel-netcdf/1.12.2-mpi-cuda            texlive/20200406                                         
+eigen/3.3.7-mpi                          libaio/0.3.113                           parallel/20200822                          texlive/20240312                                         
+eigen/3.3.8                              libbacktrace/2020-02-19                  parallel/20210922                          thrust/1.11.0                                            
+eigen/3.4.0                              libdwarf/20180129                        paraver/4.9.2                              tinyxml/2.6.2                                            
+emacs/27.2                               libffi/3.4.2                             paraview/5.6.0-mpi                         tkdiff/0.0.0                                             
+embree/2.17.7                            libgeotiff/1.6.0                         paraview/5.8.0-mpi                         travis/210521                                            
+esmf/7.1.0r-mpi-cuda                     libjpeg-turbo/2.1.3                      paraview/5.8.0-mpi-python3-nek5000         trilinos/12-18-1-mpi                                     
+espeak-ng/1.50                           libnsl/1.3.0                             paraview/5.8.0-osmesa-mpi-python3-nek5000  trilinos/12.12.1-mpi                                     
+espeak-ng/1.52.0                         libpciaccess/0.16                        paraview/5.9.1                             trimal/1.4.1                                             
+extrae/3.8.3-mpi                         libpng/1.6.37                            paraview/5.9.1-mpi                         udunits2/2.2.24                                          
+fasttree/2.1.11                          libsndfile/1.0.28                        paraview/5.10.0-osmesa                     universal-ctags/6.1.20240505.0                           
+fenics/2019.1.0.post0-mpi                libspatialindex/1.8.5                    paraview/5.11.1                            unrar/5.8.2                                              
+ferret/7.2                               libtirpc/1.1.4                           parcels/2.2.1                              uspex/10.4.1                                             
+ferret/7.6.0                             libtirpc/1.2.6                           parcels/2.2.1-mpi                          uspex/2021.0.1                                           
+festival/2.5.0                           libtool/2.4.6                            parmetis/4.0.3-mpi                         uspex/2022.1.1                                           
+ffmpeg/4.2.2                             libunwind/1.6.2                          parmetis/4.0.3-mpi-cuda                    uuid/1.6.2                                               
+ffmpeg/4.4.4                             libvips/8.10.6                           parmetis/4.0.3-mpi-cuda-int32-real64       uv/0.8.3                                                 
+ffmpeg/6.1.1                             libxml2/2.9.9                            parmetis/4.0.3-mpi-cuda-int64-real64       valgrind/3.14.0-mpi                                      
+ffmpeg/6.1.1-cuda                        libxsmm/1.17                             parmetis/4.0.3-mpi-int32-real64            valgrind/3.14.0-mpi-cuda                                 
+ffmpeg/N-94431                           libyaml/0.2.1                            parmetis/4.0.3-mpi-int64-real64            valgrind/3.15.0                                          
+fftw/2.1.5-mpi                           libzmq/4.2.5                             patchelf/0.18.0                            valgrind/3.15.0-mpi                                      
+fftw/3.3.8                               likwid/4.3.4                             pcl/1.10.1                                 valgrind/3.16.1-mpi                                      
+fftw/3.3.8-mpi                           likwid/5.1.0                             pcl/1.11.1                                 vapor/3.3.0                                              
+fftw/3.3.8-mpi-cuda                      llvm/7.1.0                               pcl/1.12.1                                 vasp/5.4.4-mpi-cuda                                      
+fftw/3.3.10                              llvm/8.0.0                               pdi/0.6.1                                  vasp/5.4.4-mpi-vtst                                      
+fftw/3.3.10-mpi                          llvm/9.0.1                               pdiplugin-decl-hdf5/0.6.1                  vasp/5.4.4.pl2-mpi-vaspsol                               
+fftw/3.3.10-mpi-cuda                     llvm/10.0.1                              pdiplugin-decl-hdf5/0.6.1-mpi              vasp/6.1.2-mpi                                           
+fidle/1.0.0                              llvm/15.0.6                              pdiplugin-mpi/0.6.1-mpi                    vasp/6.2.0-mpi                                           
+flatbuffers/1.11.0                       llvm/18.1.8                              pdiplugin-pycall/0.6.1                     vasp/6.2.0-mpi-cuda-openacc                              
+flex/2.6.4                               llvm/18.1.8-cuda                         pdiplugin-trace/0.6.1                      vasp/6.3.0-mpi                                           
+fmt/8.1.1                                mafft/7.481                              pdiplugin-user-code/0.6.1                  vasp/6.3.0-mpi-cuda-openacc                              
+fmt/9.1.0                                mafft/7.505                              petsc/3.11.3-mpi                           vasp/6.3.2-mpi-cuda-openacc_ml-ff-abinitio-patched       
+formation-mpi/1.0.0                      magma/2.5.0-cuda                         petsc/3.11.3-mpi-complex                   vasp/6.3.2-mpi-cuda-openacc_ml-ff-abinitio-patched-vtst  
+fpm/0.7.0                                magma/2.5.1-cuda                         petsc/3.12.4-mpi                           vasp/6.3.2-mpi_ml-ff-abinitio-patched                    
+fpm/0.9.0                                magma/2.5.3-cuda                         petsc/3.13.6-mpi                           vasp/6.3.2-mpi_ml-ff-abinitio-patched-vtst               
+freefem/4.12                             magma/2.5.4-cuda                         petsc/3.14.1-mpi                           vasp/6.4.0-mpi-cuda-openacc                              
+freefem/4.14-mpi                         magma/2.5.4-cuda-oneapi-mkl              petsc/3.15.0-mpi                           vasp/6.4.0-mpi-cuda-openacc-mlff_patched                 
+freefem/4.15-petsc-complex               magma/2.7.0-cuda                         petsc/3.17.4-mpi                           vasp/6.4.0-mpi-cuda-openacc-vaspsol                      
+freeglut/3.2.1                           magma/2.7.1-cuda                         petsc/3.18.1-mpi                           vasp/6.4.0-mpi-ml_ff_patched                             
+fsl/6.0.4                                magma/2.7.2-cuda                         petsc/3.18.1-mpi-complex                   vasp/6.4.0-mpi-vaspsol                                   
+fsleyes/1.6.1                            magma/2.8.0-cuda                         petsc/3.18.1-mpi-metis-real64              vasp/6.4.2-mpi                                           
+gaussian/g09-revD01                      magma/2.9.0-cuda                         petsc/3.20.1-mpi                           vasp/6.4.2-mpi-cuda-openacc                              
+gaussian/g16-revC01                      makedepend/1.0.5                         petsc/3.20.1-mpi-complex                   vasp/6.4.3-mpi-cuda-scpc                                 
+gcc/4.9.4                                makedepf90/3.0.0                         petsc/3.20.1-mpi-complex-int64             vasp/6.4.3-mpi-scpc                                      
+gcc/5.5.0                                maqao/2.9.0                              petsc/3.20.1-mpi-debug                     vasp/6.5.0-mpi-cuda                                      
+gcc/6.5.0                                maqao/2.10.2                             petsc/3.20.1-mpi-int64                     vesta/3.4.6                                              
+gcc/7.3.0                                maqao/2.11.0                             petsc/3.20.1-mpi-int64-metis-real64        viennarna/2.5.0                                          
+gcc/8.2.0                                maqao/2.12.0                             petsc/3.20.1-mpi-metis-real64              vim/8.1.0338                                             
+gcc/8.3.0                                maqao/2.17.0                             petsc/3.21.4-mpi                           vim/8.1.2141                                             
+gcc/8.4.0                                maqao/2.18.0                             petsc/3.21.4-mpi-complex                   visit/2.13.0-mpi                                         
+gcc/8.5.0(8.3.1:8.4.1)                   maqao/2.20.1                             petsc/3.21.4-mpi-complex-int64             visit/3.1.2-mpi                                          
+gcc/9.1.0                                massivefold/1.0.0                        petsc/3.21.4-mpi-cuda                      visit/3.1.4                                              
+gcc/9.1.0-cuda-openacc                   massivefold/1.1.1                        petsc/3.21.4-mpi-debug                     visit/3.2.0-mpi                                          
+gcc/9.3.0                                massivefold/1.2.3                        petsc/3.21.4-mpi-int64                     vllm/0.5.4                                               
+gcc/10.1.0                               massivefold/1.2.4                        petsc/3.21.4-mpi-int64-metis-real64        vmd/1.9.4a43-text                                        
+gcc/10.1.0-cuda-openacc                  massivefold/1.2.5                        petsc/3.21.4-mpi-metis-real64              vtk/8.1.2-mpi                                            
+gcc/11.3.0                               massivefold/1.5.0                        petsc/3.22.1-mpi-cuda                      vtk/9.0.3-mpi                                            
+gcc/11.4.1(11.3.1)                       matio/1.5.13-mpi                         petsc/3.23.2-mpi-cuda                      wannier90/2.1.0-mpi                                      
+gcc/12.2.0                               matlab-runtime/2022b                     pfft/1.0.8-alpha-mpi                       wannier90/3.1.0-mpi                                      
+gcc/13.3.0                               mbrola/3.3                               phono3py/2.3.2                             wannier90/3.1.0-mpi-cuda                                 
+gcc/14.2.0                               mc/4.8.26                                phonopy/2.5.0                              wcslib/7.3                                               
+gdal/2.2.2                               mercurial/6.0                            phonopy/2.12.0                             wcslib/8.4                                               
+gdal/3.0.0                               mesmer/6.0-mpi                           pigz/2.4                                   xedit/1.2.2                                              
+gdal/3.0.4                               meson/0.55.1                             pkiss                                      xtb/6.4.1                                                
+gdal/3.1.3                               metis/4.0.3                              plumed/2.5.3-mpi                           xtb/6.4.1-gcc                                            
+gdal/3.8.3                               metis/5.1.0                              plumed/2.6.1-mpi-cuda                      xtb/6.5.0                                                
+gdal/3.10.0                              metis/5.1.0-int32-real64                 plumed/2.6.2-mpi-cuda                      yambo/4.5.3-mpi                                          
+gdal/3.11.0                              metis/5.1.0-int64-real64                 plumed/2.7.0-mpi-cuda                      yambo/4.5.3-mpi-dp                                       
+gdb/8.2.1                                miniforge/24.9.0                         plumed/2.7.2-mpi-cuda                      yambo/5.1.1-mpi                                          
+gdb/9.2                                  miniforge/24.11.3                        plumed/2.7.4-mpi-cuda                      yambo/5.1.1-mpi-dp                                       
+gdrcopy/2.0                              mitsuba2/master-cuda                     plumed/2.8.0-mpi                           yaml-cpp/0.7.0                                           
+genesis/1.6.0-mpi-cuda-openmp-double     mmg/5.5.2-mpi                            plumed/2.8.1                               yarn/1.22.4                                              
+genesis/1.6.0-mpi-cuda-openmp-single     mmg/5.8.0-mpi                            plumed/2.8.1-mpi                           zeromq/4.2.5                                             
+genesis/1.7.1-mpi-cuda-openmp-double     MMseqs2/12                               plumed/2.8.1-mpi-cuda                      zstd/1.5.2                                               
+genesis/1.7.1-mpi-cuda-openmp-single     MMseqs2/14                               plumed/2.8.2                               
+genesis/1.7.1-mpi-openmp-double          MMseqs2/14-mpi                           plumed/2.8.2-mpi-cuda                    

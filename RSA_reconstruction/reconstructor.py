@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import gc
 from collections import defaultdict
 from typing import Dict, Optional
@@ -73,15 +74,18 @@ class Reconstructor:
                 mtg_path = mtg_list[0]
                 mtg_box_name = mtg_path.split("/")[-2]
                 # Process MTG
-                import os
-                pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(
-                    self.save_path, "Val", mtg_box_name))
+                try:
+                    pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(
+                        self.save_path, "Val", mtg_box_name))
+                except Exception as e:
+                    print(f"Error processing {mtg_box_name}: {e}")
+                    continue
                 val_or_test_str = "Val"
                 predicted_mtgs[val_or_test_str][mtg_list[0]] = pred_mtg
             pbar.close()
             # Clear memory
             gc.collect()
-            torch.cuda.empty_cache()
+            #torch.cuda.empty_cache()
 
             pbar = tqdm(self.test_loader, desc="Evaluating",
                         leave=False, dynamic_ncols=True)
@@ -90,15 +94,18 @@ class Reconstructor:
                 mtg_path = mtg_list[0]
                 mtg_box_name = mtg_path.split("/")[-2]
                 # Process MTG
-                import os
-                pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(
-                    self.save_path, "Test", mtg_box_name))
+                try:
+                    pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(
+                        self.save_path, "Test", mtg_box_name))
+                except Exception as e:
+                    print(f"Error processing {mtg_box_name}: {e}")
+                    continue
                 val_or_test_str = "Test"
                 predicted_mtgs[val_or_test_str][mtg_list[0]] = pred_mtg
             pbar.close()
             # Clear memory
             gc.collect()
-            torch.cuda.empty_cache()
+            #torch.cuda.empty_cache()
 
         return predicted_mtgs
 
@@ -130,7 +137,7 @@ class Reconstructor:
                                        jar_path=self.jar_path)
 
         del preds, predictions
-        torch.cuda.empty_cache()
+        #torch.cuda.empty_cache()
         return mtg_pred
 
     # =====================================================================

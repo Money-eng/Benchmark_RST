@@ -36,7 +36,7 @@ def main() -> None:
     )
     args = parser.parse_args()
     cfg_path = Path(args.config) if args.config else DEFAULT_CFG
-    cfg_path = Path("/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Models/configs/unet_bce.yml")
+    cfg_path = Path("RSA_deep_working/Models/configs/unet_bce.yml") # TODO !!!!!!!!!!!!!!!!!
     cfg = load_config(cfg_path)
 
     model_name = cfg.get("model", {}).get("name", "Model_X") + "_" + cfg.get("loss", {}).get("name", "loss_x")
@@ -57,7 +57,7 @@ def main() -> None:
     assert len(gt_test_folders) == len(pred_test_folders), "Mismatch in number of test folders"
 
     evaluator = ReconstructionMesurator(
-        pred_folder="Results/Reconstruction/",
+        pred_folder="Results/Reconstruction_per_epoch/",
         gt_folder="RSA_deep_working/Data",
         measure=get_measures(cfg["measures"])
     )

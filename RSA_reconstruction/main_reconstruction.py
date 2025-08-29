@@ -74,8 +74,9 @@ def main() -> None:
     cfg_path = Path(args.config) if args.config else DEFAULT_CFG
     cfg = load_config(cfg_path)
 
-    model_checkpoints_path = Path(args.model_path) if args.model_path else DEFAULT_MODEL_PATH
-
+    model_checkpoints_path = Path(args.model_path) if args.model_path else DEFAULT_MODEL_PATH 
+    epoch_number = args.model_path.split("epoch")[-1].split(".pth")[0] if args.model_path else "unknown"
+    
     # Build dataloaders
     _, val_loader, test_loader = build_dataloaders(cfg)
 
@@ -89,7 +90,6 @@ def main() -> None:
     )
     model.load_state_dict(state_dict)
     model = model.to(device)
-
     reconstructor = Reconstructor(
         model=model,
         val_dataloader=val_loader,
@@ -100,9 +100,8 @@ def main() -> None:
         patch_size=cfg.get("data", {}).get("patch_size", 512),
         jar_path=cfg.get("rst", {}).get("jar_path", None),
         save_path=cfg.get("data", {}).get("save_path", "RSA_reconstruction/Logs/Prediction") + cfg.get("model", {}).get(
-            "name", "Model_X") + "_" + cfg.get("loss", {}).get("name", "loss_x")
+            "name", "Model_X") + "_" + cfg.get("loss", {}).get("name", "loss_x") + "_" + epoch_number
     )
-
     preds = reconstructor.reconstruct_all()
 
     print(preds)

@@ -88,9 +88,43 @@ def _compute_metrics_for_time(
                 if p2 == p3:
                     matched[(p1, p2, p4)] = (d, d2)
 
-        Prediction = {v: func(sub_mtgs_pred[v]) for v in sub_mtgs_pred}
-        expertized = {v: func(sub_mtgs_exp[v]) for v in sub_mtgs_exp}
-        before_expertized = {v: func(sub_mtgs_bexp[v]) for v in sub_mtgs_bexp}
+        # Calcul des métriques par plante avec gestion des exceptions
+        failed_pred, failed_exp, failed_bexp = set(), set(), set()
+
+        Prediction = {}
+        for v in sub_mtgs_pred:
+            try:
+                Prediction[v] = func(sub_mtgs_pred[v])
+            except Exception as e:
+                print(f"[WARN] metric {metric_name} Prediction plant {v}: {e}")
+                failed_pred.add(v)
+
+        expertized = {}
+        for v in sub_mtgs_exp:
+            try:
+                expertized[v] = func(sub_mtgs_exp[v])
+            except Exception as e:
+                print(f"[WARN] metric {metric_name} expertized plant {v}: {e}")
+                failed_exp.add(v)
+
+        before_expertized = {}
+        for v in sub_mtgs_bexp:
+            try:
+                before_expertized[v] = func(sub_mtgs_bexp[v])
+            except Exception as e:
+                print(f"[WARN] metric {metric_name} before_expertized plant {v}: {e}")
+                failed_bexp.add(v)
+
+        # Retirer les matches impliquant une plante en échec
+        if failed_pred or failed_exp or failed_bexp:
+            matched = {
+                triple: dists
+                for triple, dists in matched.items()
+                if triple[0] not in failed_pred
+                and triple[1] not in failed_exp
+                and triple[2] not in failed_bexp
+            }
+
         # make dict : (p1, p2, p3) : (pred_value, exp_value, bexp_value)
         values = {
             (p1, p2, p3): (
@@ -179,22 +213,25 @@ class ReconstructionMesurator:
                 for s in ("Test", "Val")
             }
 
-            dict_pred = {
-                s: {
-                    os.path.basename(f): rsml2mtg(
-                        os.path.join(
-                            f, "61_prediction_before_expertized_graph.rsml")
-                    )
-                    for f in pred_sub[s]
-                }
-                for s in ("Val", "Test")
-            }
+
+            dict_pred = {}
+            dict_pred = {s: {} for s in ("Val", "Test")}
+            for s in ("Val", "Test"):
+                for f in pred_sub[s]:
+                    try:
+                        dict_pred[s][os.path.basename(f)] = rsml2mtg(
+                            os.path.abspath(os.path.join(
+                                f, "61_prediction_before_expertized_graph.rsml")
+                            ))
+                    except FileNotFoundError:
+                        pass
+            
             dict_gt = {
                 s: {
                     os.path.basename(f): {
-                        "expertized": rsml2mtg(os.path.join(f, "61_graph.rsml")),
+                        "expertized": rsml2mtg(os.path.abspath(os.path.join(f, "61_graph.rsml"))),
                         "before_expertized": rsml2mtg(
-                            os.path.join(f, "61_before_expertized_graph.rsml")
+                            os.path.abspath(os.path.join(f, "61_before_expertized_graph.rsml"))
                         ),
                     }
                     for f in gt_sub[s]
