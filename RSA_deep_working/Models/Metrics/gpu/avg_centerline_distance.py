@@ -62,7 +62,7 @@ class AverageCenterlineDistance(BaseMetric):
             raise ValueError("CenterlineDistance attend des tenseurs CUDA.")
         cp_pred = _to_cu(pred)
         cp_gt = _to_cu(gt)
-
+    
         acd = []
         for i in range(cp_pred.shape[0]):
             sk_pred = _skeletonize_gpu(cp_pred[i]).astype(cp.uint8)
@@ -73,10 +73,9 @@ class AverageCenterlineDistance(BaseMetric):
 
             d1 = dt_gt[sk_pred.astype(bool)]  # image with skeletonized prediction (binary)
             d2 = dt_pr[sk_gt.astype(bool)]
-
             if d1.size == 0 and d2.size == 0:
                 continue  # skip empty case
             all_d = cp.concatenate([d1, d2]) if (d1.size and d2.size) else (d1 if d1.size else d2)
             acd.append(float(all_d.mean().get()))
-
+        #print(f"ACD batch: {acd}")
         return float(np.mean(acd)) if acd else float("nan")

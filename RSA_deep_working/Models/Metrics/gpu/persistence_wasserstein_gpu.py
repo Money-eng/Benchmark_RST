@@ -131,7 +131,7 @@ class PersistenceWassersteinGPUParallel:
             internal_p: float = 2.0,  # métrique interne: L2 par défaut
     ):
         """
-        - homology_dimensions : dimensions d'homologie (ex: (0,1)).
+        - homology_dimensions : dimensions d'homologie (0 -> H0, 1 -> H1, etc).
         - use_gpu_filter : True -> EDT CuPy si dispo, sinon fallback SciPy.
         - max_workers : nb de workers CPU (par défaut: os.cpu_count()).
         - binarize_threshold : si non None, binarise (x > t) avant EDT.

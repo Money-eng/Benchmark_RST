@@ -66,14 +66,7 @@ def assemble_date_map(prediction: torch.Tensor) -> np.ndarray:
     return pred_datemap
 
 
-from contextlib import nullcontext
-
-try:
-    # pyvirtualdisplay est optionnel ; on le charge seulement si Xvfb est disponible
-    from pyvirtualdisplay import Display
-except Exception:
-    Display = None
-
+from pyvirtualdisplay import Display
 
 def generate_graph_with_java(
         input_path: str,
@@ -115,7 +108,6 @@ def generate_graph_with_java(
             print(f"[ERREUR] Java failed for {input_path} → {e}")
             return None
 
-    # Vérifie la présence du fichier attendu
     expected_path = os.path.join(output_dir, expected_filename)
     if os.path.exists(expected_path):
         return expected_path

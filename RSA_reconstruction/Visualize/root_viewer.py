@@ -201,13 +201,13 @@ class RootGraphViewer:
 if __name__ == "__main__":
     gt_expertized = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN012/61_graph.rsml"
     gt_before = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN012/61_before_expertized_graph.rsml"
-    prediction = "/home/loai/Documents/code/RSMLExtraction/Results/Reconstruction/Unet_bce_dice/Val/230629PN012/61_prediction_before_expertized_graph.rsml"
+    prediction = "/home/loai/Documents/code/RSMLExtraction/Results/Reconstruction_per_epoch/Segformer_bce_dice_200/Val/230629PN012/61_prediction_before_expertized_graph.rsml"
     viewer = RootGraphViewer.from_rsml(
         gt_expertized,
         gt_before,
         prediction,
         background="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN012/22_registered_stack.tif",
-        pred_date_map="/home/loai/Documents/code/RSMLExtraction/Results/Reconstruction/Unet_bce_dice/Val/230629PN012/40_date_map.tif",
+        pred_date_map="/home/loai/Documents/code/RSMLExtraction/Results/Reconstruction_per_epoch/Segformer_bce_dice_200/Val/230629PN012/40_date_map.tif",
         gt_date_map="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN012/40_date_map.tif",
     )
 

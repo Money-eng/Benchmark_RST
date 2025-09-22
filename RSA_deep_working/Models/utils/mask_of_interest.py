@@ -4,7 +4,7 @@ import torch
 from openalea.mtg import MTG
 from rsml import rsml2mtg
 
-from mtg_operations import extract_mtg_at_time_t
+from .mtg_operations import extract_mtg_at_time_t
 
 
 def _segment_mask(

@@ -14,17 +14,14 @@ class Intercept_curve_Area(BaseMeasure):
         super().__init__()
 
     @staticmethod
-    def _area_between_surfaces(x: np.ndarray,
-                               y1: np.ndarray,
-                               y2: np.ndarray) -> float:
-        delta = np.abs(y1 - y2)
-
-        area = np.trapz(delta, x)
-        return float(area)
+    def _area_surface(x: np.ndarray,
+                               y: np.ndarray) -> float:
+        return np.trapz(y, x)
+        
 
     def __call__(self, mtg: MTG) -> tuple:
         curve = Intercept_curve()(mtg)
         if curve[0].shape != curve[1].shape:
             raise ValueError("Les courbes d'interception doivent avoir la même forme.")
-        area = self._area_between_surfaces(curve[0], curve[1], np.zeros_like(curve[1]))
+        area = self._area_surface(curve[0], curve[1])
         return area

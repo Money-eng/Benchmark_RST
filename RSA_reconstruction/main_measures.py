@@ -41,11 +41,19 @@ def main() -> None:
 
     model_name = cfg.get("model", {}).get("name", "Model_X") + "_" + cfg.get("loss", {}).get("name", "loss_x")
 
+    print("Start")
+    
     GT_VAL_FOLDERS = os.path.join(cfg["data"]["base_dir"], "Val")
     GT_TEST_FOLDERS = os.path.join(cfg["data"]["base_dir"], "Test")
 
+    print(GT_VAL_FOLDERS)
+    print(GT_TEST_FOLDERS)
+
     PRED_VAL_FOLDERS = os.path.join(cfg["data"]["save_path"], model_name, "Val")
     PRED_TEST_FOLDERS = os.path.join(cfg["data"]["save_path"], model_name, "Test")
+
+    print(PRED_VAL_FOLDERS)
+    print(PRED_TEST_FOLDERS)
 
     # list subfolder in all above directories and assert we can find the same number of folders in each
     gt_val_folders = sorted(os.listdir(GT_VAL_FOLDERS))
@@ -56,12 +64,14 @@ def main() -> None:
     assert len(gt_val_folders) == len(pred_val_folders), "Mismatch in number of validation folders"
     assert len(gt_test_folders) == len(pred_test_folders), "Mismatch in number of test folders"
 
+    print("Evaluation")
     evaluator = ReconstructionMesurator(
         pred_folder="Results/Reconstruction_per_epoch/",
         gt_folder="RSA_deep_working/Data",
         measure=get_measures(cfg["measures"])
     )
 
+    print("Start evaluation")
     evaluation_results = evaluator.evaluate()
 
 

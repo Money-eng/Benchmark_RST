@@ -1,4 +1,5 @@
 # Metrics/gpu/graph_connectivity.py
+from skan import summarize
 import torch
 
 from ..base import BaseMetric
@@ -193,7 +194,7 @@ class APLS(BaseMetric):
 
     @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor):
-        import cupy as cp, numpy as np, networkx as nx
+        import networkx as nx
         pred = _ensure_2d_bin(prediction, self.threshold)
         gt = _ensure_2d_bin(mask, self.threshold)
         if not pred.is_cuda or not gt.is_cuda:
@@ -204,7 +205,7 @@ class APLS(BaseMetric):
         sk_gt = _skeletonize_gpu(cp_gt)
 
         # batch -> moyenne (on agrège les graphes par image)
-        topo_p, topo_r, apls_vals = [], [], []
+        topo_p, topo_r, apls_vals = [], [], [] # precision, recall, apls
         for i in range(sk_pred.shape[0]):
             skp = (sk_pred[i].get() > 0)  # CPU numpy
             skg = (sk_gt[i].get() > 0)
@@ -225,7 +226,7 @@ class APLS(BaseMetric):
                     except Exception:
                         pass
             topo_r.append(ok / tot if tot > 0 else 0.0)
-
+            
             # precision: arêtes préd expliquées par GT
             okp = 0
             totp = Gp.number_of_edges()
@@ -239,8 +240,28 @@ class APLS(BaseMetric):
                             okp += 1
                     except Exception:
                         pass
+                    
             topo_p.append(okp / totp if totp > 0 else 0.0)
-
             apls_vals.append(_apls(Gg, Gp, pairs))
-
         return float(sum(apls_vals) / len(apls_vals))
+import torch, numpy as np
+
+def img(h=128,w=128):
+    return torch.zeros((1,1,h,w), device='cuda')
+
+def line(img, y, x0, x1):
+    x = torch.arange(min(x0,x1), max(x0,x1)+1, device='cuda')
+    img[0,0,y, x] = 1
+    return img
+
+# 1) Identique
+gt = line(img(), 64, 16, 112)
+pr = line(img(), 64, 16, 112)
+metric = APLS(threshold=0.5, node_tol=3.0)
+score = metric(pr, gt); assert abs(score-1.0) < 1e-3
+
+# 2) Gap
+pr2 = line(img(), 64, 16, 60); line(pr2, 64, 68, 112)
+score2 = metric(pr2, gt); assert score2 < 0.5
+print(f"APLS: {score=:.3f}, {score2=:.3f}")
+    

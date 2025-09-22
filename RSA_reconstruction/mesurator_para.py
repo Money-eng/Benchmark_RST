@@ -1,6 +1,3 @@
-# requirements :
-# pip install "dask[complete]" distributed tqdm rsml torch pandas
-
 from __future__ import annotations
 
 import os
@@ -189,7 +186,10 @@ class ReconstructionMesurator:
         self.models_folder = [
             os.path.join(pred_folder, d) for d in os.listdir(pred_folder) if os.path.isdir(os.path.join(pred_folder, d))
         ]
-        cluster = LocalCluster(dashboard_address=":8787")
+        from os import cpu_count
+        number_of_workers = int(cpu_count() * 0.9)
+        threads_per_worker = 1
+        cluster = LocalCluster(dashboard_address=None, n_workers=number_of_workers, threads_per_worker=threads_per_worker)
         self.client = client or Client(cluster)
         print("GT :", self.gt_folder)
         print("PRED :", self.models_folder)
