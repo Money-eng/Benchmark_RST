@@ -8,3 +8,13 @@
 [submodule "RSA_deep_working/Models/Losses/clDice"]
 	path = RSA_deep_working/Models/Losses/clDice
 	url = https://github.com/jocpae/clDice
+[submodule "RSA_reconstruction/Method/ChronoRoot"]
+	path = RSA_reconstruction/Method/ChronoRoot
+	url = https://github.com/Money-eng/ChronoRoot
+[submodule "RSA_reconstruction/Method/ChronoRoot2"]
+	path = RSA_reconstruction/Method/ChronoRoot2
+	url = https://github.com/Money-eng/ChronoRoot2
+[submodule "RSML"]
+	path = RSML
+	url = https://github.com/Money-eng/RSML
+	branch = hirros

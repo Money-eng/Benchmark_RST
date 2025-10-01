@@ -102,8 +102,12 @@ def generate_graph_with_java(
             f"--acqTimes={acq_times}",
         ]
         try:
-            # On ne log pas stdout, juste les vraies erreurs
-            _ = subprocess.run(cmd, capture_output=False, text=False, timeout=timeout)
+            print("Lancement Java RST...")
+            res = subprocess.run(cmd, capture_output=False, text=False, timeout=timeout, check=True)
+            print("Java RST terminé.")
+            if res.returncode != 0:
+                print(f"[ERREUR] Java exit {res.returncode}\n{res.stderr[-2000:]}")
+                return None
         except Exception as e:
             print(f"[ERREUR] Java failed for {input_path} → {e}")
             return None

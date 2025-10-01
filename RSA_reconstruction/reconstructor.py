@@ -118,7 +118,7 @@ class Reconstructor:
         predictions = self._infer(imgs)
 
         # save probability heatmap in save_path
-        if save_path:
+        if False:
             import os
             os.makedirs(save_path, exist_ok=True)
             for i in range(predictions.shape[0]):
