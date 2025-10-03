@@ -14,27 +14,12 @@ from DataLoaders.transforms import (
 )
 from Models import get_model
 from reconstructor import Reconstructor
+from monai.inferers import SlidingWindowInfererAdapt
 from utils.misc import SEED, set_seed, get_device
 
 set_seed(SEED)
 DEFAULT_CFG: Path = Path(__file__).with_name("config.yml")
 DEFAULT_MODEL_PATH = ""
-
-
-def build_dataloaders(cfg: dict) -> tuple:
-    """Build and return (train_loader, val_loader, test_loader)."""
-    patch_size: int = cfg["data"]["patch_size"]
-    transforms = [
-        get_train_img_transform_1(patch_size=patch_size),
-        get_train_img_transform_2(patch_size=patch_size),
-        get_train_img_transform_3(patch_size=patch_size),
-        get__val_test_img_transform(),
-    ]
-    return create_dataloader(
-        base_directory=cfg["data"]["base_dir"],
-        img_transforms=transforms,
-        batch_size=int(cfg["data"].get("batch_size", 32))
-    )
 
 
 def load_config(cfg_path: Path | str) -> dict:
@@ -44,6 +29,19 @@ def load_config(cfg_path: Path | str) -> dict:
         raise FileNotFoundError(f"Config file not found: {cfg_path}")
     with cfg_path.open("r") as f:
         return yaml.safe_load(f)
+
+
+def _infer(imgs: torch.Tensor, model) -> torch.Tensor:
+    """Forward pass with optional sliding-window inference."""
+    sw_inferer = SlidingWindowInfererAdapt(
+        roi_size=(int(512), int(512)),
+        sw_batch_size=4,
+        overlap=0.25,
+        mode="constant",
+    )
+    if sw_inferer is None:
+        return model(imgs)
+    return sw_inferer(inputs=imgs, network=model)
 
 
 def main() -> None:
@@ -74,15 +72,11 @@ def main() -> None:
     cfg_path = Path(args.config) if args.config else DEFAULT_CFG
     cfg = load_config(cfg_path)
 
-    model_checkpoints_path = Path(args.model_path) if args.model_path else DEFAULT_MODEL_PATH 
-    epoch_number = args.model_path.split("epoch")[-1].split(".pth")[0] if args.model_path else "unknown"
-    
-    # Build dataloaders
-    _, val_loader, test_loader = build_dataloaders(cfg)
+    model_checkpoints_path = Path(
+        args.model_path) if args.model_path else DEFAULT_MODEL_PATH
 
     device = get_device()
     model = get_model(cfg["model"])
-    model_checkpoints_name = cfg.get("model", {}).get("name", "Model_X")
     model = DataParallel(model)
     state_dict = torch.load(
         model_checkpoints_path,
@@ -90,22 +84,19 @@ def main() -> None:
     )
     model.load_state_dict(state_dict)
     model = model.to(device)
-    reconstructor = Reconstructor(
-        model=model,
-        val_dataloader=val_loader,
-        test_dataloader=test_loader,
-        device=device,
-        model_name=model_checkpoints_name,
-        threshold=cfg.get("threshold_4_binarize", 0.5),
-        patch_size=cfg.get("data", {}).get("patch_size", 512),
-        jar_path=cfg.get("rst", {}).get("jar_path", None),
-        save_path=cfg.get("data", {}).get("save_path", "RSA_reconstruction/Logs/Prediction") + "_" + cfg.get("model", {}).get(
-            "name", "Model_X") + "_" + cfg.get("loss", {}).get("name", "loss_x") + "_" + epoch_number
-    )
-    preds = reconstructor.reconstruct_all()
 
-    print(preds)
-
+    # load an image
+    from tifffile import tifffile
+    image = tifffile.imread(
+        # shape (T, H, W)
+        "/home/loai/Documents/code/RSMLExtraction/temp/22_registered_stack.tif")
+    # to pytorch tensor of shape (1, T, H, W)
+    image = torch.from_numpy(image[0]).unsqueeze(0).unsqueeze(0).float()
+    image = image.to(device)
+    print(f"Image shape: {image.shape}, dtype: {image.dtype}")
+    pred = _infer(image, model)
+    
+    # save output in
 
 if __name__ == "__main__":
     main()
