@@ -1,19 +1,14 @@
 import argparse
 from pathlib import Path
 
-import torch
+import torch 
 import yaml
 from torch.nn import DataParallel
 
-from DataLoaders.dataloaders import create_dataloader
 from DataLoaders.transforms import (
-    get_train_img_transform_1,
-    get_train_img_transform_2,
-    get_train_img_transform_3,
     get__val_test_img_transform,
 )
 from Models import get_model
-from reconstructor import Reconstructor
 from monai.inferers import SlidingWindowInfererAdapt
 from utils.misc import SEED, set_seed, get_device
 
@@ -85,17 +80,52 @@ def main() -> None:
     model.load_state_dict(state_dict)
     model = model.to(device)
 
+    name = cfg["model"]["name"] + "_" + cfg["loss"]["name"]
     # load an image
     from tifffile import tifffile
-    image = tifffile.imread(
-        # shape (T, H, W)
-        "/home/loai/Documents/code/RSMLExtraction/temp/22_registered_stack.tif")
-    # to pytorch tensor of shape (1, T, H, W)
-    image = torch.from_numpy(image[0]).unsqueeze(0).unsqueeze(0).float()
-    image = image.to(device)
-    print(f"Image shape: {image.shape}, dtype: {image.dtype}")
-    pred = _infer(image, model)
+    images = tifffile.imread("/mnt/e823c70f-4136-47c9-91be-1ca7901a37b5/loai/Jean_trap-test/11/22_registered_stack.tif")
+    print(images.shape)
+    import numpy as np
     
+    prediction = torch.zeros((images.shape[0], images.shape[1], images.shape[2]), dtype=torch.float32)
+    for i in range(images.shape[0]):
+        image = images[i]
+        # scale image : size / 2 
+        #image = image[::2, ::2]
+        print(f"Image {i} shape: {image.shape}, dtype: {image.dtype}")
+        image = image.astype("float32")
+        transform = get__val_test_img_transform()
+        image = transform(image=image)["image"].unsqueeze(0)
+        print(f"Image shape: {image.shape}, dtype: {image.dtype}")
+        image = image.to(device)
+        pred = _infer(image, model)
+        prediction[i] = pred.detach().cpu()
+        print(f"Pred shape: {pred.shape}, dtype: {pred.dtype}")
+        #pred = torch.sigmoid(pred)
+        
+        
+        print(pred.min(), pred.max(), pred.mean(), pred.std())
+        # save heatmap as float32 tiff
+        pred = pred.detach().cpu().numpy().astype("float32")
+        
+        from os import makedirs
+        makedirs(f"/home/loai/Documents/code/RSMLExtraction/temp/{name}", exist_ok=True)
+        tifffile.imwrite(
+            f"/home/loai/Documents/code/RSMLExtraction/temp/{name}/heatmap_{i}.tif",
+            pred,
+        )
+        
+    from utils.launch_RST import assemble_date_map
+    pred_datemap = assemble_date_map(torch.tensor(prediction).unsqueeze(1))
+    # save date_map as uint8 tiff
+    pred_datemap = pred_datemap.astype(np.uint8)
+    from os import makedirs 
+    makedirs(f"/home/loai/Documents/code/RSMLExtraction/temp/{name}", exist_ok=True)
+    tifffile.imwrite(
+        f"/home/loai/Documents/code/RSMLExtraction/temp/{name}/date_map.tif",
+        pred_datemap,
+    )
+
     # save output in
 
 if __name__ == "__main__":

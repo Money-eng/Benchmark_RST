@@ -112,7 +112,7 @@ class Reconstructor:
     def reconstruct(self, imgs: torch.Tensor, masks: torch.Tensor, mtgs: list, save_path: str) -> MTG:
         # a batch is composed (for UC1 of 29 images) -> direct call to process_date_map
         imgs = imgs.to(self.device)
-        masks = masks.to(self.device).float()
+        #masks = masks.to(self.device).float()
 
         # (B, C, H, W) - already sigmoid
         predictions = self._infer(imgs)
@@ -130,7 +130,7 @@ class Reconstructor:
         # original image size is 1348 × 1166 but = 1376 × 1184 after padding operation : A.PadIfNeeded(min_height=ajusted_width, min_width=ajusted_height, border_mode=0, position='top_left'),
         # removing padding to get the original size
         preds = preds[:, :, :TARGET_SIZE[1], :TARGET_SIZE[0]]
-        masks = masks[:, :, :TARGET_SIZE[1], :TARGET_SIZE[0]]
+        #masks = masks[:, :, :TARGET_SIZE[1], :TARGET_SIZE[0]]
         _, mtg_pred = process_date_map(mtgs,
                                        preds,
                                        save_path=save_path,

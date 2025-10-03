@@ -16,7 +16,7 @@ ajusted_width = width + (32 - (width % 32)) if width % 32 != 0 else width
 def get__val_test_img_transform():
     global ajusted_height, ajusted_width
     return A.Compose([
-        A.PadIfNeeded(min_height=ajusted_width, min_width=ajusted_height, border_mode=0, position='top_left'),
+        #A.PadIfNeeded(min_height=ajusted_width, min_width=ajusted_height, border_mode=0, position='top_left'),
         A.Normalize(mean=(0,), std=(1,), max_pixel_value=255.0),
         # normalize to [0, 1] range  out = (img / max_pixel_value) - (mean / std)
         ToTensorV2(),

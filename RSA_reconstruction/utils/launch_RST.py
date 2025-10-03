@@ -55,14 +55,14 @@ def assemble_date_map(prediction: torch.Tensor) -> np.ndarray:
         for i in range(batch_size):
             mask_i = (prediction[i, 0] > 0) & (pred_datemap == 0)
             pred_datemap[mask_i] = i + 1
-    else:
-        detector = RuptureSlopeTimeDetector()
-        pred_datemap = detector(prediction)
-        # import matplotlib.pyplot as plt
-        # plt.imshow(pred_datemap, cmap='jet')
-        # plt.colorbar()
-        # plt.title("Date Map")
-        # plt.show()
+    #else:
+    #       detector = RuptureSlopeTimeDetector()
+    #       pred_datemap = detector(prediction)
+    #       import matplotlib.pyplot as plt
+    #       plt.imshow(pred_datemap, cmap='jet')
+    #       plt.colorbar()
+    #       plt.title("Date Map")
+    #       plt.show()
     return pred_datemap
 
 
