@@ -33,7 +33,7 @@ def preprocess_RST_pipeline(
     os.makedirs(temp_name, exist_ok=True)
     input_dir = tempfile.mkdtemp(prefix="rst_input_", dir=temp_name)
 
-    pred_datemap = assemble_date_map(prediction.detach().cpu().float())
+    pred_datemap = assemble_date_map(prediction)
 
     # Sauvegarde date_map au format float32
     input_file = os.path.join(input_dir, "40_date_map.tif")

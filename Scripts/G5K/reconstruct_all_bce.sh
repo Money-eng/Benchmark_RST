@@ -1,0 +1,46 @@
+#!/bin/bash
+#OAR -q abaca
+#OAR -l host=1/gpu=2,walltime=5:00:00
+#OAR -p musa
+#OAR -O /home/lgandeel/out/run_unet_bce.out
+#OAR -E /home/lgandeel/err/run_unet_bce.err
+
+source ~/.bashrc
+mamba activate test
+cd ~/Code
+sudo-g5k apt install xvfb -y
+
+CONFIG="/home/lgandeel/Code/RSA_deep_working/Models/configs/unet_bce.yml"
+CKPT_DIR="/home/lgandeel/Code/Results/Training/Checkpoints/Unet_bce/by_epochs"
+SCRIPT="/home/lgandeel/Code/RSA_reconstruction/main_reconstruction.py"
+LOGDIR="/home/lgandeel/Code/logs_unet_bce_dice"
+
+cd ~/Code
+mkdir -p "$LOGDIR"
+
+# 4) Validate inputs
+if [[ ! -f "$CONFIG" ]]; then
+  echo "Config not found: $CONFIG" >&2
+  exit 1
+fi
+if [[ ! -d "$CKPT_DIR" ]]; then
+  echo "Checkpoint dir not found: $CKPT_DIR" >&2
+  exit 1
+fi
+if [[ ! -f "$SCRIPT" ]]; then
+  echo "Script not found: $SCRIPT" >&2
+  exit 1
+fi
+
+find "$CKPT_DIR" -maxdepth 1 -type f -name "*.pth" -print0 \
+| xargs -0 -I{} -P 20 bash -c '
+  ckpt="{}"
+  base=$(basename "$ckpt" .pth)
+  log="'"$LOGDIR"'/${base}.log"
+  echo "[START] $ckpt"
+  python "'"$SCRIPT"'" --config "'"$CONFIG"'" --model_path "$ckpt" > "$log" 2>&1
+  rc=$?
+  echo "[END  ] $ckpt -> exit $rc (log: $log)"
+'
+
+echo "All reconstructions done."

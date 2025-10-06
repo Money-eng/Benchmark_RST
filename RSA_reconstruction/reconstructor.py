@@ -69,13 +69,13 @@ class Reconstructor:
         with torch.no_grad():
             pbar = tqdm(self.val_loader, desc="Evaluating",
                         leave=False, dynamic_ncols=True)
-            for imgs, masks, _, mtg_list in pbar:
+            for imgs, _, _, mtg_list in pbar:
                 # get box name of mtg path (before last slash)
                 mtg_path = mtg_list[0]
                 mtg_box_name = mtg_path.split("/")[-2]
                 # Process MTG
                 try:
-                    pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(
+                    pred_mtg = self.reconstruct(imgs, None, mtg_list, save_path=os.path.join(
                         self.save_path, "Val", mtg_box_name))
                 except Exception as e:
                     print(f"Error processing {mtg_box_name}: {e}")
@@ -89,13 +89,13 @@ class Reconstructor:
 
             pbar = tqdm(self.test_loader, desc="Evaluating",
                         leave=False, dynamic_ncols=True)
-            for imgs, masks, _, mtg_list in pbar:
+            for imgs, _, _, mtg_list in pbar:
                 # get box name of mtg path (before last slash)
                 mtg_path = mtg_list[0]
                 mtg_box_name = mtg_path.split("/")[-2]
                 # Process MTG
                 try:
-                    pred_mtg = self.reconstruct(imgs, masks, mtg_list, save_path=os.path.join(
+                    pred_mtg = self.reconstruct(imgs, None, mtg_list, save_path=os.path.join(
                         self.save_path, "Test", mtg_box_name))
                 except Exception as e:
                     print(f"Error processing {mtg_box_name}: {e}")
@@ -109,10 +109,12 @@ class Reconstructor:
 
         return predicted_mtgs
 
-    def reconstruct(self, imgs: torch.Tensor, masks: torch.Tensor, mtgs: list, save_path: str) -> MTG:
-        # a batch is composed (for UC1 of 29 images) -> direct call to process_date_map
+    def reconstruct(self, imgs: torch.Tensor, masks4debug: torch.Tensor, mtgs: list, save_path: str) -> MTG:
         imgs = imgs.to(self.device)
+<<<<<<< Updated upstream
         #masks = masks.to(self.device).float()
+=======
+>>>>>>> Stashed changes
 
         # (B, C, H, W) - already sigmoid
         predictions = self._infer(imgs)
@@ -125,19 +127,25 @@ class Reconstructor:
                 pred_img = predictions[i].cpu().numpy()
                 tifffile.imwrite(os.path.join(save_path, f"pred_heatmap_{i}.tif"), pred_img)
 
-        preds = predictions.float()  # (predictions > self.threshold).float()
+        preds = predictions.detach().cpu().float()  # (predictions > self.threshold).float()
 
         # original image size is 1348 × 1166 but = 1376 × 1184 after padding operation : A.PadIfNeeded(min_height=ajusted_width, min_width=ajusted_height, border_mode=0, position='top_left'),
         # removing padding to get the original size
         preds = preds[:, :, :TARGET_SIZE[1], :TARGET_SIZE[0]]
+<<<<<<< Updated upstream
         #masks = masks[:, :, :TARGET_SIZE[1], :TARGET_SIZE[0]]
+=======
+        
+        # clean gpu memory
+        del imgs, predictions
+        gc.collect()
+        torch.cuda.empty_cache()
+        
+>>>>>>> Stashed changes
         _, mtg_pred = process_date_map(mtgs,
                                        preds,
                                        save_path=save_path,
                                        jar_path=self.jar_path)
-
-        del preds, predictions
-        #torch.cuda.empty_cache()
         return mtg_pred
 
     # =====================================================================
