@@ -5,42 +5,32 @@
 #OAR -O /home/lgandeel/out/run_unet_bce.out
 #OAR -E /home/lgandeel/err/run_unet_bce.err
 
-source ~/.bashrc
-mamba activate test
-cd ~/Code
-sudo-g5k apt install xvfb -y
+sudo-g5k apt install -y xvfb
+
+PYRUN="mamba run -n test python"
 
 CONFIG="/home/lgandeel/Code/RSA_deep_working/Models/configs/unet_bce.yml"
 CKPT_DIR="/home/lgandeel/Code/Results/Training/Checkpoints/Unet_bce/by_epochs"
 SCRIPT="/home/lgandeel/Code/RSA_reconstruction/main_reconstruction.py"
-LOGDIR="/home/lgandeel/Code/logs_unet_bce_dice"
+LOGDIR="/home/lgandeel/Code/logs"
 
-cd ~/Code
 mkdir -p "$LOGDIR"
 
-# 4) Validate inputs
-if [[ ! -f "$CONFIG" ]]; then
-  echo "Config not found: $CONFIG" >&2
-  exit 1
-fi
-if [[ ! -d "$CKPT_DIR" ]]; then
-  echo "Checkpoint dir not found: $CKPT_DIR" >&2
-  exit 1
-fi
-if [[ ! -f "$SCRIPT" ]]; then
-  echo "Script not found: $SCRIPT" >&2
-  exit 1
-fi
+[[ -f "$CONFIG" ]] || { echo "Config not found: $CONFIG" >&2; exit 1; }
+[[ -d "$CKPT_DIR" ]] || { echo "Checkpoint dir not found: $CKPT_DIR" >&2; exit 1; }
+[[ -f "$SCRIPT" ]] || { echo "Script not found: $SCRIPT" >&2; exit 1; }
+
+echo "Python used: $($PYRUN -c 'import sys;print(sys.executable)')"
+echo "Torch ver  : $($PYRUN -c 'import torch;print(torch.__version__)')"
 
 find "$CKPT_DIR" -maxdepth 1 -type f -name "*.pth" -print0 \
-| xargs -0 -I{} -P 20 bash -c '
+| xargs -0 -I{} -P 25 bash -c '
   ckpt="{}"
   base=$(basename "$ckpt" .pth)
   log="'"$LOGDIR"'/${base}.log"
   echo "[START] $ckpt"
-  python "'"$SCRIPT"'" --config "'"$CONFIG"'" --model_path "$ckpt" > "$log" 2>&1
+  '"$PYRUN"' "'"$SCRIPT"'" --config "'"$CONFIG"'" --model_path "$ckpt" > "$log" 2>&1
   rc=$?
   echo "[END  ] $ckpt -> exit $rc (log: $log)"
 '
-
 echo "All reconstructions done."

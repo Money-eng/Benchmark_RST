@@ -111,10 +111,6 @@ class Reconstructor:
 
     def reconstruct(self, imgs: torch.Tensor, masks4debug: torch.Tensor, mtgs: list, save_path: str) -> MTG:
         imgs = imgs.to(self.device)
-<<<<<<< Updated upstream
-        #masks = masks.to(self.device).float()
-=======
->>>>>>> Stashed changes
 
         # (B, C, H, W) - already sigmoid
         predictions = self._infer(imgs)
@@ -132,16 +128,12 @@ class Reconstructor:
         # original image size is 1348 × 1166 but = 1376 × 1184 after padding operation : A.PadIfNeeded(min_height=ajusted_width, min_width=ajusted_height, border_mode=0, position='top_left'),
         # removing padding to get the original size
         preds = preds[:, :, :TARGET_SIZE[1], :TARGET_SIZE[0]]
-<<<<<<< Updated upstream
-        #masks = masks[:, :, :TARGET_SIZE[1], :TARGET_SIZE[0]]
-=======
         
         # clean gpu memory
         del imgs, predictions
         gc.collect()
         torch.cuda.empty_cache()
         
->>>>>>> Stashed changes
         _, mtg_pred = process_date_map(mtgs,
                                        preds,
                                        save_path=save_path,
