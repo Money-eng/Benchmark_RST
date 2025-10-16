@@ -29,7 +29,7 @@ def preprocess_RST_pipeline(
         output_dir (str): Chemin temporaire vers le dossier de sortie pour RST.
         obs_hours (float): Temps d'observation extrait du RSML ground truth (sera rempli après chargement MTG GT).
     """
-    temp_name = "./temps_" + str(os.getpid()) + '/'
+    temp_name = "./temps_" + str(os.getpid()) + '/' # temp + numéro de processus pour éviter les conflits
     os.makedirs(temp_name, exist_ok=True)
     input_dir = tempfile.mkdtemp(prefix="rst_input_", dir=temp_name)
 
@@ -123,7 +123,7 @@ def generate_graph_with_java(
 def process_date_map(
         mtg_paths: list,
         predictions: torch.Tensor,
-        save_path: str,
+        save_path: str, # Val/Test_path + box_name
         jar_path: str = "/home/loai/Documents/code/RSMLExtraction/RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar"
 ):
     """
@@ -144,6 +144,16 @@ def process_date_map(
         mtg_gt (rsml.MTG): MTG ground truth (premier élément du batch).
         mtg_pred (rsml.MTG): MTG prédit par RST pour le premier élément du batch.
     """
+    
+    # if save path contains an .rsml and a .tif file, return None
+    os.makedirs(save_path, exist_ok=True)
+    pred_rsml_path = os.path.join(save_path, "61_prediction_before_expertized_graph.rsml")
+    pred_date_map_path = os.path.join(save_path, "40_date_map.tif")
+    
+    if os.path.isfile(pred_rsml_path) and os.path.isfile(pred_date_map_path):
+        print(f"[SKIP] Fichiers prédits déjà présents dans {save_path}, on saute le recalcul.")
+        return None, None
+    
     # On prend le premier élément du batch
     mtg_gt_path = mtg_paths[0]
     if not os.path.exists(mtg_gt_path):

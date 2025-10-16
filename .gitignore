@@ -36,6 +36,9 @@ __pycache__/
 *.temp
 # ignore all .cache files
 *.cache
+*.png
+*.gz
+*.json
 
 # ignore vscode or pycharm files
 .vscode/

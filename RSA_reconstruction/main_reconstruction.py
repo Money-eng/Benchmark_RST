@@ -99,7 +99,7 @@ def main() -> None:
         threshold=cfg.get("threshold_4_binarize", 0.5),
         patch_size=cfg.get("data", {}).get("patch_size", 512),
         jar_path=cfg.get("rst", {}).get("jar_path", None),
-        save_path=cfg.get("data", {}).get("save_path", "RSA_reconstruction/Logs/Prediction") + "_" + cfg.get("model", {}).get(
+        save_path=cfg.get("data", {}).get("save_path", "RSA_reconstruction/Logs/Prediction") + cfg.get("model", {}).get(
             "name", "Model_X") + "_" + cfg.get("loss", {}).get("name", "loss_x") + "_" + epoch_number
     )
     preds = reconstructor.reconstruct_all()

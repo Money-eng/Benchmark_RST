@@ -19,6 +19,9 @@ def extract_mtg_at_time_t(g: MTG, t: int) -> MTG:
     time_h_prop = g_new.property("time_hours")
     diameter_prop = g_new.property("diameter")
     geometry_prop = g_new.property("geometry")
+    
+    if t == -1: 
+        t = max(max(time_prop.values()))
 
     to_remove = []
     for v, serie in time_prop.items():

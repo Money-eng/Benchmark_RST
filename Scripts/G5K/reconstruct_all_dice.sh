@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #OAR -q abaca
-#OAR -l host=1/gpu=1,walltime=10:00:00
+#OAR -l host=1/gpu=1,walltime=5:00:00
 #OAR -p musa
 #OAR -O /home/lgandeel/out/run_unet_dice.out
 #OAR -E /home/lgandeel/err/run_unet_dice.err

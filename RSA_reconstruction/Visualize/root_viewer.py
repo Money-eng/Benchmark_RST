@@ -35,7 +35,7 @@ class RootGraphViewer:
             gt_date_map: Optional[Union[str, Path]] = None,
             colors: Optional[Dict[str, str]] = None,
             flip_axes: bool = True,
-            with_time: bool = True,
+            with_time: bool = False,
     ) -> None:
 
         self.mtg_dict: Dict[str, MTG] = {
@@ -199,16 +199,16 @@ class RootGraphViewer:
 
 
 if __name__ == "__main__":
-    gt_expertized = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN008/61_graph.rsml"
-    gt_before = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN008/61_before_expertized_graph.rsml"
-    prediction = "/home/loai/Documents/code/RSMLExtraction/Results/Reconstruction_per_epoch/Unet_cldice_dice_260/Test/230629PN008/61_prediction_before_expertized_graph.rsml"
+    gt_expertized = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN031/61_graph.rsml"
+    gt_before = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN031/61_before_expertized_graph.rsml"
+    prediction = "/home/loai/Documents/code/RSMLExtraction/temp/output/230629PN031/merged_time_27.rsml"
     viewer = RootGraphViewer.from_rsml(
         gt_expertized,
         gt_before,
         prediction,
-        background="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN008/22_registered_stack.tif",
-        pred_date_map="/home/loai/Documents/code/RSMLExtraction/Results/Reconstruction_per_epoch/Unet_cldice_dice_260/Test/230629PN008/40_date_map.tif",
-        gt_date_map="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN008/40_date_map.tif",
+        background="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN031/22_registered_stack.tif",
+        pred_date_map="/home/loai/Documents/code/RSMLExtraction/Results/Reconstruction_per_epoch/Unet_cldice_dice_260/Val/230629PN031/40_date_map.tif",
+        gt_date_map="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN031/40_date_map.tif",
     )
 
     viewer.show()

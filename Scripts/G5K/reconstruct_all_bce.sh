@@ -5,9 +5,12 @@
 #OAR -O /home/lgandeel/out/run_unet_bce.out
 #OAR -E /home/lgandeel/err/run_unet_bce.err
 
+cd ~/Code
+source ~/.bashrc
 sudo-g5k apt install -y xvfb
 
-PYRUN="mamba run -n test python"
+mamba activate test
+PYRUN="/home/lgandeel/miniforge3/envs/test/bin/python3"
 
 CONFIG="/home/lgandeel/Code/RSA_deep_working/Models/configs/unet_bce.yml"
 CKPT_DIR="/home/lgandeel/Code/Results/Training/Checkpoints/Unet_bce/by_epochs"
