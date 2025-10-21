@@ -34,12 +34,22 @@ def main() -> None:
             "If omitted, 'config.yml' is searched in the same directory as this script."
         ),
     )
+    
+    parser.add_argument(
+        "--model_name",
+        type=str,
+        default=None,
+        help=(
+            "Name of the model to use. "
+            "If omitted, the model name is derived from the config file."
+        ),
+    )
+    
     args = parser.parse_args()
     cfg_path = Path(args.config) if args.config else DEFAULT_CFG
-    cfg_path = Path("RSA_deep_working/Models/configs/unet_bce.yml") # TODO !!!!!!!!!!!!!!!!!
     cfg = load_config(cfg_path)
 
-    model_name = cfg.get("model", {}).get("name", "Model_X") + "_" + cfg.get("loss", {}).get("name", "loss_x")
+    model_name = args.model_name if args.model_name else cfg.get("model_name", "default_model")
 
     print("Start")
     

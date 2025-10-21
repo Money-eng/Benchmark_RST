@@ -12,10 +12,10 @@ sudo-g5k apt install -y xvfb
 mamba activate test
 PYRUN="/home/lgandeel/miniforge3/envs/test/bin/python3"
 
-CONFIG="/home/lgandeel/Code/RSA_deep_working/Models/configs/unet_dice.yml"
-CKPT_DIR="/home/lgandeel/Code/Results/Training/Checkpoints/Unet_dice/by_epochs"
+CONFIG="/home/lgandeel/Code/RSA_deep_working/Models/configs/full_segformer_dice.yml"
+CKPT_DIR="/home/lgandeel/Code/Results/Training/Checkpoints/Segformer_dice/by_epochs"
 SCRIPT="/home/lgandeel/Code/RSA_reconstruction/main_reconstruction.py"
-LOGDIR="/home/lgandeel/Code/logs/Unet_dice"
+LOGDIR="/home/lgandeel/Code/logs/Segformer_dice"
 
 mkdir -p "$LOGDIR"
 

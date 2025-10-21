@@ -2,8 +2,8 @@
 #OAR -q abaca
 #OAR -l host=1/gpu=2,walltime=5:00:00
 #OAR -p musa
-#OAR -O /home/lgandeel/out/run_unet_dice.out
-#OAR -E /home/lgandeel/err/run_unet_dice.err
+#OAR -O /home/lgandeel/out/run_segformer_bce_dice.out
+#OAR -E /home/lgandeel/err/run_segformer_bce_dice.err
 
 cd ~/Code
 source ~/.bashrc
@@ -12,10 +12,10 @@ sudo-g5k apt install -y xvfb
 mamba activate test
 PYRUN="/home/lgandeel/miniforge3/envs/test/bin/python3"
 
-CONFIG="/home/lgandeel/Code/RSA_deep_working/Models/configs/unet_dice.yml"
-CKPT_DIR="/home/lgandeel/Code/Results/Training/Checkpoints/Unet_dice/by_epochs"
+CONFIG="/home/lgandeel/Code/RSA_deep_working/Models/configs/full_segformer_bce_dice.yml"
+CKPT_DIR="/home/lgandeel/Code/Results/Training/Checkpoints/Segformer_bce_dice/by_epochs"
 SCRIPT="/home/lgandeel/Code/RSA_reconstruction/main_reconstruction.py"
-LOGDIR="/home/lgandeel/Code/logs/Unet_dice"
+LOGDIR="/home/lgandeel/Code/logs/Segformer_bce_dice"
 
 mkdir -p "$LOGDIR"
 
