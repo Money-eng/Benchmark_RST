@@ -106,16 +106,23 @@ def convert_nx(g):
 
     root_coord =[g.node(root_id).x, g.node(root_id).y]
 
-    edge_list = []
+    #edge_list = []
     nodes = list(traversal.pre_order2(g, vtx_id=root_id))
+    
+    g_nx = nx.DiGraph()
     for v in nodes:
         parent = g.parent(v)
         if parent is None:
             continue
+        
+        edge_type = g.edge_type(v)
+        
+        # Ajouter l'arête (parent, v) avec un attribut 'type'
+        g_nx.add_edge(parent, v, type=edge_type)
 
-        edge_list.append((parent, v))
+        #edge_list.append((parent, v))
 
-    g_nx = nx.from_edgelist(edge_list, create_using=nx.DiGraph)
+    #g_nx = nx.from_edgelist(edge_list, create_using=nx.DiGraph)
 
     props = ['x', 'y', 'time', 'time_hours', 'diameters', 'label', 'diameter', 'root_deg']
     for node in nodes:
@@ -141,23 +148,18 @@ def convert_nx(g):
         
     return tree_nx
 
-def test_all():
+
+def visualize_root_graphs(dgs, ax=None, show=True):
+    """
+    Visualise une liste de graphes racinaires (dgs) sur un seul axe Matplotlib.
+    
+    - Nœuds : Dégradé 'hot' (feu) basé sur l'attribut 'time'.
+    - Arêtes '<' (Succession) : Ligne continue (solid).
+    - Arêtes '+' (Branchement) : Ligne pointillée (dotted).
+    """
     import matplotlib.pyplot as plt
     import matplotlib.colors as mcolors
-    
-    g = convert_fine_mtg(fn)
-
-    gs = split(g)
-    dgs = [convert_nx(g) for g in gs]
-
-    print("Different edge types in the graphs:")
-    edge_types = set()
-    for dg in dgs:
-        for u, v in dg.edges():
-            edge_types.add(dg.edges[u, v].get('edge_type', 'unknown'))
-    print(edge_types)
-
-    # -------------------
+    from matplotlib.lines import Line2D 
     
     all_times = []
     for dg in dgs:
@@ -165,16 +167,32 @@ def test_all():
         if times_dict:
             all_times.extend(times_dict.values())
 
-    min_time = min(all_times)
-    max_time = max(all_times)
+    if not all_times:
+        print("Avertissement : Aucun attribut 'time' trouvé.")
+        min_time, max_time = 0, 1
+    else:
+        min_time = min(all_times)
+        max_time = max(all_times)
+        
+    print(f"Échelle de temps (Time): Min={min_time}, Max={max_time}")
 
-    print(f"Min time: {min_time}, Max time: {max_time}")
 
-    plt.figure(figsize=(12, 10))
-    ax = plt.gca()
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(12, 10))
     
-    cmap = plt.cm.hot 
-    
+    cmap_nodes = plt.cm.hot 
+        
+    style_map = {
+        '<': 'solid',
+        '+': 'dotted', 
+    }
+    color_map = {
+        '<': 'black',
+        '+': 'red',
+    }
+    default_style = 'dashed'
+    default_color = 'gray'
+
     for i, dg in enumerate(dgs):
         
         pos = nx.get_node_attributes(dg, 'pos') 
@@ -183,25 +201,74 @@ def test_all():
             continue
 
         time_values = [dg.nodes[node].get('time', min_time) for node in dg.nodes()]
+        
+        nx.draw_networkx_nodes(
+            dg, pos,
+            ax=ax,
+            node_color=time_values,
+            cmap=cmap_nodes,
+            node_size=10
+        )
+        
+        edges_by_type = {etype: [] for etype in style_map}
+        other_edges = []
 
-        nx.draw(dg, pos,
+        for u, v, data in dg.edges(data=True):
+            edge_type = data.get('type')
+            if edge_type in style_map:
+                edges_by_type[edge_type].append((u, v))
+            else:
+                other_edges.append((u, v))
+
+        # Dessiner chaque groupe d'arêtes avec son style
+        for edge_type, edgelist in edges_by_type.items():
+            if edgelist: # S'il y a des arêtes de ce type
+                nx.draw_networkx_edges(
+                    dg, pos,
+                    ax=ax,
+                    edgelist=edgelist,
+                    style=style_map[edge_type],
+                    edge_color=color_map[edge_type],
+                    width=1.0
+                )
+        
+        if other_edges:
+            nx.draw_networkx_edges(
+                dg, pos,
                 ax=ax,
-                node_color=time_values, # La liste des valeurs de temps
-                cmap=cmap,             # La colormap (le dégradé)
-                with_labels=True,
-                node_size=15,          # Taille de nœud légèrement augmentée
-                width=0.5)             # Lignes un peu plus fines
+                edgelist=other_edges,
+                style=default_style,
+                edge_color=default_color,
+                width=0.5
+            )
 
-    sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min_time, vmax=max_time))
-    sm.set_array([]) 
-    
+    sm = plt.cm.ScalarMappable(cmap=cmap_nodes)
+    sm.set_array([])
     cbar = plt.colorbar(sm, ax=ax, orientation='vertical', fraction=0.046, pad=0.04)
     cbar.set_label('Time')
 
-    plt.title(f"Visualisation de {len(dgs)} graphes (Couleur = Time)")
-    plt.gca().invert_yaxis() # Décommentez si nécessaire
-    plt.axis('equal')
-    plt.show()
+    legend_elements = [
+        Line2D([0], [0], color=color_map['<'], lw=2, label="Succession ('<')", linestyle=style_map['<']),
+        Line2D([0], [0], color=color_map['+'], lw=2, label="Branchement ('+')", linestyle=style_map['+'])
+    ]
+    ax.legend(handles=legend_elements, loc='best')
+
+    ax.set_title(f"Visualisation de {len(dgs)} graphes")
+    ax.axis('equal')
+    ax.invert_yaxis() # Décommentez si nécessaire
+    
+    if show:
+        plt.show()
+        
+    return ax
+
+def test_all():
+    g = convert_fine_mtg(fn)
+    gs = split(g)
+    dgs = [convert_nx(g) for g in gs] # Assurez-vous que convert_nx est la version corrigée !
+
+    print(f"Conversion terminée. {len(dgs)} graphe(s) trouvé(s). Lancement de la visualisation...")
+    visualize_root_graphs(dgs)
 
     return dgs
 
