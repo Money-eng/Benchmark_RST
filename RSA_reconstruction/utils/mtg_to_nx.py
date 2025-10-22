@@ -133,26 +133,80 @@ def convert_nx(g):
         g_nx.nodes[node]['LR_index'] = lr_index[g.complex(node)] if lr_index[g.complex(node)] else None
 
     for node in g_nx.nodes:
-        x= g_nx.nodes[node]['x']-root_coord[0]
-        y= g_nx.nodes[node]['y']-root_coord[1]
+        x= g_nx.nodes[node]['x'] # -root_coord[0] OLD
+        y= g_nx.nodes[node]['y'] # -root_coord[1] OLD
         g_nx.nodes[node]['pos'] = [x, y]
         
     tree_nx = nx.convert_node_labels_to_integers(g_nx)
+        
     return tree_nx
 
-
-   
 def test_all():
-    """
-    Test the conversion of the MTG to a fine MTG and then to a networkx graph.
-    """
+    import matplotlib.pyplot as plt
+    import matplotlib.colors as mcolors
+    
     g = convert_fine_mtg(fn)
 
     gs = split(g)
     dgs = [convert_nx(g) for g in gs]
+
+    print("Different edge types in the graphs:")
+    edge_types = set()
+    for dg in dgs:
+        for u, v in dg.edges():
+            edge_types.add(dg.edges[u, v].get('edge_type', 'unknown'))
+    print(edge_types)
+
+    # -------------------
+    
+    all_times = []
+    for dg in dgs:
+        times_dict = nx.get_node_attributes(dg, 'time')
+        if times_dict:
+            all_times.extend(times_dict.values())
+
+    min_time = min(all_times)
+    max_time = max(all_times)
+
+    print(f"Min time: {min_time}, Max time: {max_time}")
+
+    plt.figure(figsize=(12, 10))
+    ax = plt.gca()
+    
+    cmap = plt.cm.hot 
+    
+    for i, dg in enumerate(dgs):
+        
+        pos = nx.get_node_attributes(dg, 'pos') 
+        if not pos:
+            print(f"Graphe {i} sauté (pas de 'pos')")
+            continue
+
+        time_values = [dg.nodes[node].get('time', min_time) for node in dg.nodes()]
+
+        nx.draw(dg, pos,
+                ax=ax,
+                node_color=time_values, # La liste des valeurs de temps
+                cmap=cmap,             # La colormap (le dégradé)
+                with_labels=True,
+                node_size=15,          # Taille de nœud légèrement augmentée
+                width=0.5)             # Lignes un peu plus fines
+
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min_time, vmax=max_time))
+    sm.set_array([]) 
+    
+    cbar = plt.colorbar(sm, ax=ax, orientation='vertical', fraction=0.046, pad=0.04)
+    cbar.set_label('Time')
+
+    plt.title(f"Visualisation de {len(dgs)} graphes (Couleur = Time)")
+    plt.gca().invert_yaxis() # Décommentez si nécessaire
+    plt.axis('equal')
+    plt.show()
+
     return dgs
 
 
-test_all()
-
+# Exécuter le test
+if __name__ == "__main__":
+    test_all()
                 
