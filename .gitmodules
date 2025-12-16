@@ -18,6 +18,3 @@
 	path = RSML
 	url = https://github.com/Money-eng/RSML
 	branch = hirros
-[submodule "RSA_reconstruction/Method/RootEx"]
-	path = RSA_reconstruction/Method/RootEx
-	url = https://github.com/Money-eng/RootEx2.0_GetRsml
