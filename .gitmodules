@@ -18,3 +18,6 @@
 	path = RSML
 	url = https://github.com/Money-eng/RSML
 	branch = hirros
+[submodule "RSA_reconstruction/Method/RootNav2"]
+	path = RSA_reconstruction/Method/RootNav2
+	url = https://github.com/Money-eng/RootNav2
