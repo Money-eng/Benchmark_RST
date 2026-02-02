@@ -26,8 +26,8 @@ class MeanIoU(BaseMetric):
         only sees exact 0/1 values.
         """
         # Ensure float
-        pred = prediction.int()
-        msk = mask.int()
+        pred = prediction.long()
+        msk = mask.long()
 
         # Compute binary Jaccard (IoU)
         score = FMF.mean_iou(pred, msk, num_classes=2)

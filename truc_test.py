@@ -1,4 +1,4 @@
-from rsml import rsml2mtg
+from openalea.rsml import rsml2mtg
 
 path = "/home/loai/Documents/code/RSMLExtraction/test.rsml"
 path2 = "/home/loai/Documents/code/RSMLExtraction/testo.rsml" 

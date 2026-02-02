@@ -5,8 +5,8 @@ from collections import defaultdict
 from typing import Dict, Optional
 
 import pandas as pd
-from rsml import rsml2mtg
-from rsml import rsml2mtg
+from openalea.rsml import rsml2mtg
+from openalea.rsml import rsml2mtg
 from rsml.matching import match_plants
 from torch.nn import Module
 from tqdm import tqdm

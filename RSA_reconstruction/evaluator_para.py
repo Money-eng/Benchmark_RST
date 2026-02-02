@@ -7,7 +7,7 @@ import pandas as pd
 from dask import delayed, compute
 from dask.distributed import Client, progress
 from distributed import LocalCluster
-from rsml import rsml2mtg
+from openalea.rsml import rsml2mtg
 from rsml.matching import match_plants
 from rsml.misc import plant_vertices
 from torch.nn import Module
@@ -20,12 +20,6 @@ from utils.mtg_operations import (
 
 set_seed(SEED)
 
-
-# ================================================================
-# 1)  MESURATOR (inchangé depuis la version précédente)            
-# ================================================================
-# la classe et la fonction delayed ont été légèrement renommées pour éviter les collisions
-# ------------------------------------------------------------------
 @delayed
 def _mesurator_metrics_for_time(
         model_name: str,

@@ -7,7 +7,7 @@ import numpy as np
 import tifffile  # pip install tifffile
 from matplotlib import pyplot as plt
 from openalea.mtg import MTG
-from rsml import rsml2mtg
+from openalea.rsml import rsml2mtg
 from rsml.misc import root_vertices
 from scipy.ndimage import label as labelization
 

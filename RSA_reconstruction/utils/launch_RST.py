@@ -6,7 +6,7 @@ import tempfile
 import numpy as np
 import tifffile as tiff
 import torch
-from rsml import rsml2mtg
+from openalea.rsml import rsml2mtg
 from utils.Rupture_detection.making_date_map import RuptureSlopeTimeDetector
 from utils.root_System_class import RootSystem
 
@@ -15,6 +15,7 @@ DEFAULT_DATE_MAP_ASSEMBLY = "Rupture_detection"
 
 def preprocess_RST_pipeline(
         prediction: torch.Tensor,
+        epoch_number: str = ""
 ):
     """
     À partir du tenseur de prédiction (batch de masques), crée un date_map unique,
@@ -29,7 +30,7 @@ def preprocess_RST_pipeline(
         output_dir (str): Chemin temporaire vers le dossier de sortie pour RST.
         obs_hours (float): Temps d'observation extrait du RSML ground truth (sera rempli après chargement MTG GT).
     """
-    temp_name = "./temps_" + str(os.getpid()) + '/' # temp + numéro de processus pour éviter les conflits
+    temp_name = "./temps_" + epoch_number + "_" + str(os.getpid()) + '/'
     os.makedirs(temp_name, exist_ok=True)
     input_dir = tempfile.mkdtemp(prefix="rst_input_", dir=temp_name)
 
@@ -145,29 +146,31 @@ def process_date_map(
         mtg_pred (rsml.MTG): MTG prédit par RST pour le premier élément du batch.
     """
     
-    # if save path contains an .rsml and a .tif file, return None
     os.makedirs(save_path, exist_ok=True)
+    # save path : /home/lgandeel/Code/Results/Reconstruction/Unet_dice_epoch_num/split/boxname/
+    epoch_folder = save_path.split("/")[-3]
+    epoch_num = str(epoch_folder.split("_")[-1])
+    
     pred_rsml_path = os.path.join(save_path, "61_prediction_before_expertized_graph.rsml")
     pred_date_map_path = os.path.join(save_path, "40_date_map.tif")
     
     if os.path.isfile(pred_rsml_path) and os.path.isfile(pred_date_map_path):
-        print(f"[SKIP] Fichiers prédits déjà présents dans {save_path}, on saute le recalcul.")
+        print(f"[SKIP] Files already exist in {save_path}, loading existing MTGs.")
         return None, None
     
     # On prend le premier élément du batch
     mtg_gt_path = mtg_paths[0]
     if not os.path.exists(mtg_gt_path):
-        raise FileNotFoundError(f"Fichier GT RSML introuvable : {mtg_gt_path}")
+        raise FileNotFoundError(f"GT RSML file not found: {mtg_gt_path}")
 
     mtg_gt = rsml2mtg(mtg_gt_path)
     metadata_gt = mtg_gt.graph_properties().get('metadata', {})
     obs_hours = metadata_gt.get('observation-hours', None)
     if obs_hours is None:
-        raise KeyError("Clé 'observation-hours' manquante dans le RSML GT.")
+        raise KeyError("'Observation-hours' not found in GT RSML metadata.")
 
-    pred_datemap, input_dir, output_dir, _ = preprocess_RST_pipeline(predictions)
-    # Copier tous les fichiers nécessaires depuis le dossier contenant le RSML GT vers input_dir,
-    # SAUF date_map (qu'on a déjà générée).
+    pred_datemap, input_dir, output_dir, _ = preprocess_RST_pipeline(predictions, epoch_number=epoch_num)
+
     data_input_dir = os.path.dirname(mtg_gt_path)
     for item in os.listdir(data_input_dir):
         src = os.path.join(data_input_dir, item)
@@ -191,6 +194,12 @@ def process_date_map(
         timeout=500
     )
     if generated_rsml is None:
+        # move date_map file for debugging
+        debug_date_map_path = os.path.join(save_path, "40_date_map_reconstruction_failed.tif")
+        shutil.move(os.path.join(input_dir, "40_date_map.tif"), debug_date_map_path)
+        # delete temp folder
+        #shutil.rmtree(input_dir, ignore_errors=True)
+        shutil.rmtree(output_dir, ignore_errors=True)
         raise RuntimeError(f"Échec génération RSML prédiction pour {input_dir}")
 
     # 2.4) Charger MTG prédit en passant directement pred_datemap pour éviter rechargement

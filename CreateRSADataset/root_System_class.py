@@ -1,8 +1,8 @@
 import os
 import tifffile
 import numpy as np
-import rsml
-from rsml import hirros
+import openalea.rsml
+from openalea.rsml import hirros
 from openalea.mtg import MTG
 import utils.CustomDumper as CD
 from itertools import combinations

@@ -5,7 +5,7 @@ from collections import defaultdict
 from typing import Dict, Optional
 
 import pandas as pd
-from rsml import rsml2mtg
+from openalea.rsml import rsml2mtg
 from rsml.misc import plant_vertices
 from torch.nn import Module
 from tqdm import tqdm

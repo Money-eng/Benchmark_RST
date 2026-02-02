@@ -4,7 +4,7 @@ import shutil
 import numpy as np
 import tifffile as tiff
 import utils.custom_dumper as CD
-from rsml import hirros, rsml2mtg
+from openalea.rsml import hirros, rsml2mtg
 
 
 class RootSystem:

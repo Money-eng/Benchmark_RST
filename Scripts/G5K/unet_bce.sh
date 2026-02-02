@@ -1,13 +1,13 @@
 #!/bin/bash
 
 #OAR -q abaca
-#OAR -l host=1/gpu=1,walltime=15:00:00
+#OAR -l host=1/gpu=1,walltime=10:00:00
 #OAR -p musa
-#OAR -O /home/lgandeel/out/run_unet_bce.out
-#OAR -E /home/lgandeel/err/run_unet_bce.err
+#OAR -O /home/lgandeel/out/run_chrono.out
+#OAR -E /home/lgandeel/err/run_chrono.err
 
 source ~/.bashrc
 mamba activate test
-cd ~/Code
+cd /home/lgandeel/Code/RSA_reconstruction/Method/ChronoRoot/
 
-python3 ./RSA_deep_working/Models/main.py --config "./RSA_deep_working/Models/configs/unet_bce.yml" > /home/lgandeel/log/unet_bce.log 2>&1
+python3 /home/lgandeel/Code/RSA_reconstruction/Method/ChronoRoot/train_repro.py > /home/lgandeel/Code/RSA_reconstruction/Method/ChronoRoot/train_repro.log 2>&1

@@ -46,8 +46,7 @@ class RuptureDownDetector:
         i_star = deltas.argmax(axis=0) + 1  # indices 1..T-1
 
         # seuil: si Δ_max <= seuil => index 0 (pas de rupture)
-        rupture_index = np.where(
-            delta_max > self.threshold_rupture, i_star, -1).astype(np.float32).reshape(H, W)
+        rupture_index = np.where(delta_max > self.threshold_rupture, i_star, -1).astype(np.float32).reshape(H, W)
 
         #import matplotlib.pyplot as plt
         #plt.figure(figsize=(10, 5))

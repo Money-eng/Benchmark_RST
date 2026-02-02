@@ -1,6 +1,6 @@
 import os
 
-import rsml
+import openalea.rsml as rsml
 import tifffile
 from utils.misc import set_seed, SEED
 

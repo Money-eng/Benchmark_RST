@@ -32,7 +32,8 @@ class Reconstructor:
             threshold: float = 0.5,
             patch_size: Optional[int] = None,
             jar_path: Optional[str] = None,
-            save_path: Optional[str] = None
+            save_path: Optional[str] = None,
+            save_heatmap: bool = False
     ) -> None:
 
         # --------------------------- Public fields ----------------------
@@ -56,6 +57,7 @@ class Reconstructor:
         # jar path for Root System Tracker (RST) ----------------------
         self.jar_path = jar_path
         self.save_path = save_path
+        self.save_heatmap = save_heatmap
 
     # =====================================================================
     # API
@@ -76,7 +78,7 @@ class Reconstructor:
                 # Process MTG
                 try:
                     pred_mtg = self.reconstruct(imgs, None, mtg_list, save_path=os.path.join(
-                        self.save_path, "Val", mtg_box_name))
+                        self.save_path, "Val", mtg_box_name), save_heatmap=self.save_heatmap)
                 except Exception as e:
                     print(f"Error processing {mtg_box_name}: {e}")
                     continue
@@ -96,7 +98,7 @@ class Reconstructor:
                 # Process MTG
                 try:
                     pred_mtg = self.reconstruct(imgs, None, mtg_list, save_path=os.path.join(
-                        self.save_path, "Test", mtg_box_name))
+                        self.save_path, "Test", mtg_box_name), save_heatmap=self.save_heatmap)
                 except Exception as e:
                     print(f"Error processing {mtg_box_name}: {e}")
                     continue
@@ -109,14 +111,14 @@ class Reconstructor:
 
         return predicted_mtgs
 
-    def reconstruct(self, imgs: torch.Tensor, masks4debug: torch.Tensor, mtgs: list, save_path: str) -> MTG:
+    def reconstruct(self, imgs: torch.Tensor, masks4debug: torch.Tensor, mtgs: list, save_path: str, save_heatmap: bool = False) -> MTG:
         imgs = imgs.to(self.device)
 
         # (B, C, H, W) - already sigmoid
         predictions = self._infer(imgs)
 
         # save probability heatmap in save_path
-        if False:
+        if save_heatmap:
             import os
             os.makedirs(save_path, exist_ok=True)
             for i in range(predictions.shape[0]):

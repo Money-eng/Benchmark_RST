@@ -3,13 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Union, List, Dict, Optional, Sequence
 
-import napari  # pip install napari[all]
+import napari
 import numpy as np
-import tifffile  # pip install tifffile
-from magicgui import magicgui  # pip install magicgui
+import tifffile
 from matplotlib import pyplot as plt
 from openalea.mtg import MTG
-from rsml import rsml2mtg
+from openalea.rsml import rsml2mtg
 
 
 class RootGraphViewer:
@@ -197,18 +196,17 @@ class RootGraphViewer:
             paths.append(arr)
         return paths
 
-
 if __name__ == "__main__":
-    gt_expertized = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN031/61_graph.rsml"
-    gt_before = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN031/61_before_expertized_graph.rsml"
-    prediction = "/home/loai/Documents/code/RSMLExtraction/temp/zinput/new/61_graph.rsml"
+    gt_expertized = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN018/61_graph.rsml"
+    gt_before = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN018/61_before_expertized_graph.rsml"
+    prediction = "/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN018/61_before_expertized_graph.rsml"
     viewer = RootGraphViewer.from_rsml(
         gt_expertized,
         gt_before,
         prediction,
-        background="/home/loai/Documents/code/RSMLExtraction/temp/zinput/22_registered_stack.tif",
-        pred_date_map="/home/loai/Documents/code/RSMLExtraction/Results/Reconstruction_per_epoch/Unet_cldice_dice_260/Val/230629PN031/40_date_map.tif",
-        gt_date_map="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN031/40_date_map.tif",
+        background="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN018/22_registered_stack.tif",
+        pred_date_map="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN018/40_date_map.tif",
+        gt_date_map="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Test/230629PN018/40_date_map.tif",
     )
 
     viewer.show()

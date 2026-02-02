@@ -27,7 +27,7 @@ from xml.dom import minidom
 
 # from openalea.core.graph.property_graph import PropertyGraph
 from openalea.mtg import MTG, fat_mtg
-from rsml import metadata
+from openalea.rsml import metadata
 
 
 class Parser(object):

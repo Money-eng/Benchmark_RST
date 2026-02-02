@@ -2,7 +2,7 @@ import math
 
 import torch
 from openalea.mtg import MTG
-from rsml import rsml2mtg
+from openalea.rsml import rsml2mtg
 
 from .mtg_operations import extract_mtg_at_time_t
 
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     # Example usage
     imgs = torch.randn(6, 3, 1166, 1366)  # Example image tensor
     time = [5, 10, 15, 20, 25, 29]  # Example time list
-    from rsml import rsml2mtg
+    from openalea.rsml import rsml2mtg
 
     mtg1 = "/home/loai/Documents/code/RSMLExtraction/Results/Reconstruction_0.55/Segformer_bce/Test/230629PN024/61_prediction_before_expertized_graph.rsml"
     mtgs = [mtg1, mtg1, mtg1, mtg1, mtg1, mtg1]  # Example list of MTG objects

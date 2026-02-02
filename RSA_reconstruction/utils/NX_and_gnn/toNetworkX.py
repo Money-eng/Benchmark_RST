@@ -1,6 +1,6 @@
 import networkx as nx
 import numpy as np
-import rsml
+import openalea.rsml as rsml
 from openalea.mtg import traversal, algo
 
 
@@ -141,7 +141,7 @@ def test_all():
     """
     Test the conversion of the MTG to a fine MTG and then to a networkx graph.
     """
-    from rsml import rsml2mtg
+    from openalea.rsml import rsml2mtg
     g = rsml2mtg("/home/loai/Images/DataTest/UC1_data/Train/230629PN011/61_graph.rsml")
 
     gs = split(g)
@@ -150,7 +150,7 @@ def test_all():
 
 
 if __name__ == "__main__":
-    from rsml import rsml2mtg
+    from openalea.rsml import rsml2mtg
 
     fn = "/home/loai/Images/DataTest/UC1_data/Train/230629PN011/61_graph.rsml"
     g = rsml2mtg(fn)
