@@ -101,7 +101,7 @@ def main() -> None:
         jar_path=cfg.get("rst", {}).get("jar_path", None),
         save_path=cfg.get("data", {}).get("save_path", "RSA_reconstruction/Logs/Prediction") + cfg.get("model", {}).get(
             "name", "Model_X") + "_" + cfg.get("loss", {}).get("name", "loss_x") + "_" + epoch_number, 
-        save_heatmap=int(epoch_number) % 5 == 0  # Save heatmaps every 5 epochs
+        save_heatmap=int(epoch_number) % 1 == 0  # Save heatmaps every 5 epochs
     )
     preds = reconstructor.reconstruct_all()
 

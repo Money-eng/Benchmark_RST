@@ -1,2 +1,0 @@
-# Créer un environnement conda
-

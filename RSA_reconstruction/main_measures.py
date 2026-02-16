@@ -28,7 +28,6 @@ def main() -> None:
     parser.add_argument(
         "--config",
         type=str,
-        default=None,
         help=(
             "Path to the YAML configuration file. "
             "If omitted, 'config.yml' is searched in the same directory as this script."
@@ -36,9 +35,8 @@ def main() -> None:
     )
     
     parser.add_argument(
-        "--model_name",
+        "--path_to_results",
         type=str,
-        default=None,
         help=(
             "Name of the model to use. "
             "If omitted, the model name is derived from the config file."
@@ -49,35 +47,11 @@ def main() -> None:
     cfg_path = Path(args.config) if args.config else DEFAULT_CFG
     cfg = load_config(cfg_path)
 
-    model_name = args.model_name if args.model_name else cfg.get("model_name", "default_model")
 
-    print("Start")
-    
-    GT_VAL_FOLDERS = os.path.join(cfg["data"]["base_dir"], "Val")
-    GT_TEST_FOLDERS = os.path.join(cfg["data"]["base_dir"], "Test")
-
-    print(GT_VAL_FOLDERS)
-    print(GT_TEST_FOLDERS)
-
-    PRED_VAL_FOLDERS = os.path.join(cfg["data"]["save_path"], model_name, "Val")
-    PRED_TEST_FOLDERS = os.path.join(cfg["data"]["save_path"], model_name, "Test")
-
-    print(PRED_VAL_FOLDERS)
-    print(PRED_TEST_FOLDERS)
-
-    # list subfolder in all above directories and assert we can find the same number of folders in each
-    gt_val_folders = sorted(os.listdir(GT_VAL_FOLDERS))
-    gt_test_folders = sorted(os.listdir(GT_TEST_FOLDERS))
-    pred_val_folders = sorted(os.listdir(PRED_VAL_FOLDERS))
-    pred_test_folders = sorted(os.listdir(PRED_TEST_FOLDERS))
-
-    assert len(gt_val_folders) == len(pred_val_folders), "Mismatch in number of validation folders"
-    assert len(gt_test_folders) == len(pred_test_folders), "Mismatch in number of test folders"
-
-    print("Evaluation")
+    path2results = args.path_to_results + "/" + cfg["model"]['name'] + "_" + cfg["loss"]['name'] + "/"
     evaluator = ReconstructionMesurator(
-        pred_folder="Results/Reconstruction_per_epoch/",
-        gt_folder="RSA_deep_working/Data",
+        pred_folder=path2results,
+        gt_folder="./Data",
         measure=get_measures(cfg["measures"])
     )
 
