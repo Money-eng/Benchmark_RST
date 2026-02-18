@@ -51,7 +51,7 @@ class Evaluator:
     ) -> None:
 
         # --------------------------- Public fields ---------------------
-        self.model = model.to(device).eval()  # ensure eval mode
+        self.model = model # .to(device).eval()  # ensure eval mode
         self.criterion = criterion.to(device) if criterion else None
         self.val_loader = val_dataloader
         self.test_loader = test_dataloader

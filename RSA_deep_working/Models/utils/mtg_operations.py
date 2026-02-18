@@ -4,7 +4,7 @@ from typing import List, Dict
 import numpy as np
 from openalea.mtg import MTG
 from openalea.mtg import MTG
-from rsml.misc import root_vertices
+from openalea.rsml.misc import root_vertices
 
 
 def _truncate_lists(prop: Dict[int, List], idx: int, v: int) -> None:

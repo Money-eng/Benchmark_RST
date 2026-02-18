@@ -50,20 +50,27 @@ metrics:
     - { name: "cldice" }
     - { name: "focal_loss" }
     - { name: "f1_score" }
+    - { name: "f_2_score" }
+    - { name: "f_3_score" }
+    - { name: "f_4_score" }
     - { name: "hausdorff_distance" }
+    - { name: "hausdorff_distance95" }
     - { name: "mean_iou" }
     - { name: "normalized_mutual_information" }
     - { name: "pixel_accuracy" }
     - { name: "precision" }
     - { name: "recall" }
     - { name: "specificity" }
+    - { name: "betti0_abs_err_gpu" }
     - { name: "betti0_jaccard_ratio_gpu" }
     - { name: "betti0_relative_error_gpu" }
     - { name: "betti0_variation_index_gpu" }
+    - { name: "betti1_abs_err_gpu" }
     - { name: "betti1_jaccard_ratio_gpu" }
     - { name: "betti1_relative_error_gpu" }
     - { name: "betti1_variation_index_gpu" }
-    - { name: "centerline_f1_gpu" }
+    - { name: "average_symetric_centerline_distance" }
+    - { name: "cldice_off_metric" }
     - { name: "persistence_bottleneck_gpu" }
     - { name: "persistence_wasserstein_gpu" }
     - { name: "average_centerline_distance" }
