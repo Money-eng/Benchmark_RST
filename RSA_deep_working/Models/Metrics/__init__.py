@@ -35,7 +35,8 @@ from .gpu.cldice import CLDice
 from .gpu.dice import Dice
 from .gpu.f1_score import F1Score
 from .gpu.haussdorff import HausdorffDistance
-from .gpu.iou import MeanIoU
+from .gpu.iou import IoU
+from .gpu.mean_iou import MeanIoU
 from .gpu.mutual_information import NormalizedMutualInformation
 from .gpu.persistence_bottleneck_gpu import PersistenceBottleneckGPUParallel
 from .gpu.persistence_wasserstein_gpu import PersistenceWassersteinGPUParallel
@@ -60,6 +61,7 @@ METRIC_FACTORIES = {
     "dice": Dice,
     "cldice": CLDice,
     "f1_score": F1Score,
+    "iou": IoU,
     "mean_iou": MeanIoU,
     "pixel_accuracy": PixelAccuracy,
     "precision": Precision,

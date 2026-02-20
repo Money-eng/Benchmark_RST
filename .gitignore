@@ -59,6 +59,8 @@ Data/
 Results/
 *.crt
 OLD/*
+*.png
+*.rsml
 *.tif 
 *.tiff 
 *.rsml 

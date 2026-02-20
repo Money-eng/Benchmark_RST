@@ -11,12 +11,12 @@ from ..base import BaseMetric
 def _to_cu(x: torch.Tensor):    
     return cp.from_dlpack(torch.utils.dlpack.to_dlpack(x))
 
-def _ensure_2d_bin(t: torch.Tensor, thr: float):
+def _ensure_2d_bin(t: torch.Tensor):
     if t.ndim == 4 and t.shape[1] == 1:
         t = t[:, 0]
     elif t.ndim == 4 and t.shape[1] > 1:
         raise ValueError("Mask/pred must be binary for centerline distance.")
-    return (t >= thr).to(torch.uint8)
+    return t.to(torch.uint8)
 
 
 def _skeletonize_gpu(bin_cp):
@@ -40,10 +40,10 @@ def _edt_to_ones(bin_cp, sampling=None):
 class AverageSymetricCenterlineDistance(BaseMetric):
     type = "gpu"
 
-    def __init__(self, threshold: float = 0.5, sampling=None):
+    def __init__(self, sampling=None):
         super().__init__()
-        self.threshold = threshold
         self.sampling = sampling
+        self.pixel_size = 76 * 1e-3 # Convert pixel size to millimeters
 
     def is_better(self, old_score, new_score) -> bool:
         return new_score < old_score
@@ -52,8 +52,8 @@ class AverageSymetricCenterlineDistance(BaseMetric):
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor):
         import cupy as cp
         import numpy as np
-        pred = _ensure_2d_bin(prediction, self.threshold)
-        gt = _ensure_2d_bin(mask, self.threshold)
+        pred = _ensure_2d_bin(prediction)
+        gt = _ensure_2d_bin(mask)
         cp_pred = _to_cu(pred)
         cp_gt = _to_cu(gt)
     
@@ -67,6 +67,9 @@ class AverageSymetricCenterlineDistance(BaseMetric):
 
             d1 = dt_gt[sk_pred.astype(bool)]  # points of the predicted skeleton in the distance transform of the ground truth skeleton
             d2 = dt_pr[sk_gt.astype(bool)] # points of the ground truth skeleton in the distance transform of the predicted skeleton
+            
+            d1 = d1 * self.pixel_size
+            d2 = d2 * self.pixel_size
             
             if d1.size == 0 and d2.size == 0:
                 continue 

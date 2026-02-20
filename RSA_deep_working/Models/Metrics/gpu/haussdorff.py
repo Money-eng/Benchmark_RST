@@ -1,7 +1,7 @@
 # Metrics/gpu/dice.py
 
 import torch
-from monai.metrics.hausdorff_distance import HausdorffDistanceMetric
+from monai.metrics import compute_hausdorff_distance
 
 from ..base import BaseMetric
 
@@ -11,25 +11,26 @@ class HausdorffDistance(BaseMetric):
 
     def __init__(self):
         super().__init__()
+        self.pixel_size = 76 * 1e-3 # Convert pixel size to millimeters
 
     def is_better(self, old_score: float, new_score: float) -> bool:
-        """
-        Hausdorff distance. On considère que `old_score` et `new_score`
-        sont des scores de type float.
-        """
         return new_score < old_score
 
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
-        """
-        Compute the Hausdorff distance between the predicted segmentation and the ground truth mask.
-        The Hausdorff distance is defined as the maximum distance from a point in one set to the closest point in the other set.
-        """
-        pred = prediction.long()
-        msk = mask.long()
+        pred_bin = prediction.float().detach().cpu()
+        mask_bin = mask.float().detach().cpu()
 
-        metric = HausdorffDistanceMetric(
-            include_background=False, distance_metric="euclidean"
+        hd_tensor = compute_hausdorff_distance(
+            y_pred=pred_bin,
+            y=mask_bin,
+            include_background=False,
+            distance_metric="euclidean",
+            spacing=self.pixel_size
         )
-        metric(pred, msk)  # compute the metric on the prediction and mask tensors
-        haussdorf_dist = metric.aggregate().item()  #  aggregate the results to get a single value by mean on the batch
-        return haussdorf_dist
+        
+        valid_hd = hd_tensor[torch.isfinite(hd_tensor)]
+        
+        if valid_hd.numel() == 0: # if all values are inf or NaN, return 0.0 as a default value
+            return 0.0
+        
+        return valid_hd.mean().item()

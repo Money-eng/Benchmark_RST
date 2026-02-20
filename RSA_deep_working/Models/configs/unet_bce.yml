@@ -53,8 +53,7 @@ metrics:
     - { name: "f_2_score" }
     - { name: "f_3_score" }
     - { name: "f_4_score" }
-    - { name: "hausdorff_distance" }
-    - { name: "hausdorff_distance95" }
+    - { name: "iou" }
     - { name: "mean_iou" }
     - { name: "normalized_mutual_information" }
     - { name: "pixel_accuracy" }
@@ -70,9 +69,13 @@ metrics:
     - { name: "betti1_relative_error_gpu" }
     - { name: "betti1_variation_index_gpu" }
     - { name: "average_symetric_centerline_distance" }
-    - { name: "cldice_off_metric" }
+    - { name: "hausdorff_distance" }
+    - { name: "hausdorff_distance95" }
+
   cpu:
     - { name: "variation_of_information" }
+    - { name: "cldice_off_metric" }
+
     #- { name: "betti0_jaccard_ratio" }
     #- { name: "betti0_relative_error" }
     #- { name: "betti0_variation_index" }

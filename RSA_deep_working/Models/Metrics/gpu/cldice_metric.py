@@ -26,11 +26,21 @@ class CLDICE_metric(BaseMetric):
 
     @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
-        pred =  prediction.float().cpu().numpy()
-        msk = mask.float().cpu().numpy()
+        if torch.is_tensor(prediction):
+            pred = prediction.float()
+        else:
+            pred = np.array(prediction, dtype=np.float32)
+
+        if torch.is_tensor(mask):
+            msk = mask.float().cpu().numpy()
+        else:
+            msk = np.array(mask, dtype=np.float32)
         
         cldice_scores = []
         for i in range(pred.shape[0]):
-            cldice_score = clDice(pred[i], msk[i])
+            try:
+                cldice_score = clDice(pred[i], msk[i])
+            except ZeroDivisionError:
+                cldice_score = 0.0
             cldice_scores.append(float(cldice_score))
         return float(np.mean(cldice_scores))
