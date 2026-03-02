@@ -1,0 +1,156 @@
+wandb_version: 1
+
+_wandb:
+  desc: null
+  value:
+    python_version: 3.12.10
+    cli_version: 0.19.11
+    framework: huggingface
+    huggingface_version: 4.53.0.dev0
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1772352458
+    t:
+      1:
+      - 1
+      - 5
+      - 10
+      - 11
+      - 12
+      - 35
+      - 41
+      - 48
+      - 49
+      - 53
+      - 54
+      - 63
+      - 71
+      - 74
+      - 80
+      - 105
+      2:
+      - 1
+      - 5
+      - 10
+      - 11
+      - 12
+      - 35
+      - 41
+      - 48
+      - 49
+      - 53
+      - 54
+      - 63
+      - 71
+      - 74
+      - 80
+      - 105
+      3:
+      - 4
+      - 13
+      - 16
+      - 42
+      4: 3.12.10
+      5: 0.19.11
+      6: 4.53.0.dev0
+      13: linux-x86_64
+data:
+  desc: null
+  value:
+    base_dir: RSA_deep_working/Data
+    patch_size: 512
+    batch_size: 128
+    save_path: Results/Reconstruction/
+training:
+  desc: null
+  value:
+    epochs: 300
+    epochs_btw_eval: 1
+    device: cuda
+    save_best_only: true
+    early_stopping:
+      metric: f1_score
+      patience: 5
+      delta: 0.01
+    lr_scheduler:
+      name: ReduceLROnPlateau
+      mode: min
+      factor: 0.5
+      patience: 5
+    checkpoint_dir: RSA_deep_working/Models/Checkpoints
+    log_dir: RSA_deep_working/Models/Logs
+model:
+  desc: null
+  value:
+    name: Segformer
+    pretrained: false
+    params:
+      in_channels: 1
+      out_channels: 1
+      encoder_name: mit_b0
+      encoder_weights: null
+      decoder_attention_type: null
+      return_logits: false
+optimizer:
+  desc: null
+  value:
+    name: AdamW
+    learning_rate: 0.0010069508238219975
+    weight_decay: 7.244844110285308e-05
+loss:
+  desc: null
+  value:
+    name: dice
+    params:
+      weight: null
+      reduction: mean
+metrics:
+  desc: null
+  value:
+    threshold_4_binarize: 0.5
+    gpu:
+    - name: dice
+    - name: cldice
+    - name: f1_score
+    - name: f_2_score
+    - name: f_3_score
+    - name: f_4_score
+    - name: iou
+    - name: mean_iou
+    - name: normalized_mutual_information
+    - name: pixel_accuracy
+    - name: precision
+    - name: recall
+    - name: specificity
+    - name: betti0_abs_err_gpu
+    - name: betti0_relative_error_gpu
+    - name: betti0_variation_index_gpu
+    - name: betti1_abs_err_gpu
+    - name: betti1_relative_error_gpu
+    - name: betti1_variation_index_gpu
+    - name: hausdorff_distance95
+    - name: hausdorff_distance
+    cpu:
+    - name: average_symetric_centerline_distance
+measures:
+  desc: null
+  value:
+    threshold_4_binarize: 0.5
+    per_plant:
+    - name: number_of_organs
+    - name: total_root_length
+    - name: number_of_laterals
+    - name: intercept_curve_area
+    - name: convex_area_hull
+    - name: root_density
+    - name: primary_root_length
+    - name: lateral_root_length
+    per_box:
+    - name: number_of_plants
+    - name: number_of_organs
+    - name: total_root_length
+    - name: number_of_laterals
+rst:
+  desc: null
+  value:
+    jar_path: RootSystemTracker/target/rootsystemtracker-1.6.1-jar-with-dependencies.jar

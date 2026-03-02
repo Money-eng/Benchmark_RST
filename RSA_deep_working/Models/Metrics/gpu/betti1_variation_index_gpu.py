@@ -6,8 +6,8 @@ from ..base import BaseMetric
 
 
 def _betti1_variation_index_gpu(prediction_torch, mask_torch):
-    pred = cp.from_dlpack(torch.utils.dlpack.to_dlpack((prediction_torch > 0).to(torch.uint8)))
-    mask = cp.from_dlpack(torch.utils.dlpack.to_dlpack((mask_torch > 0).to(torch.uint8)))
+    pred = cp.from_dlpack(torch.utils.dlpack.to_dlpack(prediction_torch > 0))
+    mask = cp.from_dlpack(torch.utils.dlpack.to_dlpack(mask_torch > 0))
     scores = []
     for i in range(pred.shape[0]):
         n_pred = measure.label(~pred[i].astype(bool)).max()  # inverted image connected components

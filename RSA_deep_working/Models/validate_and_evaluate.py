@@ -26,8 +26,11 @@ from utils.misc import SEED, get_device, set_seed
 
 import wandb
 
-
 set_seed(SEED)
+
+def extract_epoch_num(path):
+    match = re.search(r'epoch(\d+)', os.path.basename(path))
+    return int(match.group(1)) if match else -1
 
 def load_config(cfg_path: Path | str) -> dict:
     with open(cfg_path, "r") as f:
@@ -108,23 +111,14 @@ def run_inference_pass(cfg, weights_path, dataloader, device, run_name="Run 1"):
     
     return full_output
 
-def run_full_evaluation(cfg, weights_path, val_loader, test_loader, device):
+def run_full_evaluation(cfg, weights_path, evaluator, tb_logger, device):
     print("\n" + "="*50)
-    print("Starting Evaluation")
+    print(f"Starting Evaluation for {Path(weights_path).name}")
     print("="*50)
 
     filename = Path(weights_path).name
     match = re.search(r'epoch(\d+)', filename)
-    if match:
-        epoch = int(match.group(1))
-    else:
-        epoch = 0
-
-    log_dir = Path(cfg["training"]["log_dir"]) / "Post_Training_Validation"
-    log_dir.mkdir(parents=True, exist_ok=True)
-    
-    logger = get_logger(log_dir / "validation_log.txt")
-    tb_logger = TensorboardLogger(log_dir / "tensorboard_logs")
+    epoch = int(match.group(1)) if match else 0
 
     model = get_model(cfg["model"])
     model = load_weights_safely(model, weights_path, device)
@@ -132,32 +126,11 @@ def run_full_evaluation(cfg, weights_path, val_loader, test_loader, device):
     if torch.cuda.device_count() > 1:
         device_ids = list(range(torch.cuda.device_count()))
         model = DataParallel(model, device_ids=device_ids)
+    
     model = model.to(device)
     model.eval()
     
-    criterion = get_loss(cfg["loss"]).to(device)
-    
-    metric_logger_path = os.path.join(log_dir, "metrics_csv")
-    os.makedirs(metric_logger_path, exist_ok=True)
-
-    evaluator = Evaluator(
-        model=model,
-        val_dataloader=val_loader,
-        test_dataloader=test_loader,
-        criterion=criterion,
-        metrics=get_metrics(cfg["metrics"]),
-        device=device,
-        logger=logger,
-        threshold=cfg["metrics"].get("threshold_4_binarize", 0.5),
-        tb_logger=tb_logger,
-        patch_size=cfg["data"].get("patch_size", 512),
-        log_metric_path=metric_logger_path,
-        profile_dir=None,
-        roi_fnc=roi_fnc,
-        compute_cpu_metrics=True,
-        use_dask=False,
-    )
-
+    evaluator.model = model
     evaluator.epoch = epoch
 
     print(f"--- Evaluation Validation Set (Epoch {epoch}) ---")
@@ -179,7 +152,7 @@ def run_full_evaluation(cfg, weights_path, val_loader, test_loader, device):
     wandb_test_metrics = {f"test/{k}": v for k, v in test_metrics.items()}
     wandb_test_metrics["epoch"] = epoch
     wandb.log(wandb_test_metrics)
-    
+
 def main():
     parser = argparse.ArgumentParser(description="Validation and Evaluation Script")
     parser.add_argument("--config", type=str, default="config.yml", help="Chemin vers le config.yml")
@@ -196,39 +169,74 @@ def main():
 
     weigths_paths = os.listdir(args.weights)
     weigths_paths = [os.path.join(args.weights, f) for f in weigths_paths if os.path.basename(f).endswith('.pth')]
-    
-    def extract_epoch_num(path):
-        match = re.search(r'epoch(\d+)', os.path.basename(path))
-        return int(match.group(1)) if match else -1
     weigths_paths.sort(key=extract_epoch_num)
     
     wandb.init(
         project="First_Test", 
         config=cfg,
-        name=f"EPM_{cfg['model'].get('name', 'model')}",
+        name=f"EPM_{cfg['model'].get('name', 'model')}_{cfg['loss'].get('name', 'loss')}",
         mode="offline"  
     )
+    
+    job_id = os.environ.get("SLURM_JOB_ID", "local")
+    log_dir = Path(cfg["training"]["log_dir"]) / f"Post_Training_Validation_{cfg['model'].get('name', 'model')}_{cfg['loss'].get('name', 'loss')}_{job_id}"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    
+    logger = get_logger(log_dir / "validation_log.txt")
+    tb_logger = TensorboardLogger(log_dir / "tensorboard_logs")
+    metric_logger_path = os.path.join(log_dir, "metrics_csv")
+    os.makedirs(metric_logger_path, exist_ok=True)
+
+    criterion = get_loss(cfg["loss"]).to(device)
+
+    duh_model = get_model(cfg["model"]).to(device)
+
+    evaluator = Evaluator(
+        model=duh_model,
+        val_dataloader=val_loader,
+        test_dataloader=test_loader,
+        criterion=criterion,
+        metrics=get_metrics(cfg["metrics"]),
+        device=device,
+        logger=logger,
+        threshold=cfg["metrics"].get("threshold_4_binarize", 0.5),
+        tb_logger=tb_logger,
+        patch_size=cfg["data"].get("patch_size", 512),
+        log_metric_path=metric_logger_path,
+        profile_dir=None,
+        roi_fnc=roi_fnc,
+        compute_cpu_metrics=True,
+        use_dask=False, 
+    )
+    
 
     for weights_file in weigths_paths:
         print("\n" + "#"*60)
         print("Check reproductibility")
         print("#"*60)
         
-        output_1 = run_inference_pass(cfg, weights_file, val_loader, device, run_name="Run A")
-        output_2 = run_inference_pass(cfg, weights_file, val_loader, device, run_name="Run B")
+        epoch_num = extract_epoch_num(weights_file)
+        if epoch_num % 50 == 0 or epoch_num == extract_epoch_num(weigths_paths[0]) or epoch_num == extract_epoch_num(weigths_paths[-1]):
+            output_1 = run_inference_pass(cfg, weights_file, val_loader, device, run_name="Run A")
+            output_2 = run_inference_pass(cfg, weights_file, val_loader, device, run_name="Run B")
 
-        diff = torch.abs(output_1 - output_2)
-        max_diff = diff.max().item()
-        
-        print(f"Max diff: {max_diff}")
+            diff = torch.abs(output_1 - output_2)
+            max_diff = diff.max().item()
+            
+            print(f"Max diff: {max_diff}")
 
-        if max_diff > 1e-6:
-            return
-        else:
-            print("\n✅ SUCCESS")
+            if max_diff > 1e-6:
+                print("❌ Failed reproducibility check! Outputs differ between runs.")
+                return
+            else:
+                print("\n✅ SUCCESS")
 
-        run_full_evaluation(cfg, weights_file, val_loader, test_loader, device)
+        run_full_evaluation(cfg, weights_file, evaluator, tb_logger, device)
 
+    evaluator.done_evaluating()
     wandb.finish()
+
 if __name__ == "__main__":
+    # from dask_mpi import initialize
+    # initialize(interface='lo')
     main()

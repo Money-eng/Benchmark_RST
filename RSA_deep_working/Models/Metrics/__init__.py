@@ -18,7 +18,7 @@ from .cpu.variation_of_information import VI
 #from .gpu.apls import APLS
 from .gpu.haussdorff_95 import HausdorffDistance95
 from .gpu.nomalized_surface_distance import NormalizedSurfaceDistance
-from .gpu.avg_centerline_distance import AverageSymetricCenterlineDistance
+from .cpu.avg_centerline_distance import AverageSymetricCenterlineDistance
 from .gpu.f_beta_score import FBetaScore
 from .gpu.betti0_abs_err import Betti0AbsErrGPU
 from .gpu.betti1_abs_err import Betti1AbsErrGPU
@@ -69,8 +69,6 @@ METRIC_FACTORIES = {
     "specificity": Specificity,
     "surface_distance": Surface_distance,
     "surface_dice": Surface_dice,
-    "hausdorff_distance": HausdorffDistance,
-    "hausdorff_distance95": HausdorffDistance95,
     "normalized_mutual_information": NormalizedMutualInformation,
     "normalized_surface_distance": NormalizedSurfaceDistance,  
     "f_2_score": lambda **params: FBetaScore(beta=2.0, **params),
@@ -85,12 +83,13 @@ METRIC_FACTORIES = {
     "betti1_relative_error_gpu": Betti1RelativeErrorGPU,
     "betti1_variation_index_gpu": Betti1VariationIndexGPU,
     "cldice_off_metric": CLDICE_metric,
-    "average_symetric_centerline_distance": AverageSymetricCenterlineDistance,
     #"average_path_length_similarity": APLS,
     "persistence_bottleneck_gpu": PersistenceBottleneckGPUParallel,
     "persistence_wasserstein_gpu": PersistenceWassersteinGPUParallel,
     "branch_break_rate": BranchBrakeRate,
     "branch_length_rate": BranchLengthRate,
+    "hausdorff_distance": HausdorffDistance,
+    "hausdorff_distance95": HausdorffDistance95,
 
     # CPU
     "variation_of_information": VI,
@@ -104,7 +103,8 @@ METRIC_FACTORIES = {
     "euler_charac_relative_error": EulerCharacRelativeError,
     "euler_charac_variation_index": EulerCharacVariationIndex,
     "persistence_bottleneck": PeristenceBottleneck,
-    "persistence_wasserstein": PeristenceWasserstein
+    "persistence_wasserstein": PeristenceWasserstein,
+    "average_symetric_centerline_distance": AverageSymetricCenterlineDistance,
 }
 
 

@@ -39,4 +39,4 @@ class Betti1AbsErrGPU(BaseMetric):
         return new_score < old_score
 
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
-        return _betti1_abs_err(prediction.float(), mask.float()) # already thresholded in the evaluation loop
+        return _betti1_abs_err(prediction, mask) # already thresholded in the evaluation loop

@@ -94,13 +94,13 @@ class Evaluator:
         self.client: Optional[Client] = None
 
         if self.compute_cpu_metrics and self.use_dask:
-            self.cluster = LocalCluster(
-                n_workers=max(1, int(0.8 * os.cpu_count())),
-                threads_per_worker=1,
-                processes=True,
-                memory_limit="8GB",
-            )
-            self.client = Client(self.cluster)
+            # self.cluster = LocalCluster(
+            #     n_workers=max(1, int(0.8 * os.cpu_count())),
+            #     threads_per_worker=1,
+            #     processes=True,
+            #     memory_limit="8GB",
+            # )
+            self.client = Client()# self.cluster)
 
         self._log(logging.INFO, "Evaluator initialised (epoch %d).", self.epoch)
         self.roi_fnc = roi_fnc
@@ -128,11 +128,11 @@ class Evaluator:
         with torch.no_grad():
             pbar = tqdm(loader, desc="Evaluating", leave=False, dynamic_ncols=True)
             for imgs, masks, time, mtgs in pbar:
-                imgs = imgs.to(self.device)
+                imgs = imgs.to(self.device).float()
                 masks = masks.to(self.device).float()
 
                 # (B, C, H, W) - already sigmoid
-                predictions = self._infer(imgs)
+                predictions = self._infer(imgs).float()
                 preds = (predictions > self.threshold).float()
 
                 if self.roi_fnc is not None:
@@ -143,14 +143,13 @@ class Evaluator:
                     roi_masks = torch.ones_like(masks)
 
                 # Apply ROI mask to predictions and ground truth masks
-                preds_of_interest = preds * roi_masks
-                masks_of_interest = masks * roi_masks
+                preds_of_interest = (preds * roi_masks).to(torch.uint8)
+                masks_of_interest = (masks * roi_masks).to(torch.uint8)
 
                 # -------------------------- Loss -----------------------
                 if self.criterion is not None:
-                    # loss_val = self.criterion(predictions, masks).item()
                     loss_val = self.criterion(
-                        preds_of_interest, masks_of_interest).item()
+                        predictions, masks).item()
                     raw[f"val_loss_{self.criterion.__class__.__name__}"].append(
                         loss_val)
                     pbar.set_postfix(loss=f"{loss_val:.4f}")
