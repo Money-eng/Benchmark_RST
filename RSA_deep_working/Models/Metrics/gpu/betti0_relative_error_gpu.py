@@ -15,7 +15,7 @@ def _betti0_relative_error_gpu(prediction_torch, mask_torch):
         scores.append(cp.abs(n_pred - n_mask) / (n_mask + 1e-8))
     return float(cp.mean(cp.asarray(scores)).get())
 
-
+@torch.no_grad()
 class Betti0RelativeErrorGPU(BaseMetric):
     type = "gpu"
 
@@ -30,6 +30,7 @@ class Betti0RelativeErrorGPU(BaseMetric):
         """
         return new_score < old_score
 
+    @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Relative Betti-0 Characteristic Error (RECE):

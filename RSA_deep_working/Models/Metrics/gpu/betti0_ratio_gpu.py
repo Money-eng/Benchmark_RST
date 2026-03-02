@@ -30,7 +30,8 @@ class Betti0JaccardRatioGPU(BaseMetric):
         - The lower the JREC, the greater the difference in connected components between prediction and mask.
         """
         return new_score > old_score
-
+    
+    @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Jaccard Ratio of Betti-0 Characteristic (JREC) :

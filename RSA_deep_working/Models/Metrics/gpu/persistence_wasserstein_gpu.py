@@ -199,6 +199,7 @@ class PersistenceWassersteinGPUParallel:
             f_mask_np = self._cpu_filter(mask_np)
             return f_pred_np, f_mask_np
 
+    @torch.no_grad()
     def __call__(self, prediction, mask) -> Dict[int, float]:
         """
         prediction, mask : (B,H,W) ou (B,1,H,W) ; numpy ou torch.Tensor (CPU/GPU).

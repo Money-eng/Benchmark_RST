@@ -14,6 +14,7 @@ class NormalizedMutualInformation(BaseMetric):
     def is_better(self, old_score: float, new_score: float) -> bool:
         return new_score > old_score
 
+    @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         pred_np = prediction.long().flatten()
         mask_np = mask.long().flatten()

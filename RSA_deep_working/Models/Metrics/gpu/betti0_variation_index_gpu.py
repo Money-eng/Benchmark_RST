@@ -34,6 +34,7 @@ class Betti0VariationIndexGPU(BaseMetric):
             return True
         return False
 
+    @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Variation of Betti-0 Characteristic (VEC):

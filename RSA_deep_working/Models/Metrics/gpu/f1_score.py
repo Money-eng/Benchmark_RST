@@ -19,6 +19,7 @@ class F1Score(BaseMetric):
         """
         return new_score > old_score
 
+    @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         F1 Score binaire. Equivalent au Dice dans la plupart des cas,

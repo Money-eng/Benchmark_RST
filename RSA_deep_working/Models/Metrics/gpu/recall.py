@@ -15,6 +15,7 @@ class Recall(BaseMetric):
     def is_better(self, old_score: float, new_score: float) -> bool:
         return new_score > old_score
 
+    @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         preds = prediction.float()
         masks = mask.float()

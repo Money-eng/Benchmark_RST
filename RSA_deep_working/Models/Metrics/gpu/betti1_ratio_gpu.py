@@ -32,6 +32,7 @@ class Betti1JaccardRatioGPU(BaseMetric):
         """
         return new_score > old_score
 
+    @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Jaccard Ratio of Betti-1 Characteristic (JREC) :

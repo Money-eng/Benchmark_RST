@@ -19,7 +19,6 @@ from .cpu.variation_of_information import VI
 from .gpu.haussdorff_95 import HausdorffDistance95
 from .gpu.nomalized_surface_distance import NormalizedSurfaceDistance
 from .cpu.avg_centerline_distance import AverageSymetricCenterlineDistance
-from .gpu.f_beta_score import FBetaScore
 from .gpu.betti0_abs_err import Betti0AbsErrGPU
 from .gpu.betti1_abs_err import Betti1AbsErrGPU
 from .gpu.betti0_ratio_gpu import Betti0JaccardRatioGPU
@@ -30,10 +29,12 @@ from .gpu.betti1_relative_error_gpu import Betti1RelativeErrorGPU
 from .gpu.betti1_variation_index_gpu import Betti1VariationIndexGPU
 from .gpu.branch_break_rate import BranchBrakeRate
 from .gpu.branch_length_rate import BranchLengthRate
-from .gpu.cldice_metric import CLDICE_metric
-from .gpu.cldice import CLDice
+from .gpu.cldice import CLDICE
 from .gpu.dice import Dice
 from .gpu.f1_score import F1Score
+from .gpu.f2_score import F2Score
+from .gpu.f3_score import F3Score
+from .gpu.f4_score import F4Score
 from .gpu.haussdorff import HausdorffDistance
 from .gpu.iou import IoU
 from .gpu.mean_iou import MeanIoU
@@ -59,8 +60,7 @@ set_seed(SEED)  # Ensure reproducibility
 METRIC_FACTORIES = {
     # GPU
     "dice": Dice,
-    "cldice": CLDice,
-    "f1_score": F1Score,
+    "cldice": CLDICE,
     "iou": IoU,
     "mean_iou": MeanIoU,
     "pixel_accuracy": PixelAccuracy,
@@ -70,10 +70,11 @@ METRIC_FACTORIES = {
     "surface_distance": Surface_distance,
     "surface_dice": Surface_dice,
     "normalized_mutual_information": NormalizedMutualInformation,
-    "normalized_surface_distance": NormalizedSurfaceDistance,  
-    "f_2_score": lambda **params: FBetaScore(beta=2.0, **params),
-    "f_3_score": lambda **params: FBetaScore(beta=3.0, **params),
-    "f_4_score": lambda **params: FBetaScore(beta=4.0, **params),
+    "normalized_surface_distance": NormalizedSurfaceDistance,
+    "f1_score": F1Score,
+    "f_2_score": F2Score,
+    "f_3_score": F3Score,
+    "f_4_score": F4Score,
     "betti0_abs_err_gpu": Betti0AbsErrGPU,
     "betti1_abs_err_gpu": Betti1AbsErrGPU,
     "betti0_jaccard_ratio_gpu": Betti0JaccardRatioGPU,
@@ -82,7 +83,6 @@ METRIC_FACTORIES = {
     "betti1_jaccard_ratio_gpu": Betti1JaccardRatioGPU,
     "betti1_relative_error_gpu": Betti1RelativeErrorGPU,
     "betti1_variation_index_gpu": Betti1VariationIndexGPU,
-    "cldice_off_metric": CLDICE_metric,
     #"average_path_length_similarity": APLS,
     "persistence_bottleneck_gpu": PersistenceBottleneckGPUParallel,
     "persistence_wasserstein_gpu": PersistenceWassersteinGPUParallel,

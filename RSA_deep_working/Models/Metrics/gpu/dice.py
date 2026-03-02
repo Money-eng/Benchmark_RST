@@ -5,7 +5,6 @@ import torchmetrics.functional.segmentation as FMS
 
 from ..base import BaseMetric
 
-
 class Dice(BaseMetric):
     type = "gpu"
 
@@ -19,6 +18,7 @@ class Dice(BaseMetric):
         """
         return new_score > old_score
 
+    @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Dice coefficient (Binary). On considère que `prediction` et `mask`

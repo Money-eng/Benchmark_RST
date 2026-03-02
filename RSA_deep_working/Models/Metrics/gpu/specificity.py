@@ -19,6 +19,7 @@ class Specificity(BaseMetric):
         """
         return new_score > old_score
 
+    @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
         """
         Specificity binaire : TN / (TN + FP).

@@ -1,16 +1,18 @@
-# Metrics/gpu/iou.py
+# Metrics/gpu/f2_score.py
 
 import torch
-import torchmetrics.functional.segmentation as FMF
+import torchmetrics.functional as FMF
 
 from ..base import BaseMetric
 
 
-class MeanIoU(BaseMetric):
+class F2Score(BaseMetric):
     type = "gpu"
 
-    def __init__(self):
+    def __init__(self, beta: float = 2.0, threshold: float = 0.5):
         super().__init__()
+        self.beta = beta
+        self.threshold = threshold
 
     def is_better(self, old_score: float, new_score: float) -> bool:
         return new_score > old_score
@@ -20,7 +22,5 @@ class MeanIoU(BaseMetric):
         pred = prediction.long()
         msk = mask.long()
 
-        # Compute binary Jaccard (IoU)
-        score = FMF.mean_iou(pred, msk, num_classes=2)
-
-        return score.mean().item() if isinstance(score, torch.Tensor) else float(score)
+        score = FMF.fbeta_score(pred, msk, beta=self.beta, average="micro", task="binary")
+        return score.mean().item()
