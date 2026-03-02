@@ -1,9 +1,8 @@
 # Metrics/gpu/iou.py
 
 import torch
-
+from monai.metrics import compute_iou
 from ..base import BaseMetric
-
 
 class IoU(BaseMetric):
     type = "gpu"
@@ -16,12 +15,9 @@ class IoU(BaseMetric):
 
     @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
-        pred = prediction.long()
-        msk = mask.long()
-        
-        # Compute binary Jaccard (IoU)
-        intersection = torch.logical_and(pred, msk).sum().item()
-        union = torch.logical_or(pred, msk).sum().item()
-        score = intersection / union if union > 0 else 1.0  
+        pred = prediction.float()
+        msk = mask.float()
 
-        return score.mean().item() if isinstance(score, torch.Tensor) else float(score)
+        iou_tensor = compute_iou(y_pred=pred, y=msk, ignore_empty=True)
+        
+        return float(torch.nanmean(iou_tensor).item())

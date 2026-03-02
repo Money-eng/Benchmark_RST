@@ -22,5 +22,5 @@ class F2Score(BaseMetric):
         pred = prediction.long()
         msk = mask.long()
 
-        score = FMF.fbeta_score(pred, msk, beta=self.beta, average="micro", task="binary")
+        score = FMF.fbeta_score(pred, msk, beta=self.beta, average="macro", task="binary")
         return score.mean().item()

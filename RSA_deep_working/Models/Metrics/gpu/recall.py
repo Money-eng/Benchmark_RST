@@ -20,5 +20,5 @@ class Recall(BaseMetric):
         preds = prediction.float()
         masks = mask.float()
 
-        score = FMF.recall(preds, masks, task="binary")
+        score = FMF.recall(preds, masks, task="binary", average='macro')
         return score.mean().item()

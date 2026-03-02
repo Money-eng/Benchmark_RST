@@ -27,5 +27,5 @@ class PixelAccuracy(BaseMetric):
         pred = prediction.float()
         msk = mask.float()
 
-        score = FMF.accuracy(pred, msk, task="binary")
+        score = FMF.accuracy(pred, msk, task="binary", average="macro")
         return score.mean().item()

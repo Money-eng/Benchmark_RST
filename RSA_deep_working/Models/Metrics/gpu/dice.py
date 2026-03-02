@@ -27,7 +27,5 @@ class Dice(BaseMetric):
         pred = prediction.float()
         msk = mask.float()
 
-        # torchmetrics.segmentation.dice_score attend (B, H, W) ou (B, C, H, W) mais ici C=1
-        score = FMS.dice_score(pred, msk, num_classes=2, average="micro")
-        # `score` est un tenseur, on prend la moyenne puis on transforme en float
+        score = FMS.dice_score(pred, msk, num_classes=2, average="macro")
         return score.mean().item()

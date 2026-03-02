@@ -29,5 +29,5 @@ class F1Score(BaseMetric):
         msk = mask.float()
 
         # FMF.f1_score retourne un tenseur, on fait mean().item()
-        score = FMF.f1_score(pred, msk, average="micro", task="binary")
+        score = FMF.f1_score(pred, msk, average="macro", task="binary")
         return score.mean().item()

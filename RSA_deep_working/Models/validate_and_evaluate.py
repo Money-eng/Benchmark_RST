@@ -143,15 +143,15 @@ def run_full_evaluation(cfg, weights_path, evaluator, tb_logger, device):
     wandb_val_metrics["epoch"] = epoch
     wandb.log(wandb_val_metrics)
 
-    print(f"--- Evaluation Test Set (Epoch {epoch}) ---")
-    test_metrics = evaluator.evaluate(on_test=True)
+    # print(f"--- Evaluation Test Set (Epoch {epoch}) ---")
+    # test_metrics = evaluator.evaluate(on_test=True)
     
-    for name, value in test_metrics.items():
-        tb_logger.log_scalar(f"test/{name}", value, epoch)
+    # for name, value in test_metrics.items():
+    #     tb_logger.log_scalar(f"test/{name}", value, epoch)
     
-    wandb_test_metrics = {f"test/{k}": v for k, v in test_metrics.items()}
-    wandb_test_metrics["epoch"] = epoch
-    wandb.log(wandb_test_metrics)
+    # wandb_test_metrics = {f"test/{k}": v for k, v in test_metrics.items()}
+    # wandb_test_metrics["epoch"] = epoch
+    # wandb.log(wandb_test_metrics)
 
 def main():
     parser = argparse.ArgumentParser(description="Validation and Evaluation Script")

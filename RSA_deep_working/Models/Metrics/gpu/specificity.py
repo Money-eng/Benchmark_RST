@@ -27,5 +27,5 @@ class Specificity(BaseMetric):
         pred = prediction.float()
         msk = mask.float()
 
-        score = FMF.specificity(pred, msk, task="binary")
+        score = FMF.specificity(pred, msk, task="binary", average="macro")
         return score.mean().item()
