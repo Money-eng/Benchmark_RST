@@ -34,13 +34,6 @@ MEASURES_FACTORIES = {
 
 
 def get_measure(metric_config: dict) -> BaseMeasure:
-    """
-    Instanciate a given metric based on its configuration.
-    {
-        "name": "dice",
-        "params": {...} 
-    }
-    """
     name = metric_config["name"]
     params = metric_config.get("params", {})
     if name not in MEASURES_FACTORIES:

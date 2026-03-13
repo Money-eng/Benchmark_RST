@@ -21,5 +21,5 @@ class RootDensity(BaseMeasure):
         if ch_area == 0:
             return float('inf')
 
-        root_density = total_root_lengths / ch_area if ch_area > 0 else float('inf')
-        return root_density
+        root_density = total_root_lengths / ch_area
+        return root_density # no need to multiply by pixel_size since it is already included in total_root_length and convex_hull_area calculations

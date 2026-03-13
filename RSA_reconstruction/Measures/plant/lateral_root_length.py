@@ -3,9 +3,9 @@ from openalea.mtg import MTG
 from ..base import BaseMeasure
 
 
-def lateral_root_length(mtg: MTG) -> float:
+def lateral_root_length(mtg: MTG, pixel_size: float = 0.076) -> float:
     roots = mtg.vertices(scale=mtg.max_scale())
-    # remove 1st vertex 
+    # remove 1st vertex which corresponds to the primary root
     roots.pop(0)
     total_length = 0.0
     for root in roots:
@@ -15,7 +15,7 @@ def lateral_root_length(mtg: MTG) -> float:
             length = ((polyline[i][0] - polyline[i + 1][0]) ** 2 +
                       (polyline[i][1] - polyline[i + 1][1]) ** 2) ** 0.5
             total_length += length
-    return total_length
+    return total_length * pixel_size
 
 
 class LateralRootLength(BaseMeasure):

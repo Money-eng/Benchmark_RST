@@ -8,8 +8,8 @@ from dask import delayed, compute
 from dask.distributed import Client, progress
 from distributed import LocalCluster
 from openalea.rsml import rsml2mtg
-from rsml.matching import match_plants
-from rsml.misc import plant_vertices
+from openalea.rsml.matching import match_plants
+from openalea.rsml.misc import plant_vertices
 from torch.nn import Module
 
 from utils.misc import SEED, set_seed
@@ -34,7 +34,7 @@ def _compute_metrics_for_time(
 ) -> Tuple[List[dict], List[dict]]:
     rows_box, rows_plant = [], []
 
-    # -- métriques par boîte --------------------------------------
+    # for box metrics, compute the metric on the whole mtg (num of plants)
     for func in measure.get("per_box", []):
         metric_name = getattr(func, "__name__", str(func)
                               ).split(".")[-1].split(" ")[0]
@@ -54,7 +54,7 @@ def _compute_metrics_for_time(
             )
         )
 
-    # -- métriques par plante -------------------------------------
+    # for plant metrics, compute the metric on each plant sub-mtg and match the plants between pred, exp and bexp to compare the same plant with the same id
     for func in measure.get("per_plant", []):
         metric_name = getattr(func, "__name__", str(func)
                               ).split(".")[-1].split(" ")[0]
@@ -68,15 +68,21 @@ def _compute_metrics_for_time(
         sub_mtgs_bexp = {
             v: extract_plant_sub_mtg(mtg_bexp, v) for v in plant_vertices(mtg_bexp)
         }
-
-        matched_pred_exp, _, _ = match_plants(
-            # {(21, 10, 0.0), (9, 5, 0.0), (1, 1, 0.0), (31, 15, 0.0), (23, 12, 0.0)}
-            mtg_pred, mtg_exp
-        )
-        matched_exp_bexp, _, _ = match_plants(
-            # {(10, 15, 0.0), (5, 12, 0.0), (1, 1, 0.0), (15, 14, 0.0), (12, 60, 0.0)}
-            mtg_exp, mtg_bexp
-        )
+        
+        v_pred = plant_vertices(mtg_pred)
+        v_exp = plant_vertices(mtg_exp)
+        v_bexp = plant_vertices(mtg_bexp)
+        
+        if not v_pred or not v_exp or not v_bexp:
+            print(f"[SKIP] No plants found in one of the MTGs for box '{box_name}' ({split}) at time {time}. Box skipped for plant metrics.")
+            return rows_box, rows_plant
+        
+        try:
+            matched_pred_exp, _, _ = match_plants(mtg_pred, mtg_exp) # {(21, 10, 0.0), (9, 5, 0.0), (1, 1, 0.0), (31, 15, 0.0), (23, 12, 0.0)}
+            matched_exp_bexp, _, _ = match_plants(mtg_exp, mtg_bexp) # {(10, 15, 0.0), (5, 12, 0.0), (1, 1, 0.0), (15, 14, 0.0), (12, 60, 0.0)}
+        except ValueError as e:
+            print(f"[ERROR] Error matching plants for box '{box_name}' ({split}) at time {time}: {e}. Box skipped for plant metrics.")
+            return rows_box, rows_plant
 
         # put the matched plant ids (pred, exp, bexp) as keys of a dict (ex: {(42, 35, 32) : [], {28, 16, 14): []})
         matched = {}
@@ -85,7 +91,6 @@ def _compute_metrics_for_time(
                 if p2 == p3:
                     matched[(p1, p2, p4)] = (d, d2)
 
-        # Calcul des métriques par plante avec gestion des exceptions
         failed_pred, failed_exp, failed_bexp = set(), set(), set()
 
         Prediction = {}
@@ -187,7 +192,7 @@ class ReconstructionMesurator:
             os.path.join(pred_folder, d) for d in os.listdir(pred_folder) if os.path.isdir(os.path.join(pred_folder, d))
         ]
         from os import cpu_count
-        number_of_workers = int(cpu_count() * 0.9)
+        number_of_workers = int(cpu_count() * 0.8)
         threads_per_worker = 1
         cluster = LocalCluster(dashboard_address=None, n_workers=number_of_workers, threads_per_worker=threads_per_worker)
         self.client = client or Client(cluster)
@@ -195,65 +200,65 @@ class ReconstructionMesurator:
         print("PRED :", self.models_folder)
 
     def evaluate(self) -> None:
-        tasks = []
+        tasks = [] # for dask delayed tasks
         for model_folder in self.models_folder:
-            model_name = os.path.basename(model_folder)
-            pred_sub = {
-                s: [
-                    os.path.join(model_folder, s, d)
-                    for d in os.listdir(os.path.join(model_folder, s))
-                ]
-                for s in ("Test", "Val")
-            }
-            gt_sub = {
-                s: [
-                    os.path.join(self.gt_folder, s, d)
-                    for d in os.listdir(os.path.join(self.gt_folder, s))
-                ]
-                for s in ("Test", "Val")
-            }
-
-
-            dict_pred = {}
-            dict_pred = {s: {} for s in ("Val", "Test")}
-            for s in ("Val", "Test"):
-                for f in pred_sub[s]:
-                    try:
-                        dict_pred[s][os.path.basename(f)] = rsml2mtg(
-                            os.path.abspath(os.path.join(
-                                f, "61_prediction_before_expertized_graph.rsml")
-                            ))
-                    except FileNotFoundError:
-                        pass
+            model_name = os.path.basename(model_folder) # get configuration name from folder name
+            pred_sub = {}
+            gt_sub = {}
             
-            dict_gt = {
-                s: {
-                    os.path.basename(f): {
-                        "expertized": rsml2mtg(os.path.abspath(os.path.join(f, "61_graph.rsml"))),
-                        "before_expertized": rsml2mtg(
-                            os.path.abspath(os.path.join(f, "61_before_expertized_graph.rsml"))
-                        ),
-                    }
-                    for f in gt_sub[s]
-                }
-                for s in ("Val", "Test")
-            }
+            dict_mtgs = {s: {} for s in ("Val", "Test")}
 
-            for split, boxes in dict_gt.items():
-                for box_name, gt in boxes.items():
-                    pred_full = dict_pred[split].get(box_name)
-                    if pred_full is None:
+
+            for split in ("Val", "Test"):
+                pred_split_path = os.path.join(model_folder, split)
+                gt_split_path = os.path.join(self.gt_folder, split)
+                
+                if os.path.isdir(pred_split_path):
+                    pred_sub[split] = [os.path.join(pred_split_path, d) for d in os.listdir(pred_split_path)]
+                else:
+                    pred_sub[split] = []
+                    print(f"[WARN] Dossier de prédiction manquant ignoré : {pred_split_path}")
+
+                # Sécurisation pour la Ground Truth
+                if os.path.isdir(gt_split_path):
+                    gt_sub[split] = [os.path.join(gt_split_path, d) for d in os.listdir(gt_split_path)]
+                else:
+                    gt_sub[split] = []
+                    print(f"[WARN] Dossier de Ground Truth manquant ignoré : {gt_split_path}")
+                    
+                pred_boxes = {os.path.basename(f): f for f in pred_sub[split]}
+                gt_boxes = {os.path.basename(f): f for f in gt_sub[split]}
+                
+                common_boxes = set(pred_boxes.keys()).intersection(set(gt_boxes.keys()))
+                
+                for box_name in common_boxes:
+                    pred_path = pred_boxes[box_name]
+                    gt_path = gt_boxes[box_name]
+                    
+                    try:
+                        pred_mtg = rsml2mtg(os.path.abspath(os.path.join(pred_path, "61_prediction_before_expertized_graph.rsml")))
+                        exp_mtg = rsml2mtg(os.path.abspath(os.path.join(gt_path, "61_graph.rsml")))
+                        bexp_mtg = rsml2mtg(os.path.abspath(os.path.join(gt_path, "61_before_expertized_graph.rsml")))
+                        
+                        dict_mtgs[split][box_name] = {
+                            "pred": pred_mtg,
+                            "expertized": exp_mtg,
+                            "before_expertized": bexp_mtg
+                        }
+                    except FileNotFoundError as e:
+                        print(f"[WARN] Missing file for box {box_name} in split {split} of model {model_name}: {e}")
                         continue
-                    exp_full = gt["expertized"]
-                    bexp_full = gt["before_expertized"]
+
+            for split, boxes in dict_mtgs.items():
+                for box_name, data in boxes.items():
+                    pred_full = data["pred"]
+                    exp_full = data["expertized"]
+                    bexp_full = data["before_expertized"]
 
                     max_time = min(
-                        max(max(t)
-                            for t in pred_full.property("time").values()),
-                        max(max(t)
-                            for t in exp_full.property("time").values()),
-                        max(max(t)
-                            for t in bexp_full.property("time").values()),
+                        max(max(t) for t in pred_full.property("time").values()),
+                        max(max(t) for t in exp_full.property("time").values()),
+                        max(max(t) for t in bexp_full.property("time").values()),
                     )
                     for t in range(1, int(max_time) + 1):
                         tasks.append(
@@ -269,7 +274,7 @@ class ReconstructionMesurator:
                             )
                         )
 
-        print(f"Lancement de {len(tasks)} tâches…")
+        print(f"Launch {len(tasks)} tasks")
         print(f"Client : {self.client}")
         if isinstance(self.client, Client):
             futures = self.client.compute(tasks)

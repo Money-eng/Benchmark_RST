@@ -1,5 +1,5 @@
 from openalea.mtg import MTG
-from rsml.misc import root_vertices
+from openalea.rsml.misc import root_vertices
 
 from ..base import BaseMeasure
 

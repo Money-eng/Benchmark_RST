@@ -3,9 +3,9 @@ from openalea.mtg import MTG
 from ..base import BaseMeasure
 
 
-def primary_root_length(mtg: MTG) -> float:
+def primary_root_length(mtg: MTG, pixel_size: float = 0.076) -> float:
     roots = mtg.vertices(scale=mtg.max_scale())
-    root = roots[0]
+    root = roots[0] # the 1st vertex corresponds to the primary root
     geometry = mtg.property("geometry")
     polyline = geometry[root]
     total_length = 0.0
@@ -13,7 +13,7 @@ def primary_root_length(mtg: MTG) -> float:
         length = ((polyline[i][0] - polyline[i + 1][0]) ** 2 +
                   (polyline[i][1] - polyline[i + 1][1]) ** 2) ** 0.5
         total_length += length
-    return total_length
+    return total_length * pixel_size
 
 
 class PrimaryRootLength(BaseMeasure):

@@ -6,12 +6,12 @@ from ..base import BaseMetric
 
 
 def _betti0_relative_error_gpu(prediction_torch, mask_torch):
-    pred = cp.from_dlpack(torch.utils.dlpack.to_dlpack((prediction_torch > 0).to(torch.uint8)))
-    mask = cp.from_dlpack(torch.utils.dlpack.to_dlpack((mask_torch > 0).to(torch.uint8)))
+    pred = cp.from_dlpack(torch.utils.dlpack.to_dlpack(prediction_torch))
+    mask = cp.from_dlpack(torch.utils.dlpack.to_dlpack(mask_torch))
     scores = []
     for i in range(pred.shape[0]):  # label agit image par image
-        n_pred = measure.label(pred[i]).max()
-        n_mask = measure.label(mask[i]).max()
+        n_pred = measure.label(pred[i], connectivity=2).max()
+        n_mask = measure.label(mask[i], connectivity=2).max()
         scores.append(cp.abs(n_pred - n_mask) / (n_mask + 1e-8))
     return float(cp.mean(cp.asarray(scores)).get())
 

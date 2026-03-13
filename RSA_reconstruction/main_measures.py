@@ -49,14 +49,14 @@ def main() -> None:
 
 
     path2results = args.path_to_results + "/" + cfg["model"]['name'] + "_" + cfg["loss"]['name'] + "/"
-    evaluator = ReconstructionMesurator(
+    mesurator = ReconstructionMesurator(
         pred_folder=path2results,
         gt_folder="./Data",
         measure=get_measures(cfg["measures"])
     )
 
-    print("Start evaluation")
-    evaluation_results = evaluator.evaluate()
+    print("Start mesurator")
+    mesurator_results = mesurator.evaluate()
 
 
 if __name__ == "__main__":

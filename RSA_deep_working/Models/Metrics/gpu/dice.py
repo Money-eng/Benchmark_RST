@@ -12,20 +12,12 @@ class Dice(BaseMetric):
         super().__init__()
 
     def is_better(self, old_score: float, new_score: float) -> bool:
-        """
-        Dice coefficient (Binary). On considère que `old_score` et `new_score`
-        sont des scores de type float.
-        """
         return new_score > old_score
 
     @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
-        """
-        Dice coefficient (Binary). On considère que `prediction` et `mask`
-        sont des tenseurs de forme [B, 1, H, W] ou [B, H, W], déjà sigmoidés/binaire.
-        """
         pred = prediction.float()
-        msk = mask.float()
+        msk = mask.int()
 
-        score = FMS.dice_score(pred, msk, num_classes=2, average="macro")
+        score = FMS.dice(pred, msk, ignore_index=0)
         return score.mean().item()

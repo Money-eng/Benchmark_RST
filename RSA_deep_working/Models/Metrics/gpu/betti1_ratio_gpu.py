@@ -10,10 +10,20 @@ def _betti1_jaccard_gpu(prediction_torch, mask_torch):
     mask = cp.from_dlpack(torch.utils.dlpack.to_dlpack((mask_torch > 0).to(torch.uint8)))
     scores = []
     for i in range(pred.shape[0]):
-        n_pred = measure.label(~pred[i].astype(bool)).max()  # inverted image connected components
-        n_mask = measure.label(~mask[i].astype(bool)).max()
-        b1_pred = max(0, n_pred - 1)  # Betti1 = number of holes = cc_inverted - 1
-        b1_mask = max(0, n_mask - 1)
+        region_pred = measure.regionprops(measure.label(pred[i].astype(bool), connectivity=2))
+        region_mask = measure.regionprops(measure.label(mask[i].astype(bool), connectivity=2))
+        
+        b0_pred = len(region_pred)  # Betti0 = number of connected components
+        b0_mask = len(region_mask)
+        
+        euler_char_pred = sum([region.euler_number for region in region_pred]) 
+        euler_char_mask = sum([region.euler_number for region in region_mask])
+        
+        b1_pred = b0_pred - euler_char_pred  # Betti1 = Betti0 - Euler characteristic
+        b1_mask = b0_mask - euler_char_mask
+        
+        b1_pred = max(0, b1_pred) 
+        b1_mask = max(0, b1_mask)
         scores.append(cp.minimum(b1_pred, b1_mask) / (cp.maximum(b1_pred, b1_mask) + 1e-8))
     return float(cp.mean(cp.asarray(scores)).get())
 

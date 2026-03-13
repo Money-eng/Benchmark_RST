@@ -5,10 +5,10 @@ from scipy.spatial import ConvexHull
 from ..base import BaseMeasure
 
 
-def convex_hull_area(points):
+def convex_hull_area(points, pixel_size: float = 0.076) -> float:
     points = np.array(points)
     hull = ConvexHull(points)
-    return hull.volume # and not hull.area lol !
+    return hull.volume * (pixel_size ** 2) # and not hull.area lol !
 
 
 class Convex_Area_Hull(BaseMeasure):

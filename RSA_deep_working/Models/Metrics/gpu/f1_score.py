@@ -13,18 +13,10 @@ class F1Score(BaseMetric):
         super().__init__()
 
     def is_better(self, old_score: float, new_score: float) -> bool:
-        """
-        F1 Score binaire. On considère que `old_score` et `new_score`
-        sont des scores de type float.
-        """
         return new_score > old_score
 
     @torch.no_grad()
     def __call__(self, prediction: torch.Tensor, mask: torch.Tensor) -> float:
-        """
-        F1 Score binaire. Equivalent au Dice dans la plupart des cas,
-        mais on utilise torchmetrics.functional.f1_score().
-        """
         pred = prediction.float()
         msk = mask.float()
 

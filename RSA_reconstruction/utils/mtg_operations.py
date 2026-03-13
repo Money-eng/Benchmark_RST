@@ -3,7 +3,7 @@ from typing import List, Dict
 
 import numpy as np
 from openalea.mtg import MTG
-from rsml.misc import root_vertices
+from openalea.rsml.misc import root_vertices
 
 
 def _truncate_lists(prop: Dict[int, List], idx: int, v: int) -> None:
@@ -71,7 +71,7 @@ def remove_single_coordinate_vertices(mtg: MTG) -> MTG:
     return mtg
 
 
-def total_root_length(mtg: MTG) -> float:
+def total_root_length(mtg: MTG, pixel_size: float = 0.076) -> float:
     roots = root_vertices(mtg)
     total_length = 0.0
     for root in roots:
@@ -80,16 +80,16 @@ def total_root_length(mtg: MTG) -> float:
         for i in range(len(polyline) - 1):
             length = ((polyline[i][0] - polyline[i + 1][0]) ** 2 +
                       (polyline[i][1] - polyline[i + 1][1]) ** 2) ** 0.5
-            total_length += length
-    return total_length
+            total_length += length 
+    return total_length * pixel_size
 
 
 def intercept_curve(mtg: MTG, nlengths=2500, step=1e-3):
     """
     Calcule la courbe intercepto pour une plante d'un mtg, éventuellement à un temps donné.
     """
-    from hydroroot.analysis import intercept
-    from hydroroot.hydro_io import import_rsml_to_discrete_mtg
+    from openalea.hydroroot.analysis import intercept
+    from openalea.hydroroot.hydro_io import import_rsml_to_discrete_mtg
     mtg_2 = deepcopy(mtg)
     mtg_2 = remove_single_coordinate_vertices(mtg_2)
     mtg_test = import_rsml_to_discrete_mtg(mtg_2)
@@ -114,8 +114,8 @@ def intercept_curve_at_all_time(
     lengths = np.linspace(0, (nlengths - 1) * step, nlengths)
     intercepto_all = []
 
-    from hydroroot.analysis import intercept
-    from hydroroot.hydro_io import import_rsml_to_discrete_mtg
+    from openalea.hydroroot.analysis import intercept
+    from openalea.hydroroot.hydro_io import import_rsml_to_discrete_mtg
 
     for t in times:
         mtg_t = extract_mtg_at_time_t(mtg, t)

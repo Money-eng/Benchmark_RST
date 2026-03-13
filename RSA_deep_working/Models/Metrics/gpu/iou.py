@@ -20,4 +20,4 @@ class IoU(BaseMetric):
 
         iou_tensor = compute_iou(y_pred=pred, y=msk, ignore_empty=True)
         
-        return float(torch.nanmean(iou_tensor).item())
+        return float(torch.nanmean(iou_tensor).item()) # average is like a macro average
