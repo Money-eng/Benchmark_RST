@@ -24,7 +24,7 @@ MEASURES_FACTORIES = {
     "number_of_organs": NumberOfOrgans,
     "total_root_length": TotalRootLength,
     "number_of_laterals": NumberOfLateralRoots,
-    "intercept_curve_area": Intercept_curve_Area,
+    #"intercept_curve_area": Intercept_curve_Area,
     # Per plant
     "convex_area_hull": Convex_Area_Hull,
     "root_density": RootDensity,

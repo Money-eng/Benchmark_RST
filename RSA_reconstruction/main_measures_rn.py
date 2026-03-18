@@ -48,10 +48,10 @@ def main() -> None:
     cfg = load_config(cfg_path)
 
 
-    path2results = args.path_to_results + "/" + cfg["model"]['name'] + "_" + cfg["loss"]['name'] + "/"
+    path2results = args.path_to_results # + "/" + cfg["model"]['name'] + "_" + cfg["loss"]['name'] + "/"
     mesurator = ReconstructionMesurator(
         pred_folder=path2results,
-        gt_folder="./Data_flatten", # TODO or use data_inf
+        gt_folder="./data_gt",
         measure=get_measures(cfg["measures"])
     )
 

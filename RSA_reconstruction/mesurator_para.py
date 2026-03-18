@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import gc
 import os
 from typing import Dict, List, Tuple, Optional
+from tqdm import tqdm
 
 import pandas as pd
 from dask import delayed, compute
-from dask.distributed import Client, progress
+from dask.distributed import Client, as_completed
 from distributed import LocalCluster
 from openalea.rsml import rsml2mtg
 from openalea.rsml.matching import match_plants
@@ -22,6 +24,37 @@ set_seed(SEED)
 
 
 @delayed
+def process_box_metrics(model_name, split, box_name, pred_path, gt_path, bexp_path, measure):
+    pred_full = rsml2mtg(pred_path)
+    exp_full = rsml2mtg(gt_path)
+    bexp_full = rsml2mtg(bexp_path)
+
+    max_time = min(
+        max(max(t) for t in pred_full.property("time").values()),
+        max(max(t) for t in exp_full.property("time").values()),
+        max(max(t) for t in bexp_full.property("time").values()),
+    )
+
+    rows_box, rows_plant = [], []
+    
+    for t in range(1, int(max_time) + 1):
+        rb, rp = _compute_metrics_for_time(
+            model_name, split, box_name, t,
+            extract_mtg_at_time_t(pred_full, t),
+            extract_mtg_at_time_t(exp_full, t),
+            extract_mtg_at_time_t(bexp_full, t),
+            measure
+        )
+        rows_box.extend(rb)
+        rows_plant.extend(rp)
+        
+    del pred_full
+    del exp_full
+    del bexp_full
+    gc.collect() 
+        
+    return rows_box, rows_plant
+
 def _compute_metrics_for_time(
         model_name: str,
         split: str,
@@ -43,9 +76,21 @@ def _compute_metrics_for_time(
             "expertized": func(mtg_exp),
             "before_expertized": func(mtg_bexp),
         }
+        
+        # split model_name on "_", after the last one is epoch number, before (including other _) is model configuration name
+        model_config = "_".join(model_name.split("_")[:-1])
+        epoch = int(model_name.split("_")[-1])
+        
+        # in mopdel config, til first "_" is model name, after is loss name (ex: "RSMLExtraction_Loss1")
+        model_n = model_config.split("_")[0]
+        loss_n = "_".join(model_config.split("_")[1:])
+
         rows_box.append(
             dict(
                 model=model_name,
+                model_name=model_n,
+                loss_name=loss_n,
+                epoch=epoch,
                 split=split,
                 box=box_name,
                 metric=metric_name,
@@ -189,111 +234,156 @@ class ReconstructionMesurator:
         self.gt_folder = gt_folder
         self.pred_folder = pred_folder
         self.models_folder = [
-            os.path.join(pred_folder, d) for d in os.listdir(pred_folder) if os.path.isdir(os.path.join(pred_folder, d))
+            os.path.join(pred_folder, d) 
+            for d in os.listdir(pred_folder) 
+            if os.path.isdir(os.path.join(pred_folder, d))
         ]
-        from os import cpu_count
-        number_of_workers = int(cpu_count() * 0.8)
+        
+        total_cores = 90
+        number_of_workers = max(1, total_cores - 4)
         threads_per_worker = 1
-        cluster = LocalCluster(dashboard_address=None, n_workers=number_of_workers, threads_per_worker=threads_per_worker)
+        cluster = LocalCluster(
+            dashboard_address=None, 
+            n_workers=number_of_workers, 
+            threads_per_worker=threads_per_worker,
+            memory_limit="4GB",
+            silence_logs=50,
+            #local_directory="./dask_worker_space/"
+        )
         self.client = client or Client(cluster)
         print("GT :", self.gt_folder)
         print("PRED :", self.models_folder)
+        print(f"Dask initialized with {number_of_workers} workers and {threads_per_worker} threads per worker.")
 
     def evaluate(self) -> None:
         tasks = [] # for dask delayed tasks
-        for model_folder in self.models_folder:
-            model_name = os.path.basename(model_folder) # get configuration name from folder name
-            pred_sub = {}
-            gt_sub = {}
+        
+        future_measure = self.client.scatter(self.measure, broadcast=True) # Scatter the measure dict to all workers to avoid sending it with each task
+        for model1 in self.models_folder:
+            #model_big_name = os.path.basename(model1) # get configuration name from folder name
+            models_subdirs = os.listdir(model1)
             
-            dict_mtgs = {s: {} for s in ("Val", "Test")}
-
-
-            for split in ("Val", "Test"):
-                pred_split_path = os.path.join(model_folder, split)
-                gt_split_path = os.path.join(self.gt_folder, split)
+            for model_folder_name in models_subdirs:
+                full_model_folder = os.path.join(model1, model_folder_name)
                 
-                if os.path.isdir(pred_split_path):
-                    pred_sub[split] = [os.path.join(pred_split_path, d) for d in os.listdir(pred_split_path)]
-                else:
-                    pred_sub[split] = []
-                    print(f"[WARN] Dossier de prédiction manquant ignoré : {pred_split_path}")
+                if not os.path.isdir(full_model_folder):
+                    continue
+                
+                model_name = os.path.basename(full_model_folder)
+                pred_sub = {}
+                gt_sub = {}
+                
+                dict_mtgs = {s: {} for s in ("Val", "Test")}
 
-                # Sécurisation pour la Ground Truth
-                if os.path.isdir(gt_split_path):
-                    gt_sub[split] = [os.path.join(gt_split_path, d) for d in os.listdir(gt_split_path)]
-                else:
-                    gt_sub[split] = []
-                    print(f"[WARN] Dossier de Ground Truth manquant ignoré : {gt_split_path}")
+
+                for split in ("Val", "Test"):
+                    pred_split_path = os.path.join(os.path.abspath(full_model_folder), split)
+                    gt_split_path = os.path.join(self.gt_folder, split)
                     
-                pred_boxes = {os.path.basename(f): f for f in pred_sub[split]}
-                gt_boxes = {os.path.basename(f): f for f in gt_sub[split]}
-                
-                common_boxes = set(pred_boxes.keys()).intersection(set(gt_boxes.keys()))
-                
-                for box_name in common_boxes:
-                    pred_path = pred_boxes[box_name]
-                    gt_path = gt_boxes[box_name]
-                    
-                    try:
-                        pred_mtg = rsml2mtg(os.path.abspath(os.path.join(pred_path, "61_prediction_before_expertized_graph.rsml")))
-                        exp_mtg = rsml2mtg(os.path.abspath(os.path.join(gt_path, "61_graph.rsml")))
-                        bexp_mtg = rsml2mtg(os.path.abspath(os.path.join(gt_path, "61_before_expertized_graph.rsml")))
+                    if os.path.isdir(pred_split_path):
+                        pred_sub[split] = [os.path.join(pred_split_path, d) for d in os.listdir(pred_split_path)]
+                    else:
+                        pred_sub[split] = []
+                        print(f"[WARN] Prediction missing folder ignored: {pred_split_path}")
+
+                    if os.path.isdir(gt_split_path):
+                        gt_sub[split] = [os.path.join(gt_split_path, d) for d in os.listdir(gt_split_path)]
+                    else:
+                        gt_sub[split] = []
+                        print(f"[WARN] Ground truth missing folder ignored: {gt_split_path}")
                         
-                        dict_mtgs[split][box_name] = {
-                            "pred": pred_mtg,
-                            "expertized": exp_mtg,
-                            "before_expertized": bexp_mtg
-                        }
-                    except FileNotFoundError as e:
-                        print(f"[WARN] Missing file for box {box_name} in split {split} of model {model_name}: {e}")
-                        continue
+                    pred_boxes = {os.path.basename(f): f for f in pred_sub[split]}
+                    gt_boxes = {os.path.basename(f): f for f in gt_sub[split]}
+                    
+                    common_boxes = set(pred_boxes.keys()).intersection(set(gt_boxes.keys()))
+                    
+                    for box_name in common_boxes:
+                        pred_path = pred_boxes[box_name]
+                        gt_path = gt_boxes[box_name]
+                        
+                        try:
+                            pred_mtg = os.path.abspath(os.path.join(pred_path, "61_prediction_before_expertized_graph.rsml"))
+                            exp_mtg = os.path.abspath(os.path.join(gt_path, "61_graph.rsml"))
+                            bexp_mtg = os.path.abspath(os.path.join(gt_path, "61_before_expertized_graph.rsml"))
+                            
+                            dict_mtgs[split][box_name] = {
+                                "pred": pred_mtg,
+                                "expertized": exp_mtg,
+                                "before_expertized": bexp_mtg
+                            }
+                        except FileNotFoundError as e:
+                            print(f"[WARN] Missing file for box {box_name} in split {split} of model {model_name}: {e}")
+                            continue
 
-            for split, boxes in dict_mtgs.items():
-                for box_name, data in boxes.items():
-                    pred_full = data["pred"]
-                    exp_full = data["expertized"]
-                    bexp_full = data["before_expertized"]
-
-                    max_time = min(
-                        max(max(t) for t in pred_full.property("time").values()),
-                        max(max(t) for t in exp_full.property("time").values()),
-                        max(max(t) for t in bexp_full.property("time").values()),
-                    )
-                    for t in range(1, int(max_time) + 1):
+                for split, boxes in dict_mtgs.items():
+                    for box_name, paths in boxes.items():
                         tasks.append(
-                            _compute_metrics_for_time(
+                            process_box_metrics(
                                 model_name,
                                 split,
                                 box_name,
-                                t,
-                                extract_mtg_at_time_t(pred_full, t),
-                                extract_mtg_at_time_t(exp_full, t),
-                                extract_mtg_at_time_t(bexp_full, t),
-                                self.measure,
+                                paths["pred"],
+                                paths["expertized"],
+                                paths["before_expertized"],
+                                future_measure
                             )
                         )
 
         print(f"Launch {len(tasks)} tasks")
         print(f"Client : {self.client}")
+        
+        box_csv_path = os.path.join(self.pred_folder, "results_per_box.csv")
+        plant_csv_path = os.path.join(self.pred_folder, "results_per_plant.csv")
+        
+        box_header_written = False
+        plant_header_written = False
+        
+        if os.path.exists(box_csv_path):
+            os.remove(box_csv_path)
+        if os.path.exists(plant_csv_path):
+            os.remove(plant_csv_path)
+        
         if isinstance(self.client, Client):
             futures = self.client.compute(tasks)
-            progress(futures)
-            results = self.client.gather(futures)
+            
+            for future in tqdm(as_completed(futures), total=len(futures), desc="Processing tasks"):
+                try:
+                    rb, rp = future.result() 
+                    
+                    if rb:
+                        df_box = pd.DataFrame(rb)
+                        df_box.to_csv(box_csv_path, mode='a', header=not box_header_written, index=False)
+                        box_header_written = True
+                        
+                    if rp:
+                        df_plant = pd.DataFrame(rp)
+                        df_plant.to_csv(plant_csv_path, mode='a', header=not plant_header_written, index=False)
+                        plant_header_written = True
+                        
+                    future.release() 
+                    
+                except Exception as e:
+                    print(f"\n[ERREUR] Task failed : {e}")
+                    
         else:
             from dask.diagnostics import ProgressBar
-
             with ProgressBar():
                 results = compute(*tasks)
+                rows_box, rows_plant = [], []
+                for rb, rp in results:
+                    rows_box.extend(rb)
+                    rows_plant.extend(rp)
+                self._save_csv(rows_box, "results_per_box_fallback.csv")
+                self._save_csv(rows_plant, "results_per_plant_fallback.csv")
 
-        rows_box, rows_plant = [], []
-        for rb, rp in results:
-            rows_box.extend(rb)
-            rows_plant.extend(rp)
-
-        self._save_csv(rows_box, "results_per_box.csv")
-        self._save_csv(rows_plant, "results_per_plant.csv")
-
+        self.client.close()
+        try:
+            self.client.cluster.close()
+        except Exception:
+            pass
+        
+        print("Mesuration completed.")
+        
     def _save_csv(self, rows: List[dict], filename: str) -> None:
         if not rows:
             print(f"Rien à sauvegarder pour {filename}")

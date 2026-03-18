@@ -16,7 +16,8 @@ class Intercept_curve_Area(BaseMeasure):
     @staticmethod
     def _area_surface(x: np.ndarray,
                                y: np.ndarray) -> float:
-        return np.trapz(y, x)
+        # np.trapz is outdated
+        return np.trapezoid(y, x)
         
 
     def __call__(self, mtg: MTG) -> tuple:

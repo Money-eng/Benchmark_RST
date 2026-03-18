@@ -5,7 +5,7 @@ from scipy.spatial import ConvexHull
 from ..base import BaseMeasure
 
 
-def convex_hull_area(points, pixel_size: float = 0.076) -> float:
+def convex_hull_area(points, pixel_size: float = 0.076) -> float: # can cause errors, colinearity or few number of points, do not care for evaluation here
     points = np.array(points)
     hull = ConvexHull(points)
     return hull.volume * (pixel_size ** 2) # and not hull.area lol !

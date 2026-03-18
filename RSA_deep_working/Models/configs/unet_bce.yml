@@ -95,7 +95,7 @@ measures:
     - name: "number_of_organs"
     - name: "total_root_length"
     - name: "number_of_laterals"
-    - name: "intercept_curve_area"
+    #- name: "intercept_curve_area"
     - name: "convex_area_hull"
     - name: "root_density"
     - name: "primary_root_length"
