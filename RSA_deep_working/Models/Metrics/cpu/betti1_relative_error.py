@@ -13,21 +13,9 @@ class Betti1RelativeError(BaseMetric):
         super().__init__()
 
     def is_better(self, old_score: float, new_score: float) -> bool:
-        """
-        Jaccard Ratio of Betti-0 Characteristic (JREC) :
-        - JREC = 1 means the prediction matches the mask perfectly.
-        - The lower the JREC, the greater the difference in connected components between prediction and mask.
-        """
         return new_score > old_score
 
     def __call__(self, prediction: np.ndarray, mask: np.ndarray) -> float:
-        """
-        Jaccard Ratio of Betti-0 Characteristic (JREC) :
-        JREC = min(|E(pred)|, |E(mask)|) / (max(|E(pred)|, |E(mask)|) + 1e-8)
-        where E is the Betti-0 characteristic (number of connected components).
-        - JREC = 1 means the prediction matches the mask perfectly.
-        - The lower the JREC, the greater the difference in connected components between prediction and mask.
-        """
         pred_np = prediction.astype(np.uint8)
         mask_np = mask.astype(np.uint8)
         scores = []

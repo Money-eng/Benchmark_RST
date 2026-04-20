@@ -13,21 +13,9 @@ class Betti0RelativeError(BaseMetric):
         super().__init__()
 
     def is_better(self, old_score: float, new_score: float) -> bool:
-        """
-        Relative Betti-0 Characteristic Error (RECE):
-        - RECE = 0 means the prediction matches the mask perfectly.
-        - The higher the RECE, the greater the difference in connected components or holes between prediction and mask.
-        """
         return new_score < old_score
 
     def __call__(self, prediction: np.ndarray, mask: np.ndarray) -> float:
-        """ 
-        Relative Betti-0 Characteristic Error (RECE):
-        RECE = |E(pred) - E(mask)| / (|E(mask)| + 1e-8)
-        where E is the Betti-0 characteristic (number of connected components).
-        - RECE = 0 means the prediction matches the mask perfectly.
-        - The higher the RECE, the greater the difference in connected components or holes between prediction and mask.
-        """
         pred_np = prediction.astype(np.uint8)
         mask_np = mask.astype(np.uint8)
         scores = []

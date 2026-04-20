@@ -204,9 +204,9 @@ if __name__ == "__main__":
         gt_expertized,
         gt_before,
         prediction,
-        background="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN019/22_registered_stack.tif",
-        pred_date_map="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN019/40_date_map.tif",
-        gt_date_map="/home/loai/Documents/code/RSMLExtraction/RSA_deep_working/Data/Val/230629PN019/40_date_map.tif",
-    )
+        background="/home/loai/Images/DataTest/ChronoRoot/Train_set/data/rpi14_cam2/2019-02-19_10-00-18_2.png",
+        pred_date_map="/home/loai/Images/DataTest/ChronoRoot/Train_set/ground_truth/rpi14_cam2/2019-02-19_10-00-18_2.png" 
+        gt_date_map="/home/loai/Images/DataTest/ChronoRoot/Train_set/ground_truth/rpi14_cam2/2019-02-19_10-00-18_2.png"    
+        )
 
     viewer.show()
